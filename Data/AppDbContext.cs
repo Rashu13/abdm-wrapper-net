@@ -23,12 +23,6 @@ public class AppDbContext : DbContext
             : config.Value.SqlServer.ConnectionString;
     }
 
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-    {
-        _connectionString = "";
-        _provider = "SqlServer";
-    }
-
     public DbSet<Patient> Patients { get; set; } = null!;
     public DbSet<RequestLog> RequestLogs { get; set; } = null!;
     public DbSet<LinkToken> LinkTokens { get; set; } = null!;
