@@ -1,0 +1,45 @@
+## Ignore Visual Studio temporary files, build results, and user properties
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Re]leases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+out/
+publish/
+
+# Visual Studio files
+.vs/
+.vs*
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# VS Code
+.vscode/
+
+# Rider
+.idea/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# AppSettings secrets (keep appsettings.json template, but ignore local secrets if any)
+# appsettings.Development.json
+# appsettings.Production.json
