@@ -11,6 +11,18 @@ namespace ABDM.Models
     {
         public string? LoginId   { get; set; }   // Mobile (10 digits) or Aadhaar (12 digits)
         public string? LoginType { get; set; }   // "MOBILE" | "AADHAAR"
+
+        // Nudge Consent Logging details
+        public bool? Chk1 { get; set; }
+        public bool? Chk2 { get; set; }
+        public bool? Chk3 { get; set; }
+        public bool? Chk4 { get; set; }
+        public bool? Chk5 { get; set; }
+        public bool? Chk6 { get; set; }
+        public bool? Chk7 { get; set; }
+        public string? OperatorName { get; set; }
+        public string? BeneficiaryName { get; set; }
+        public DateTime? ConsentTimestamp { get; set; }
     }
 
     public class AbdmVerifyOtpRequest

@@ -25,6 +25,8 @@ namespace ABDM.Api
         /// <summary>Stores the last raw API response for debugging purposes.</summary>
         public string LastRawResponse { get; private set; } = "";
 
+        public AbdmSettings Settings => _cfg;
+
         public AbdmApiClient() : this(LoadSettingsFromConfig()) { }
 
         public AbdmApiClient(AbdmSettings settings)
@@ -412,7 +414,7 @@ namespace ABDM.Api
 
         private static AbhaProfile ParseProfileDict(Dictionary<string, object> acc)
         {
-            return new AbhaProfile
+            var profile = new AbhaProfile
             {
                 HealthIdNumber = acc.ContainsKey("ABHANumber") ? acc["ABHANumber"]?.ToString() : 
                                  acc.ContainsKey("healthIdNumber") ? acc["healthIdNumber"]?.ToString() : "",
@@ -426,6 +428,19 @@ namespace ABDM.Api
                                  acc.ContainsKey("dob") ? acc["dob"]?.ToString() : "",
                 ProfilePhoto   = acc.ContainsKey("profilePhoto") ? acc["profilePhoto"]?.ToString() : ""
             };
+
+            if (acc.ContainsKey("tokens") && acc["tokens"] is Dictionary<string, object> tok)
+            {
+                profile.Token = tok.ContainsKey("token") ? tok["token"]?.ToString() : "";
+                profile.RefreshToken = tok.ContainsKey("refreshToken") ? tok["refreshToken"]?.ToString() : "";
+            }
+            else
+            {
+                profile.Token = acc.ContainsKey("token") ? acc["token"]?.ToString() : "";
+                profile.RefreshToken = acc.ContainsKey("refreshToken") ? acc["refreshToken"]?.ToString() : "";
+            }
+
+            return profile;
         }
 
         // ??? Generate OTP ???????????????????????????????????????????????????????
@@ -1829,13 +1844,45 @@ namespace ABDM.Api
             if (obj == null) return "null";
             if (obj is bool) return (bool)obj ? "true" : "false";
             if (obj is string) return EscapeString((string)obj);
-            if (obj is int || obj is long || obj is double || obj is float)
+            if (obj is int || obj is long || obj is double || obj is float || obj is decimal)
                 return obj.ToString();
+            if (obj is DateTime) return EscapeString(((DateTime)obj).ToString("o"));
             
-            if (obj is string[]) return SerializeStringArray((string[])obj);
-            if (obj is object[]) return SerializeArray((object[])obj);
-            if (obj is List<object>) return SerializeList((List<object>)obj);
             if (obj is Dictionary<string, object>) return SerializeDict((Dictionary<string, object>)obj);
+
+            if (obj is System.Collections.IEnumerable && !(obj is string))
+            {
+                var sb = new StringBuilder("[");
+                bool first = true;
+                foreach (var item in (System.Collections.IEnumerable)obj)
+                {
+                    if (!first) sb.Append(",");
+                    sb.Append(Serialize(item));
+                    first = false;
+                }
+                sb.Append("]");
+                return sb.ToString();
+            }
+
+            var type = obj.GetType();
+            if (type.IsClass)
+            {
+                var sb = new StringBuilder("{");
+                var props = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                bool first = true;
+                foreach (var prop in props)
+                {
+                    var val = prop.GetValue(obj);
+                    if (val == null) continue;
+                    if (!first) sb.Append(",");
+                    sb.Append(EscapeString(prop.Name));
+                    sb.Append(":");
+                    sb.Append(Serialize(val));
+                    first = false;
+                }
+                sb.Append("}");
+                return sb.ToString();
+            }
             
             return EscapeString(obj.ToString());
         }

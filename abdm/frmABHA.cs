@@ -81,11 +81,21 @@ namespace HMS.abdm
                             btnSubmit.Text = "Sending OTP...";
                             
                             var client = GetAbdmClient();
-                            var resp = await client.GenerateOtpAsync(new AbdmGenerateOtpRequest 
-                            { 
-                                LoginId = aadhaar, 
-                                LoginType = "AADHAAR" 
-                            });
+                             var resp = await client.GenerateOtpAsync(new AbdmGenerateOtpRequest 
+                             { 
+                                 LoginId = aadhaar, 
+                                 LoginType = "AADHAAR",
+                                 Chk1 = consent.Chk1Checked,
+                                 Chk2 = consent.Chk2Checked,
+                                 Chk3 = consent.Chk3Checked,
+                                 Chk4 = consent.Chk4Checked,
+                                 Chk5 = consent.Chk5Checked,
+                                 Chk6 = consent.Chk6Checked,
+                                 Chk7 = consent.Chk7Checked,
+                                 OperatorName = consent.ExplainText,
+                                 BeneficiaryName = consent.BeneficiaryText,
+                                 ConsentTimestamp = DateTime.UtcNow
+                             });
 
                             if (resp.Success && resp.Data != null)
                             {

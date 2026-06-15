@@ -19,4 +19,5 @@ public class MongoDbContext
     public IMongoCollection<RequestLog> RequestLogs => _database.GetCollection<RequestLog>("request-logs");
     public IMongoCollection<LinkToken> LinkTokens => _database.GetCollection<LinkToken>("link-tokens");
     public IMongoCollection<ConsentPatient> ConsentPatients => _database.GetCollection<ConsentPatient>("consent-patient");
+    public IMongoCollection<AbhaConsentLog> AbhaConsentLogs => _database.GetCollection<AbhaConsentLog>("abha-consent-logs");
 }

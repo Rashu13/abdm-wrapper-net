@@ -28,6 +28,7 @@ public class AppDbContext : DbContext
     public DbSet<LinkToken> LinkTokens { get; set; } = null!;
     public DbSet<ConsentPatient> ConsentPatients { get; set; } = null!;
     public DbSet<ConsentRequestMapping> ConsentRequestMappings { get; set; } = null!;
+    public DbSet<AbhaConsentLog> AbhaConsentLogs { get; set; } = null!;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
