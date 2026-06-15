@@ -145,11 +145,6 @@ namespace HMS.abdm
                 catch { }
             }
 
-            if (!loadedFromApi)
-            {
-                dt.Rows.Add(1, "Pending", "99-9999-9999-99", "testpatient@sbx", "Ramesh Kumar", "Male", "1990", "8683916682", "123 Main St", "Delhi", "Delhi", "Suresh Kumar");
-            }
-
             return dt;
         }
 
