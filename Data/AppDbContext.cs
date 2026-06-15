@@ -112,6 +112,13 @@ public class AppDbContext : DbContext
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Id).ValueGeneratedOnAdd();
         });
+
+        // AbhaConsentLog Configuration
+        modelBuilder.Entity<AbhaConsentLog>(entity =>
+        {
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.Id).ValueGeneratedOnAdd();
+        });
     }
 
     private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = false };
