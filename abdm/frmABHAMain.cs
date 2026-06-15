@@ -98,5 +98,33 @@ namespace HMS.abdm
                 }
             }
         }
+
+        private void btnAccountOps_Click(object sender, EventArgs e)
+        {
+            var session = ABDM.Models.SessionStore.Load();
+            if (session == null || string.IsNullOrEmpty(session.UserToken))
+            {
+                MessageBox.Show("Please login first to access account operations.", "Login Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                using (var loginFrm = new frmABHALogin())
+                {
+                    if (loginFrm.ShowDialog() == DialogResult.OK)
+                    {
+                        session = ABDM.Models.SessionStore.Load();
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+            }
+
+            if (session != null && !string.IsNullOrEmpty(session.UserToken))
+            {
+                using (var opsFrm = new frmABHAAccountOps(session))
+                {
+                    opsFrm.ShowDialog();
+                }
+            }
+        }
     }
 }

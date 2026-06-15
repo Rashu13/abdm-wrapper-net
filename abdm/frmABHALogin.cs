@@ -136,8 +136,8 @@ namespace HMS.abdm
                         LoggedInProfile.RefreshToken = resp.Data.RefreshToken;
                         
                         // Save to Session Store
-                        var session = SessionStore.Create(null, resp.Data.Token, LoggedInProfile);
-                        SessionStore.Save(session);
+                        var session = ABDM.Models.SessionStore.Create(null, resp.Data.Token, LoggedInProfile);
+                        ABDM.Models.SessionStore.Save(session);
                         
                         this.DialogResult = DialogResult.OK;
                         this.Close();
