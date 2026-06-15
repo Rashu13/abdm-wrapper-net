@@ -167,6 +167,11 @@ namespace ABDM.Api
 
         public async Task<string> GetAccessTokenAsync()
         {
+            if (!_cfg.BaseUrl.Contains("abdm.gov.in"))
+            {
+                return "ConnectedToWrapper";
+            }
+
             if (!string.IsNullOrWhiteSpace(_cachedAccessToken) &&
                 _cachedAccessTokenUtc > DateTime.UtcNow.AddMinutes(1))
             {
@@ -219,6 +224,11 @@ namespace ABDM.Api
 
         public async Task<string> GetPublicKeyAsync(string accessToken)
         {
+            if (!_cfg.BaseUrl.Contains("abdm.gov.in"))
+            {
+                return "ConnectedToWrapperPublicKey";
+            }
+
             if (!string.IsNullOrEmpty(_cachedPublicKey))
                 return _cachedPublicKey;
 
