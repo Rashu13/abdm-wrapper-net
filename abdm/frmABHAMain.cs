@@ -20,7 +20,18 @@ namespace HMS.abdm
         public frmABHAMain()
         {
             InitializeComponent();
-            _client = new AbdmApiClient();
+            var settings = new AbdmSettings
+            {
+                BaseUrl = System.Configuration.ConfigurationManager.AppSettings["AbdmSettings:BaseUrl"] ?? "https://dev.abdm.gov.in/api/hiecm/gateway",
+                AbhaServiceUrl = System.Configuration.ConfigurationManager.AppSettings["AbdmSettings:AbhaServiceUrl"] ?? "https://abhasbx.abdm.gov.in/abha/api/v3",
+                ClientId = System.Configuration.ConfigurationManager.AppSettings["AbdmSettings:ClientId"],
+                ClientSecret = System.Configuration.ConfigurationManager.AppSettings["AbdmSettings:ClientSecret"],
+                HipId = System.Configuration.ConfigurationManager.AppSettings["AbdmSettings:HipId"],
+                HipName = System.Configuration.ConfigurationManager.AppSettings["AbdmSettings:HipName"],
+                CmId = System.Configuration.ConfigurationManager.AppSettings["AbdmSettings:CmId"] ?? "sbx",
+                Environment = System.Configuration.ConfigurationManager.AppSettings["AbdmSettings:Environment"] ?? "Sandbox"
+            };
+            _client = new AbdmApiClient(settings);
             this.Load += new System.EventHandler(this.frmABHAMain_Load);
         }
 
