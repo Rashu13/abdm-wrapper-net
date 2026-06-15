@@ -9,42 +9,42 @@ namespace ABDM.Models
 
     public class AbdmGenerateOtpRequest
     {
-        public string LoginId   { get; set; }   // Mobile (10 digits) or Aadhaar (12 digits)
-        public string LoginType { get; set; }   // "MOBILE" | "AADHAAR"
+        public string? LoginId   { get; set; }   // Mobile (10 digits) or Aadhaar (12 digits)
+        public string? LoginType { get; set; }   // "MOBILE" | "AADHAAR"
     }
 
     public class AbdmVerifyOtpRequest
     {
-        public string Otp           { get; set; }
-        public string TransactionId { get; set; }
-        public string LoginType     { get; set; }   // "MOBILE" | "AADHAAR"
-        public string Mobile        { get; set; }   // required for Aadhaar flow
+        public string? Otp           { get; set; }
+        public string? TransactionId { get; set; }
+        public string? LoginType     { get; set; }   // "MOBILE" | "AADHAAR"
+        public string? Mobile        { get; set; }   // required for Aadhaar flow
     }
 
     public class AbdmCreateAbhaAddressRequest
     {
-        public string TransactionId { get; set; }
-        public string AbhaAddress   { get; set; }
+        public string? TransactionId { get; set; }
+        public string? AbhaAddress   { get; set; }
     }
 
     public class MobileUpdateOtpRequest
     {
-        public string TransactionId { get; set; }
-        public string Mobile    { get; set; }   // New 10-digit mobile number
-        public string UserToken { get; set; }   // X-Token (user's bearer token)
+        public string? TransactionId { get; set; }
+        public string? Mobile    { get; set; }   // New 10-digit mobile number
+        public string? UserToken { get; set; }   // X-Token (user's bearer token)
     }
 
     public class MobileUpdateVerifyRequest
     {
-        public string Otp           { get; set; }
-        public string TransactionId { get; set; }
-        public string UserToken     { get; set; }   // X-Token
+        public string? Otp           { get; set; }
+        public string? TransactionId { get; set; }
+        public string? UserToken     { get; set; }   // X-Token
     }
 
     public class EmailVerificationLinkRequest
     {
-        public string Email     { get; set; }
-        public string UserToken { get; set; }
+        public string? Email     { get; set; }
+        public string? UserToken { get; set; }
     }
 
     // --- Response Models ----------------------------------------------------------
