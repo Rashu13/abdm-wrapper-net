@@ -995,8 +995,13 @@ namespace ABDM.Api
 
                     // If we have a user-token (from enrollment verify), pass it as X-Token
                     if (!string.IsNullOrEmpty(userToken))
+                    {
+                        string cleanUserToken = userToken.Trim();
+                        if (cleanUserToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                            cleanUserToken = cleanUserToken.Substring(7).Trim();
                         _http.DefaultRequestHeaders.TryAddWithoutValidation(
-                            "X-Token", $"Bearer {userToken}");
+                            "X-Token", $"Bearer {cleanUserToken}");
+                    }
 
                     // Strip @abdm suffix - API expects just the local part
                     string localPart = abhaAddress;
@@ -1059,8 +1064,11 @@ namespace ABDM.Api
                 {
                     var token = await GetAccessTokenAsync();
                     AddCommonHeaders(token);
+                    string cleanUserToken = (userToken ?? "").Trim();
+                    if (cleanUserToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        cleanUserToken = cleanUserToken.Substring(7).Trim();
                     _http.DefaultRequestHeaders.TryAddWithoutValidation(
-                        "X-Token", $"Bearer {userToken}");
+                        "X-Token", $"Bearer {cleanUserToken}");
                     _http.DefaultRequestHeaders.Accept.Clear();
                     _http.DefaultRequestHeaders.Accept.Add(
                         new MediaTypeWithQualityHeaderValue("image/png"));
@@ -1100,8 +1108,11 @@ namespace ABDM.Api
                 AddCommonHeaders(token);
                 if (!string.IsNullOrEmpty(request.UserToken))
                 {
+                    string cleanUserToken = request.UserToken.Trim();
+                    if (cleanUserToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        cleanUserToken = cleanUserToken.Substring(7).Trim();
                     _http.DefaultRequestHeaders.TryAddWithoutValidation(
-                        "X-Token", $"Bearer {request.UserToken}");
+                        "X-Token", $"Bearer {cleanUserToken}");
                 }
 
                 var payloadDict = new Dictionary<string, object>
@@ -1156,8 +1167,11 @@ namespace ABDM.Api
                 AddCommonHeaders(token);
                 if (!string.IsNullOrEmpty(request.UserToken))
                 {
+                    string cleanUserToken = request.UserToken.Trim();
+                    if (cleanUserToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        cleanUserToken = cleanUserToken.Substring(7).Trim();
                     _http.DefaultRequestHeaders.TryAddWithoutValidation(
-                        "X-Token", $"Bearer {request.UserToken}");
+                        "X-Token", $"Bearer {cleanUserToken}");
                 }
 
                 var payload = SimpleJson.Serialize(new Dictionary<string, object>
@@ -1210,8 +1224,13 @@ namespace ABDM.Api
 
                 AddCommonHeaders(token);
                 if (!string.IsNullOrEmpty(request.UserToken))
+                {
+                    string cleanUserToken = request.UserToken.Trim();
+                    if (cleanUserToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        cleanUserToken = cleanUserToken.Substring(7).Trim();
                     _http.DefaultRequestHeaders.TryAddWithoutValidation(
-                        "X-Token", $"Bearer {request.UserToken}");
+                        "X-Token", $"Bearer {cleanUserToken}");
+                }
 
                 string endpoint = "https://abhasbx.abdm.gov.in/abha/api/v3/profile/account/request/emailVerificationLink";
                 if (!string.IsNullOrWhiteSpace(_cfg.AbhaServiceUrl) &&
