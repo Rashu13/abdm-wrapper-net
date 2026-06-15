@@ -59,8 +59,11 @@ namespace HMS.abdm
             {
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
+                    if (this.Modal)
+                    {
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
                 }
             }
         }
@@ -72,8 +75,11 @@ namespace HMS.abdm
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     this.SelectedProfile = frm.LoggedInProfile;
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
+                    if (this.Modal)
+                    {
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
                 }
             }
         }
@@ -93,8 +99,11 @@ namespace HMS.abdm
                 if (frm.ShowDialog() == DialogResult.OK)
                 {
                     this.SelectedProfile = frm.SelectedProfile;
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
+                    if (this.Modal)
+                    {
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
                 }
             }
         }

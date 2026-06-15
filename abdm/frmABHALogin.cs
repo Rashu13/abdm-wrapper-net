@@ -132,15 +132,24 @@ namespace HMS.abdm
                             LoggedInProfile = basicProfile;
                         }
 
-                        LoggedInProfile.Token = resp.Data.Token;
-                        LoggedInProfile.RefreshToken = resp.Data.RefreshToken;
-                        
-                        // Save to Session Store
-                        var session = ABDM.Models.SessionStore.Create(null, resp.Data.Token, LoggedInProfile);
-                        ABDM.Models.SessionStore.Save(session);
-                        
-                        this.DialogResult = DialogResult.OK;
-                        this.Close();
+                        if (LoggedInProfile != null)
+                        {
+                            LoggedInProfile.Token = resp.Data.Token;
+                            LoggedInProfile.RefreshToken = resp.Data.RefreshToken;
+                            
+                            // Save to Session Store
+                            var session = ABDM.Models.SessionStore.Create(null, resp.Data.Token, LoggedInProfile);
+                            ABDM.Models.SessionStore.Save(session);
+
+                            MessageBox.Show("Login Successful!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            
+                            this.DialogResult = DialogResult.OK;
+                            this.Close();
+                        }
+                        else
+                        {
+                            MessageBox.Show("Failed to load your ABHA profile.", "Login Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
                     }
                     else
                     {
