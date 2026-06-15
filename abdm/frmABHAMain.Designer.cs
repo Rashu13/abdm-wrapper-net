@@ -38,6 +38,8 @@ namespace HMS.abdm
             this.btnCreate = new System.Windows.Forms.Button();
             this.btnBioEnroll = new System.Windows.Forms.Button();
             this.btnDlEnroll = new System.Windows.Forms.Button();
+            this.btnCreateAddress = new System.Windows.Forms.Button();
+            this.btnDownloadCard = new System.Windows.Forms.Button();
 
             // Verification Group
             this.gbVerification = new System.Windows.Forms.GroupBox();
@@ -105,6 +107,8 @@ namespace HMS.abdm
             this.gbCreation.Controls.Add(this.btnCreate);
             this.gbCreation.Controls.Add(this.btnBioEnroll);
             this.gbCreation.Controls.Add(this.btnDlEnroll);
+            this.gbCreation.Controls.Add(this.btnCreateAddress);
+            this.gbCreation.Controls.Add(this.btnDownloadCard);
             this.gbCreation.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, FontStyle.Bold);
             this.gbCreation.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
             this.gbCreation.Location = new System.Drawing.Point(20, 140);
@@ -112,7 +116,7 @@ namespace HMS.abdm
             this.gbCreation.Size = new System.Drawing.Size(260, 370);
             this.gbCreation.TabIndex = 18;
             this.gbCreation.TabStop = false;
-            this.gbCreation.Text = "ABHA Creation (Enrollment)";
+            this.gbCreation.Text = "ABHA Creation & Download";
             // 
             // btnCreate
             // 
@@ -120,13 +124,13 @@ namespace HMS.abdm
             this.btnCreate.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
             this.btnCreate.FlatAppearance.BorderSize = 2;
             this.btnCreate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCreate.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnCreate.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             this.btnCreate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
-            this.btnCreate.Location = new System.Drawing.Point(15, 35);
+            this.btnCreate.Location = new System.Drawing.Point(15, 30);
             this.btnCreate.Name = "btnCreate";
-            this.btnCreate.Size = new System.Drawing.Size(230, 95);
+            this.btnCreate.Size = new System.Drawing.Size(230, 50);
             this.btnCreate.TabIndex = 1;
-            this.btnCreate.Text = "Aadhaar OTP\r\n(Mandatory)";
+            this.btnCreate.Text = "Aadhaar OTP (Mandatory)";
             this.btnCreate.UseVisualStyleBackColor = false;
             this.btnCreate.Click += new System.EventHandler(this.btnCreate_Click);
             // 
@@ -136,13 +140,13 @@ namespace HMS.abdm
             this.btnBioEnroll.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
             this.btnBioEnroll.FlatAppearance.BorderSize = 2;
             this.btnBioEnroll.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBioEnroll.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnBioEnroll.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             this.btnBioEnroll.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
-            this.btnBioEnroll.Location = new System.Drawing.Point(15, 145);
+            this.btnBioEnroll.Location = new System.Drawing.Point(15, 95);
             this.btnBioEnroll.Name = "btnBioEnroll";
-            this.btnBioEnroll.Size = new System.Drawing.Size(230, 95);
+            this.btnBioEnroll.Size = new System.Drawing.Size(230, 50);
             this.btnBioEnroll.TabIndex = 2;
-            this.btnBioEnroll.Text = "Aadhaar Biometrics\r\n(Optional)";
+            this.btnBioEnroll.Text = "Aadhaar Biometrics (Opt)";
             this.btnBioEnroll.UseVisualStyleBackColor = false;
             this.btnBioEnroll.Click += new System.EventHandler(this.btnBioEnroll_Click);
             // 
@@ -152,15 +156,47 @@ namespace HMS.abdm
             this.btnDlEnroll.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
             this.btnDlEnroll.FlatAppearance.BorderSize = 2;
             this.btnDlEnroll.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDlEnroll.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnDlEnroll.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             this.btnDlEnroll.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
-            this.btnDlEnroll.Location = new System.Drawing.Point(15, 255);
+            this.btnDlEnroll.Location = new System.Drawing.Point(15, 160);
             this.btnDlEnroll.Name = "btnDlEnroll";
-            this.btnDlEnroll.Size = new System.Drawing.Size(230, 95);
+            this.btnDlEnroll.Size = new System.Drawing.Size(230, 50);
             this.btnDlEnroll.TabIndex = 3;
-            this.btnDlEnroll.Text = "Driving License\r\n(Optional)";
+            this.btnDlEnroll.Text = "Driving License (Opt)";
             this.btnDlEnroll.UseVisualStyleBackColor = false;
             this.btnDlEnroll.Click += new System.EventHandler(this.btnDlEnroll_Click);
+            // 
+            // btnCreateAddress
+            // 
+            this.btnCreateAddress.BackColor = System.Drawing.Color.White;
+            this.btnCreateAddress.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
+            this.btnCreateAddress.FlatAppearance.BorderSize = 2;
+            this.btnCreateAddress.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnCreateAddress.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.btnCreateAddress.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
+            this.btnCreateAddress.Location = new System.Drawing.Point(15, 225);
+            this.btnCreateAddress.Name = "btnCreateAddress";
+            this.btnCreateAddress.Size = new System.Drawing.Size(230, 50);
+            this.btnCreateAddress.TabIndex = 4;
+            this.btnCreateAddress.Text = "Create ABHA Address";
+            this.btnCreateAddress.UseVisualStyleBackColor = false;
+            this.btnCreateAddress.Click += new System.EventHandler(this.btnCreateAddress_Click);
+            // 
+            // btnDownloadCard
+            // 
+            this.btnDownloadCard.BackColor = System.Drawing.Color.White;
+            this.btnDownloadCard.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
+            this.btnDownloadCard.FlatAppearance.BorderSize = 2;
+            this.btnDownloadCard.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnDownloadCard.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.btnDownloadCard.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
+            this.btnDownloadCard.Location = new System.Drawing.Point(15, 290);
+            this.btnDownloadCard.Name = "btnDownloadCard";
+            this.btnDownloadCard.Size = new System.Drawing.Size(230, 50);
+            this.btnDownloadCard.TabIndex = 5;
+            this.btnDownloadCard.Text = "Download ABHA Card";
+            this.btnDownloadCard.UseVisualStyleBackColor = false;
+            this.btnDownloadCard.Click += new System.EventHandler(this.btnDownloadCard_Click);
             // 
             // gbVerification
             // 
@@ -184,12 +220,12 @@ namespace HMS.abdm
             this.btnScanShare.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnScanShare.FlatAppearance.BorderSize = 2;
             this.btnScanShare.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnScanShare.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnScanShare.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             this.btnScanShare.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnScanShare.Location = new System.Drawing.Point(20, 35);
             this.btnScanShare.Name = "btnScanShare";
             this.btnScanShare.Size = new System.Drawing.Size(265, 95);
-            this.btnScanShare.TabIndex = 4;
+            this.btnScanShare.TabIndex = 6;
             this.btnScanShare.Text = "Facility QR Code\r\n(Scan & Share)";
             this.btnScanShare.UseVisualStyleBackColor = false;
             this.btnScanShare.Click += new System.EventHandler(this.btnScanShare_Click);
@@ -200,12 +236,12 @@ namespace HMS.abdm
             this.btnScanUserQR.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnScanUserQR.FlatAppearance.BorderSize = 2;
             this.btnScanUserQR.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnScanUserQR.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnScanUserQR.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             this.btnScanUserQR.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnScanUserQR.Location = new System.Drawing.Point(305, 35);
             this.btnScanUserQR.Name = "btnScanUserQR";
             this.btnScanUserQR.Size = new System.Drawing.Size(275, 95);
-            this.btnScanUserQR.TabIndex = 5;
+            this.btnScanUserQR.TabIndex = 7;
             this.btnScanUserQR.Text = "Scan Patient Card QR\r\n(Optional)";
             this.btnScanUserQR.UseVisualStyleBackColor = false;
             this.btnScanUserQR.Click += new System.EventHandler(this.btnScanUserQR_Click);
@@ -216,12 +252,12 @@ namespace HMS.abdm
             this.btnLogin.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnLogin.FlatAppearance.BorderSize = 2;
             this.btnLogin.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnLogin.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnLogin.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             this.btnLogin.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnLogin.Location = new System.Drawing.Point(20, 145);
             this.btnLogin.Name = "btnLogin";
             this.btnLogin.Size = new System.Drawing.Size(265, 95);
-            this.btnLogin.TabIndex = 6;
+            this.btnLogin.TabIndex = 8;
             this.btnLogin.Text = "Verify by OTP\r\n(ABHA Login)";
             this.btnLogin.UseVisualStyleBackColor = false;
             this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
@@ -232,12 +268,12 @@ namespace HMS.abdm
             this.btnViewRequests.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnViewRequests.FlatAppearance.BorderSize = 2;
             this.btnViewRequests.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnViewRequests.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnViewRequests.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             this.btnViewRequests.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnViewRequests.Location = new System.Drawing.Point(305, 145);
             this.btnViewRequests.Name = "btnViewRequests";
             this.btnViewRequests.Size = new System.Drawing.Size(275, 95);
-            this.btnViewRequests.TabIndex = 7;
+            this.btnViewRequests.TabIndex = 9;
             this.btnViewRequests.Text = "View Shared Profiles\r\n(Scan & Share List)";
             this.btnViewRequests.UseVisualStyleBackColor = false;
             this.btnViewRequests.Click += new System.EventHandler(this.btnViewRequests_Click);
@@ -248,12 +284,12 @@ namespace HMS.abdm
             this.btnAccountOps.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnAccountOps.FlatAppearance.BorderSize = 2;
             this.btnAccountOps.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnAccountOps.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnAccountOps.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             this.btnAccountOps.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnAccountOps.Location = new System.Drawing.Point(20, 255);
             this.btnAccountOps.Name = "btnAccountOps";
             this.btnAccountOps.Size = new System.Drawing.Size(560, 95);
-            this.btnAccountOps.TabIndex = 8;
+            this.btnAccountOps.TabIndex = 10;
             this.btnAccountOps.Text = "ABHA Account Operations\r\n(Profile Update / Re-KYC)";
             this.btnAccountOps.UseVisualStyleBackColor = false;
             this.btnAccountOps.Click += new System.EventHandler(this.btnAccountOps_Click);
@@ -292,6 +328,8 @@ namespace HMS.abdm
         private System.Windows.Forms.Button btnCreate;
         private System.Windows.Forms.Button btnBioEnroll;
         private System.Windows.Forms.Button btnDlEnroll;
+        private System.Windows.Forms.Button btnCreateAddress;
+        private System.Windows.Forms.Button btnDownloadCard;
 
         private System.Windows.Forms.GroupBox gbVerification;
         private System.Windows.Forms.Button btnScanShare;

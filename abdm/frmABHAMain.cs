@@ -180,5 +180,35 @@ namespace HMS.abdm
                 }
             }
         }
+
+        private void btnCreateAddress_Click(object sender, EventArgs e)
+        {
+            using (var frm = new frmABHAAddressCreationDirect(_client))
+            {
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    if (this.Modal)
+                    {
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
+                }
+            }
+        }
+
+        private void btnDownloadCard_Click(object sender, EventArgs e)
+        {
+            using (var frm = new frmABHACardDownloadDirect(_client))
+            {
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    if (this.Modal)
+                    {
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
+                }
+            }
+        }
     }
 }
