@@ -157,7 +157,7 @@ namespace ABDM.Api
 
         // ??? Step 0 : Access Token ?????????????????????????????????????????????
 
-        // Gateway base URL � BaseUrl itself IS the gateway base
+        // Gateway base URL ∩┐╜ BaseUrl itself IS the gateway base
         // BaseUrl = "https://dev.abdm.gov.in/api/hiecm/gateway"
         // Token endpoint = BaseUrl + "/v3/sessions"
         private string GwBase
@@ -244,7 +244,7 @@ namespace ABDM.Api
                     if (respBody.TrimStart().StartsWith("-----BEGIN"))
                         return respBody.Trim();
 
-                    // JSON response � try common key names
+                    // JSON response ∩┐╜ try common key names
                     if (respBody.TrimStart().StartsWith("{"))
                     {
                         var dict = SimpleJson.Deserialize(respBody);
@@ -261,7 +261,7 @@ namespace ABDM.Api
             throw lastEx ?? new Exception("PublicKey Error: All endpoints failed.");
         }
 
-        // ??? RSA Encrypt (OAEP SHA-1 � built-in .NET 4.8) ????????????????????
+        // ??? RSA Encrypt (OAEP SHA-1 ∩┐╜ built-in .NET 4.8) ????????????????????
 
         public string Encrypt(string data, string publicKeyPem)
         {
@@ -341,74 +341,177 @@ namespace ABDM.Api
             return len;
         }
 
+        // --- Redirection to Wrapper Helpers ---
+
+        private string BaseUrl => _cfg.BaseUrl.TrimEnd('/');
+
+        private async Task<string> PostToWrapperAsync(string path, string jsonPayload, string? userToken = null)
+        {
+            using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{BaseUrl}{path}"))
+            {
+                requestMessage.Content = JsonContent(jsonPayload);
+                if (!string.IsNullOrEmpty(userToken))
+                {
+                    string cleanUserToken = userToken.Trim();
+                    if (cleanUserToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        cleanUserToken = cleanUserToken.Substring(7).Trim();
+                    requestMessage.Headers.TryAddWithoutValidation("X-Token", "Bearer " + cleanUserToken);
+                }
+                var resp = await _http.SendAsync(requestMessage);
+                var body = await resp.Content.ReadAsStringAsync();
+                LastRawResponse = body;
+                if (!resp.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Wrapper Error [{resp.StatusCode}]: {body}");
+                }
+                return body;
+            }
+        }
+
+        private async Task<string> GetFromWrapperAsync(string path, string? userToken = null)
+        {
+            using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}{path}"))
+            {
+                if (!string.IsNullOrEmpty(userToken))
+                {
+                    string cleanUserToken = userToken.Trim();
+                    if (cleanUserToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        cleanUserToken = cleanUserToken.Substring(7).Trim();
+                    requestMessage.Headers.TryAddWithoutValidation("X-Token", "Bearer " + cleanUserToken);
+                }
+                var resp = await _http.SendAsync(requestMessage);
+                if (resp.Content.Headers.ContentType?.MediaType == "image/png" || path.Contains("/card"))
+                {
+                    var bytes = await resp.Content.ReadAsByteArrayAsync();
+                    if (!resp.IsSuccessStatusCode)
+                    {
+                        var text = Encoding.UTF8.GetString(bytes);
+                        throw new Exception($"Wrapper Error [{resp.StatusCode}]: {text}");
+                    }
+                    return Convert.ToBase64String(bytes);
+                }
+                var body = await resp.Content.ReadAsStringAsync();
+                LastRawResponse = body;
+                if (!resp.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Wrapper Error [{resp.StatusCode}]: {body}");
+                }
+                return body;
+            }
+        }
+
+        private static AbhaProfile ParseProfileDict(Dictionary<string, object> acc)
+        {
+            return new AbhaProfile
+            {
+                HealthIdNumber = acc.ContainsKey("ABHANumber") ? acc["ABHANumber"]?.ToString() : 
+                                 acc.ContainsKey("healthIdNumber") ? acc["healthIdNumber"]?.ToString() : "",
+                AbhaAddress    = acc.ContainsKey("preferredAbhaAddress") ? acc["preferredAbhaAddress"]?.ToString() : 
+                                 acc.ContainsKey("abhaAddress") ? acc["abhaAddress"]?.ToString() : "",
+                Name           = acc.ContainsKey("name") ? acc["name"]?.ToString() : "",
+                Gender         = acc.ContainsKey("gender") ? acc["gender"]?.ToString() : "",
+                Mobile         = acc.ContainsKey("mobile") ? acc["mobile"]?.ToString() : "",
+                Address        = acc.ContainsKey("address") ? acc["address"]?.ToString() : "",
+                YearOfBirth    = acc.ContainsKey("yearOfBirth") ? acc["yearOfBirth"]?.ToString() : 
+                                 acc.ContainsKey("dob") ? acc["dob"]?.ToString() : "",
+                ProfilePhoto   = acc.ContainsKey("profilePhoto") ? acc["profilePhoto"]?.ToString() : ""
+            };
+        }
+
         // ??? Generate OTP ???????????????????????????????????????????????????????
 
         public async Task<AbdmResponse<OtpTransactionResponse>> GenerateOtpAsync(
             AbdmGenerateOtpRequest request)
         {
-            try
+            if (!_cfg.BaseUrl.Contains("abdm.gov.in"))
             {
-                var token     = await GetAccessTokenAsync();
-                var publicKey = await GetPublicKeyAsync(token);
-                var encrypted = Encrypt(request.LoginId.Trim(), publicKey);
-
-                long dummy;
-                bool isAadhaar = request.LoginType?.ToUpper() == "AADHAAR"
-                              || (request.LoginId.Trim().Length == 12
-                                  && long.TryParse(request.LoginId.Trim(), out dummy));
-
-                AddCommonHeaders(token);
-                string endpoint;
-                Dictionary<string, object> payloadDict;
-
-                if (isAadhaar)
+                try
                 {
-                    // Aadhaar flow: enrollment/request/otp
-                    endpoint = $"{_cfg.AbhaServiceUrl}/enrollment/request/otp";
-                    payloadDict = new Dictionary<string, object>
+                    string payload = SimpleJson.Serialize(request);
+                    string responseBody = await PostToWrapperAsync("/api/v3/m1/generate-otp", payload);
+                    var dict = SimpleJson.Deserialize(responseBody);
+                    var dataDict = dict.ContainsKey("data") ? dict["data"] as Dictionary<string, object> : null;
+                    if (dataDict == null) return AbdmApiClient.Fail<OtpTransactionResponse>("Invalid response format from wrapper");
+                    
+                    var data = new OtpTransactionResponse
                     {
-                        ["clientId"]  = _cfg.ClientId,
-                        ["txnId"]     = "",
-                        ["scope"]     = new[] { "abha-enrol" },
-                        ["loginHint"] = "aadhaar",
-                        ["loginId"]   = encrypted,
-                        ["otpSystem"] = "aadhaar"
+                        TransactionId = dataDict.ContainsKey("transactionId") ? dataDict["transactionId"]?.ToString() : "",
+                        Message       = dataDict.ContainsKey("message") ? dataDict["message"]?.ToString() : "",
+                        MaskedMobile  = dataDict.ContainsKey("maskedMobile") ? dataDict["maskedMobile"]?.ToString() : ""
                     };
+                    return AbdmApiClient.Ok(data, "OTP Sent.");
                 }
-                else
+                catch (Exception ex)
                 {
-                    // Mobile flow: profile/login/request/otp (existing ABHA login)
-                    endpoint = $"{_cfg.AbhaServiceUrl}/profile/login/request/otp";
-                    payloadDict = new Dictionary<string, object>
-                    {
-                        ["scope"]     = new[] { "abha-login", "mobile-verify" },
-                        ["loginHint"] = "mobile",
-                        ["loginId"]   = encrypted,
-                        ["otpSystem"] = "abdm"
-                    };
+                    return AbdmApiClient.Fail<OtpTransactionResponse>(ex.Message);
                 }
-
-                var payload = SimpleJson.Serialize(payloadDict);
-                var resp    = await _http.PostAsync(endpoint, JsonContent(payload));
-                var body    = await resp.Content.ReadAsStringAsync();
-                LogResponse("GenerateOtpAsync", body);
-
-                if (!resp.IsSuccessStatusCode)
-                    return AbdmApiClient.Fail<OtpTransactionResponse>($"OTP Error [{resp.StatusCode}]: {body}");
-
-                var d    = SimpleJson.Deserialize(body);
-                var data = new OtpTransactionResponse
-                {
-                    TransactionId = d.ContainsKey("txnId")   ? d["txnId"]?.ToString()   : "",
-                    Message       = d.ContainsKey("message") ? d["message"]?.ToString() : "",
-                    MaskedMobile  = d.ContainsKey("mobileNumber") ? d["mobileNumber"]?.ToString()
-                                  : d.ContainsKey("maskedMobile") ? d["maskedMobile"]?.ToString()
-                                  : d.ContainsKey("mobile") ? d["mobile"]?.ToString()
-                                  : ""
-                };
-                return AbdmApiClient.Ok(data, isAadhaar ? "Aadhaar OTP Sent." : "Mobile OTP Sent.");
             }
-            catch (Exception ex) { return AbdmApiClient.Fail<OtpTransactionResponse>(ex.Message); }
+            else
+            {
+                try
+                {
+                    var token     = await GetAccessTokenAsync();
+                    var publicKey = await GetPublicKeyAsync(token);
+                    var encrypted = Encrypt(request.LoginId.Trim(), publicKey);
+
+                    long dummy;
+                    bool isAadhaar = request.LoginType?.ToUpper() == "AADHAAR"
+                                  || (request.LoginId.Trim().Length == 12
+                                      && long.TryParse(request.LoginId.Trim(), out dummy));
+
+                    AddCommonHeaders(token);
+                    string endpoint;
+                    Dictionary<string, object> payloadDict;
+
+                    if (isAadhaar)
+                    {
+                        // Aadhaar flow: enrollment/request/otp
+                        endpoint = $"{_cfg.AbhaServiceUrl}/enrollment/request/otp";
+                        payloadDict = new Dictionary<string, object>
+                        {
+                            ["clientId"]  = _cfg.ClientId,
+                            ["txnId"]     = "",
+                            ["scope"]     = new[] { "abha-enrol" },
+                            ["loginHint"] = "aadhaar",
+                            ["loginId"]   = encrypted,
+                            ["otpSystem"] = "aadhaar"
+                        };
+                    }
+                    else
+                    {
+                        // Mobile flow: profile/login/request/otp (existing ABHA login)
+                        endpoint = $"{_cfg.AbhaServiceUrl}/profile/login/request/otp";
+                        payloadDict = new Dictionary<string, object>
+                        {
+                            ["scope"]     = new[] { "abha-login", "mobile-verify" },
+                            ["loginHint"] = "mobile",
+                            ["loginId"]   = encrypted,
+                            ["otpSystem"] = "abdm"
+                        };
+                    }
+
+                    var payload = SimpleJson.Serialize(payloadDict);
+                    var resp    = await _http.PostAsync(endpoint, JsonContent(payload));
+                    var body    = await resp.Content.ReadAsStringAsync();
+                    LogResponse("GenerateOtpAsync", body);
+
+                    if (!resp.IsSuccessStatusCode)
+                        return AbdmApiClient.Fail<OtpTransactionResponse>($"OTP Error [{resp.StatusCode}]: {body}");
+
+                    var d    = SimpleJson.Deserialize(body);
+                    var data = new OtpTransactionResponse
+                    {
+                        TransactionId = d.ContainsKey("txnId")   ? d["txnId"]?.ToString()   : "",
+                        Message       = d.ContainsKey("message") ? d["message"]?.ToString() : "",
+                        MaskedMobile  = d.ContainsKey("mobileNumber") ? d["mobileNumber"]?.ToString()
+                                      : d.ContainsKey("maskedMobile") ? d["maskedMobile"]?.ToString()
+                                      : d.ContainsKey("mobile") ? d["mobile"]?.ToString()
+                                      : ""
+                    };
+                    return AbdmApiClient.Ok(data, isAadhaar ? "Aadhaar OTP Sent." : "Mobile OTP Sent.");
+                }
+                catch (Exception ex) { return AbdmApiClient.Fail<OtpTransactionResponse>(ex.Message); }
+            }
         }
 
         // ??? Verify OTP ?????????????????????????????????????????????????????????
@@ -416,74 +519,95 @@ namespace ABDM.Api
         public async Task<AbdmResponse<AbhaProfile>> VerifyOtpAsync(
             AbdmVerifyOtpRequest request)
         {
-            try
+            if (!_cfg.BaseUrl.Contains("abdm.gov.in"))
             {
-                var token     = await GetAccessTokenAsync();
-                var publicKey = await GetPublicKeyAsync(token);
-                var encOtp    = Encrypt(request.Otp, publicKey);
-                bool isAadhaar = request.LoginType?.ToUpper() == "AADHAAR";
-                var ts = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
-
-                AddCommonHeaders(token);
-                string url;
-                string payloadJson;
-
-                if (isAadhaar)
+                try
                 {
-                    // Aadhaar enrollment verify
-                    url = $"{_cfg.AbhaServiceUrl}/enrollment/enrol/byAadhaar";
-                    payloadJson = SimpleJson.Serialize(new Dictionary<string, object>
-                    {
-                        ["authData"] = new Dictionary<string, object>
-                        {
-                            ["authMethods"] = new[] { "otp" },
-                            ["otp"] = new Dictionary<string, object>
-                            {
-                                ["timeStamp"] = ts,
-                                ["txnId"]     = request.TransactionId,
-                                ["otpValue"]  = encOtp,
-                                ["mobile"]    = request.Mobile
-                            }
-                        },
-                        ["consent"] = new Dictionary<string, object>
-                        {
-                            ["code"]    = "abha-enrollment",
-                            ["version"] = "1.4"
-                        }
-                    });
+                    string payload = SimpleJson.Serialize(request);
+                    string responseBody = await PostToWrapperAsync("/api/v3/m1/verify-otp", payload);
+                    var dict = SimpleJson.Deserialize(responseBody);
+                    var dataDict = dict.ContainsKey("data") ? dict["data"] as Dictionary<string, object> : null;
+                    if (dataDict == null) return AbdmApiClient.Fail<AbhaProfile>("Invalid response format from wrapper");
+
+                    var profile = ParseProfileDict(dataDict);
+                    return AbdmApiClient.Ok(profile, "OTP Verified.");
                 }
-                else
+                catch (Exception ex)
                 {
-                    // Mobile login verify ? profile/login/verify
-                    url = $"{_cfg.AbhaServiceUrl}/profile/login/verify";
-                    payloadJson = SimpleJson.Serialize(new Dictionary<string, object>
-                    {
-                        ["scope"] = new[] { "abha-login", "mobile-verify" },
-                        ["authData"] = new Dictionary<string, object>
-                        {
-                            ["authMethods"] = new[] { "otp" },
-                            ["otp"] = new Dictionary<string, object>
-                            {
-                                ["timeStamp"] = ts,
-                                ["txnId"]     = request.TransactionId,
-                                ["otpValue"]  = encOtp
-                            }
-                        }
-                    });
+                    return AbdmApiClient.Fail<AbhaProfile>(ex.Message);
                 }
-
-                var resp = await _http.PostAsync(url, JsonContent(payloadJson));
-                var body = await resp.Content.ReadAsStringAsync();
-                LastRawResponse = body;
-                LogResponse("VerifyOtpAsync", body);
-
-                if (!resp.IsSuccessStatusCode)
-                    return AbdmApiClient.Fail<AbhaProfile>($"Verify Error [{resp.StatusCode}]: {body}");
-
-                var profile = ParseAbhaProfile(body);
-                return AbdmApiClient.Ok(profile, "OTP Verified Successfully.");
             }
-            catch (Exception ex) { return AbdmApiClient.Fail<AbhaProfile>(ex.Message); }
+            else
+            {
+                try
+                {
+                    var token     = await GetAccessTokenAsync();
+                    var publicKey = await GetPublicKeyAsync(token);
+                    var encOtp    = Encrypt(request.Otp, publicKey);
+                    bool isAadhaar = request.LoginType?.ToUpper() == "AADHAAR";
+                    var ts = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+
+                    AddCommonHeaders(token);
+                    string url;
+                    string payloadJson;
+
+                    if (isAadhaar)
+                    {
+                        // Aadhaar enrollment verify
+                        url = $"{_cfg.AbhaServiceUrl}/enrollment/enrol/byAadhaar";
+                        payloadJson = SimpleJson.Serialize(new Dictionary<string, object>
+                        {
+                            ["authData"] = new Dictionary<string, object>
+                            {
+                                ["authMethods"] = new[] { "otp" },
+                                ["otp"] = new Dictionary<string, object>
+                                {
+                                    ["timeStamp"] = ts,
+                                    ["txnId"]     = request.TransactionId,
+                                    ["otpValue"]  = encOtp,
+                                    ["mobile"]    = request.Mobile
+                                }
+                            },
+                            ["consent"] = new Dictionary<string, object>
+                            {
+                                ["code"]    = "abha-enrollment",
+                                ["version"] = "1.4"
+                            }
+                        });
+                    }
+                    else
+                    {
+                        // Mobile login verify ? profile/login/verify
+                        url = $"{_cfg.AbhaServiceUrl}/profile/login/verify";
+                        payloadJson = SimpleJson.Serialize(new Dictionary<string, object>
+                        {
+                            ["scope"] = new[] { "abha-login", "mobile-verify" },
+                            ["authData"] = new Dictionary<string, object>
+                            {
+                                ["authMethods"] = new[] { "otp" },
+                                ["otp"] = new Dictionary<string, object>
+                                {
+                                    ["timeStamp"] = ts,
+                                    ["txnId"]     = request.TransactionId,
+                                    ["otpValue"]  = encOtp
+                                }
+                            }
+                        });
+                    }
+
+                    var resp = await _http.PostAsync(url, JsonContent(payloadJson));
+                    var body = await resp.Content.ReadAsStringAsync();
+                    LastRawResponse = body;
+                    LogResponse("VerifyOtpAsync", body);
+
+                    if (!resp.IsSuccessStatusCode)
+                        return AbdmApiClient.Fail<AbhaProfile>($"Verify Error [{resp.StatusCode}]: {body}");
+
+                    var profile = ParseAbhaProfile(body);
+                    return AbdmApiClient.Ok(profile, "OTP Verified Successfully.");
+                }
+                catch (Exception ex) { return AbdmApiClient.Fail<AbhaProfile>(ex.Message); }
+            }
         }
 
         // ??? Login Request OTP ?????????????????????????????????????????????????
@@ -491,80 +615,139 @@ namespace ABDM.Api
         public async Task<AbdmResponse<OtpTransactionResponse>> LoginRequestOtpAsync(
             AbdmGenerateOtpRequest request)
         {
-            try
+            if (!_cfg.BaseUrl.Contains("abdm.gov.in"))
             {
-                var token     = await GetAccessTokenAsync();
-                var publicKey = await GetPublicKeyAsync(token);
-                var encrypted = Encrypt(request.LoginId.Trim(), publicKey);
-
-                AddCommonHeaders(token);
-                var payload = SimpleJson.Serialize(new Dictionary<string, object>
+                try
                 {
-                    ["scope"]     = new[] { "abha-login", "mobile-verify" },
-                    ["loginHint"] = "mobile",
-                    ["loginId"]   = encrypted,
-                    ["otpSystem"] = "abdm"
-                });
+                    string payload = SimpleJson.Serialize(request);
+                    string responseBody = await PostToWrapperAsync("/api/v3/m1/login-otp", payload);
+                    var dict = SimpleJson.Deserialize(responseBody);
+                    var dataDict = dict.ContainsKey("data") ? dict["data"] as Dictionary<string, object> : null;
+                    if (dataDict == null) return AbdmApiClient.Fail<OtpTransactionResponse>("Invalid response format from wrapper");
 
-                var resp = await _http.PostAsync(
-                    $"{_cfg.AbhaServiceUrl}/profile/login/request/otp", JsonContent(payload));
-                var body = await resp.Content.ReadAsStringAsync();
-                LogResponse("LoginRequestOtpAsync", body);
-
-                if (!resp.IsSuccessStatusCode)
-                    return AbdmApiClient.Fail<OtpTransactionResponse>($"Login OTP Error [{resp.StatusCode}]: {body}");
-
-                var d    = SimpleJson.Deserialize(body);
-                var data = new OtpTransactionResponse
+                    var data = new OtpTransactionResponse
+                    {
+                        TransactionId = dataDict.ContainsKey("transactionId") ? dataDict["transactionId"]?.ToString() : "",
+                        Message       = dataDict.ContainsKey("message") ? dataDict["message"]?.ToString() : ""
+                    };
+                    return AbdmApiClient.Ok(data, "Login OTP Sent.");
+                }
+                catch (Exception ex)
                 {
-                    TransactionId = d.ContainsKey("txnId")   ? d["txnId"]?.ToString()   : "",
-                    Message       = d.ContainsKey("message") ? d["message"]?.ToString() : ""
-                };
-                return AbdmApiClient.Ok(data, "Login OTP Sent.");
+                    return AbdmApiClient.Fail<OtpTransactionResponse>(ex.Message);
+                }
             }
-            catch (Exception ex) { return AbdmApiClient.Fail<OtpTransactionResponse>(ex.Message); }
+            else
+            {
+                try
+                {
+                    var token     = await GetAccessTokenAsync();
+                    var publicKey = await GetPublicKeyAsync(token);
+                    var encrypted = Encrypt(request.LoginId.Trim(), publicKey);
+
+                    AddCommonHeaders(token);
+                    var payload = SimpleJson.Serialize(new Dictionary<string, object>
+                    {
+                        ["scope"]     = new[] { "abha-login", "mobile-verify" },
+                        ["loginHint"] = "mobile",
+                        ["loginId"]   = encrypted,
+                        ["otpSystem"] = "abdm"
+                    });
+
+                    var resp = await _http.PostAsync(
+                        $"{_cfg.AbhaServiceUrl}/profile/login/request/otp", JsonContent(payload));
+                    var body = await resp.Content.ReadAsStringAsync();
+                    LogResponse("LoginRequestOtpAsync", body);
+
+                    if (!resp.IsSuccessStatusCode)
+                        return AbdmApiClient.Fail<OtpTransactionResponse>($"Login OTP Error [{resp.StatusCode}]: {body}");
+
+                    var d    = SimpleJson.Deserialize(body);
+                    var data = new OtpTransactionResponse
+                    {
+                        TransactionId = d.ContainsKey("txnId")   ? d["txnId"]?.ToString()   : "",
+                        Message       = d.ContainsKey("message") ? d["message"]?.ToString() : ""
+                    };
+                    return AbdmApiClient.Ok(data, "Login OTP Sent.");
+                }
+                catch (Exception ex) { return AbdmApiClient.Fail<OtpTransactionResponse>(ex.Message); }
+            }
         }
 
         public async Task<AbdmResponse<AbhaSuggestionResponse>> GetAbhaSuggestionsAsync(string txnId)
         {
-            try
+            if (!_cfg.BaseUrl.Contains("abdm.gov.in"))
             {
-                var token = await GetAccessTokenAsync();
-                AddCommonHeaders(token);
-
-                string url = $"{_cfg.AbhaServiceUrl}/enrollment/enrol/suggestion";
-                string payload = SimpleJson.Serialize(new Dictionary<string, object>
+                try
                 {
-                    ["txnId"] = txnId
-                });
+                    string responseBody = await GetFromWrapperAsync($"/api/v3/m1/suggestions/{txnId}");
+                    var dict = SimpleJson.Deserialize(responseBody);
+                    var dataDict = dict.ContainsKey("data") ? dict["data"] as Dictionary<string, object> : null;
+                    if (dataDict == null) return AbdmApiClient.Fail<AbhaSuggestionResponse>("Invalid response format from wrapper");
 
-                var resp = await _http.PostAsync(url, JsonContent(payload));
-                var body = await resp.Content.ReadAsStringAsync();
-                LastRawResponse = body;
-
-                if (!resp.IsSuccessStatusCode)
-                    return AbdmApiClient.Fail<AbhaSuggestionResponse>($"Suggestion Error [{resp.StatusCode}]: {body}");
-
-                var dict = SimpleJson.Deserialize(body);
-                var result = new AbhaSuggestionResponse
-                {
-                    TransactionId = dict.ContainsKey("txnId") ? dict["txnId"]?.ToString() : "",
-                    AbhaAddressList = new List<string>()
-                };
-
-                if (dict.ContainsKey("abhaAddressList") && dict["abhaAddressList"] is List<object>)
-                {
-                    var list = dict["abhaAddressList"] as List<object>;
-                    if (list != null)
+                    var result = new AbhaSuggestionResponse
                     {
-                        foreach (var item in list)
-                            result.AbhaAddressList.Add(item?.ToString() ?? "");
-                    }
-                }
+                        TransactionId = dataDict.ContainsKey("transactionId") ? dataDict["transactionId"]?.ToString() : "",
+                        AbhaAddressList = new List<string>()
+                    };
 
-                return AbdmApiClient.Ok(result);
+                    if (dataDict.ContainsKey("abhaAddressList") && dataDict["abhaAddressList"] is List<object>)
+                    {
+                        var list = dataDict["abhaAddressList"] as List<object>;
+                        if (list != null)
+                        {
+                            foreach (var item in list)
+                                result.AbhaAddressList.Add(item?.ToString() ?? "");
+                        }
+                    }
+                    return AbdmApiClient.Ok(result);
+                }
+                catch (Exception ex)
+                {
+                    return AbdmApiClient.Fail<AbhaSuggestionResponse>(ex.Message);
+                }
             }
-            catch (Exception ex) { return AbdmApiClient.Fail<AbhaSuggestionResponse>(ex.Message); }
+            else
+            {
+                try
+                {
+                    var token = await GetAccessTokenAsync();
+                    AddCommonHeaders(token);
+
+                    string url = $"{_cfg.AbhaServiceUrl}/enrollment/enrol/suggestion";
+                    string payload = SimpleJson.Serialize(new Dictionary<string, object>
+                    {
+                        ["txnId"] = txnId
+                    });
+
+                    var resp = await _http.PostAsync(url, JsonContent(payload));
+                    var body = await resp.Content.ReadAsStringAsync();
+                    LastRawResponse = body;
+
+                    if (!resp.IsSuccessStatusCode)
+                        return AbdmApiClient.Fail<AbhaSuggestionResponse>($"Suggestion Error [{resp.StatusCode}]: {body}");
+
+                    var dict = SimpleJson.Deserialize(body);
+                    var result = new AbhaSuggestionResponse
+                    {
+                        TransactionId = dict.ContainsKey("txnId") ? dict["txnId"]?.ToString() : "",
+                        AbhaAddressList = new List<string>()
+                    };
+
+                    if (dict.ContainsKey("abhaAddressList") && dict["abhaAddressList"] is List<object>)
+                    {
+                        var list = dict["abhaAddressList"] as List<object>;
+                        if (list != null)
+                        {
+                            foreach (var item in list)
+                                result.AbhaAddressList.Add(item?.ToString() ?? "");
+                        }
+                    }
+
+                    return AbdmApiClient.Ok(result);
+                }
+                catch (Exception ex) { return AbdmApiClient.Fail<AbhaSuggestionResponse>(ex.Message); }
+            }
         }
 
         // ??? Login Verify OTP ??????????????????????????????????????????????????
@@ -572,110 +755,171 @@ namespace ABDM.Api
         public async Task<AbdmResponse<AbdmLoginResponse>> LoginVerifyOtpAsync(
             AbdmVerifyOtpRequest request)
         {
-            try
+            if (!_cfg.BaseUrl.Contains("abdm.gov.in"))
             {
-                var token     = await GetAccessTokenAsync();
-                var publicKey = await GetPublicKeyAsync(token);
-                var encOtp    = Encrypt(request.Otp, publicKey);
-
-                AddCommonHeaders(token);
-                var payload = SimpleJson.Serialize(new Dictionary<string, object>
+                try
                 {
-                    ["scope"] = new[] { "abha-login", "mobile-verify" },
-                    ["authData"] = new Dictionary<string, object>
+                    string payload = SimpleJson.Serialize(request);
+                    string responseBody = await PostToWrapperAsync("/api/v3/m1/login-verify", payload);
+                    var dict = SimpleJson.Deserialize(responseBody);
+                    var dataDict = dict.ContainsKey("data") ? dict["data"] as Dictionary<string, object> : null;
+                    if (dataDict == null) return AbdmApiClient.Fail<AbdmLoginResponse>("Invalid response format from wrapper");
+
+                    var loginResp = new AbdmLoginResponse
                     {
-                        ["authMethods"] = new[] { "otp" },
-                        ["otp"] = new Dictionary<string, object>
-                        {
-                            ["txnId"]    = request.TransactionId,
-                            ["otpValue"] = encOtp
-                        }
-                    }
-                });
+                        IsNew        = dataDict.ContainsKey("isNew") && dataDict["isNew"] != null && dataDict["isNew"].ToString().ToLower() == "true",
+                        Token        = dataDict.ContainsKey("token")        ? dataDict["token"]?.ToString()        : "",
+                        RefreshToken = dataDict.ContainsKey("refreshToken") ? dataDict["refreshToken"]?.ToString() : "",
+                        Accounts     = new List<AbhaProfile>()
+                    };
 
-                var resp = await _http.PostAsync(
-                    $"{_cfg.AbhaServiceUrl}/profile/login/verify", JsonContent(payload));
-                var body = await resp.Content.ReadAsStringAsync();
-                LogResponse("LoginVerifyOtpAsync", body);
-
-                if (!resp.IsSuccessStatusCode)
-                    return AbdmApiClient.Fail<AbdmLoginResponse>($"Login Verify Error [{resp.StatusCode}]: {body}");
-
-                var root = SimpleJson.Deserialize(body);
-                var loginResp = new AbdmLoginResponse
-                {
-                    IsNew        = root.ContainsKey("isNew") && root["isNew"] != null && root["isNew"].ToString().ToLower() == "true",
-                    Token        = root.ContainsKey("token")        ? root["token"]?.ToString()        : "",
-                    RefreshToken = root.ContainsKey("refreshToken") ? root["refreshToken"]?.ToString() : "",
-                    Accounts     = new List<AbhaProfile>()
-                };
-
-                var accts = root.ContainsKey("accounts") ? root["accounts"] as List<object> : null;
-                if (accts != null)
-                {
-                    foreach (var a in accts)
+                    var accts = dataDict.ContainsKey("accounts") ? dataDict["accounts"] as List<object> : null;
+                    if (accts != null)
                     {
-                        var acc = a as Dictionary<string, object>;
-                        if (acc != null)
+                        foreach (var a in accts)
                         {
-                            loginResp.Accounts.Add(new AbhaProfile
+                            var acc = a as Dictionary<string, object>;
+                            if (acc != null)
                             {
-                                HealthIdNumber = acc.ContainsKey("ABHANumber")            ? acc["ABHANumber"]?.ToString()            : "",
-                                Name           = acc.ContainsKey("name")                  ? acc["name"]?.ToString()                  : "",
-                                AbhaAddress    = acc.ContainsKey("preferredAbhaAddress")  ? acc["preferredAbhaAddress"]?.ToString()  : "",
-                                ProfilePhoto   = acc.ContainsKey("profilePhoto")          ? acc["profilePhoto"]?.ToString()          : ""
-                            });
+                                loginResp.Accounts.Add(ParseProfileDict(acc));
+                            }
                         }
                     }
+                    return AbdmApiClient.Ok(loginResp, "Login Successful.");
                 }
-                return AbdmApiClient.Ok(loginResp, "Login Successful.");
+                catch (Exception ex)
+                {
+                    return AbdmApiClient.Fail<AbdmLoginResponse>(ex.Message);
+                }
             }
-            catch (Exception ex) { return AbdmApiClient.Fail<AbdmLoginResponse>(ex.Message); }
+            else
+            {
+                try
+                {
+                    var token     = await GetAccessTokenAsync();
+                    var publicKey = await GetPublicKeyAsync(token);
+                    var encOtp    = Encrypt(request.Otp, publicKey);
+
+                    AddCommonHeaders(token);
+                    var payload = SimpleJson.Serialize(new Dictionary<string, object>
+                    {
+                        ["scope"] = new[] { "abha-login", "mobile-verify" },
+                        ["authData"] = new Dictionary<string, object>
+                        {
+                            ["authMethods"] = new[] { "otp" },
+                            ["otp"] = new Dictionary<string, object>
+                            {
+                                ["txnId"]    = request.TransactionId,
+                                ["otpValue"] = encOtp
+                            }
+                        }
+                    });
+
+                    var resp = await _http.PostAsync(
+                        $"{_cfg.AbhaServiceUrl}/profile/login/verify", JsonContent(payload));
+                    var body = await resp.Content.ReadAsStringAsync();
+                    LogResponse("LoginVerifyOtpAsync", body);
+
+                    if (!resp.IsSuccessStatusCode)
+                        return AbdmApiClient.Fail<AbdmLoginResponse>($"Login Verify Error [{resp.StatusCode}]: {body}");
+
+                    var root = SimpleJson.Deserialize(body);
+                    var loginResp = new AbdmLoginResponse
+                    {
+                        IsNew        = root.ContainsKey("isNew") && root["isNew"] != null && root["isNew"].ToString().ToLower() == "true",
+                        Token        = root.ContainsKey("token")        ? root["token"]?.ToString()        : "",
+                        RefreshToken = root.ContainsKey("refreshToken") ? root["refreshToken"]?.ToString() : "",
+                        Accounts     = new List<AbhaProfile>()
+                    };
+
+                    var accts = root.ContainsKey("accounts") ? root["accounts"] as List<object> : null;
+                    if (accts != null)
+                    {
+                        foreach (var a in accts)
+                        {
+                            var acc = a as Dictionary<string, object>;
+                            if (acc != null)
+                            {
+                                loginResp.Accounts.Add(new AbhaProfile
+                                {
+                                    HealthIdNumber = acc.ContainsKey("ABHANumber")            ? acc["ABHANumber"]?.ToString()            : "",
+                                    Name           = acc.ContainsKey("name")                  ? acc["name"]?.ToString()                  : "",
+                                    AbhaAddress    = acc.ContainsKey("preferredAbhaAddress")  ? acc["preferredAbhaAddress"]?.ToString()  : "",
+                                    ProfilePhoto   = acc.ContainsKey("profilePhoto")          ? acc["profilePhoto"]?.ToString()          : ""
+                                });
+                            }
+                        }
+                    }
+                    return AbdmApiClient.Ok(loginResp, "Login Successful.");
+                }
+                catch (Exception ex) { return AbdmApiClient.Fail<AbdmLoginResponse>(ex.Message); }
+            }
         }
 
         // ??? Get Profile ???????????????????????????????????????????????????????
 
         public async Task<AbdmResponse<AbhaProfile>> GetAbhaProfileAsync(string userToken)
         {
-            try
+            if (!_cfg.BaseUrl.Contains("abdm.gov.in"))
             {
-                var token = await GetAccessTokenAsync();
-                AddCommonHeaders(token);
-
-                string cleanUserToken = (userToken ?? "").Trim();
-                if (cleanUserToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                    cleanUserToken = cleanUserToken.Substring(7).Trim();
-
-                string endpoint = "https://abhasbx.abdm.gov.in/abha/api/v3/profile/account";
-                if (!string.IsNullOrWhiteSpace(_cfg.AbhaServiceUrl) &&
-                    _cfg.AbhaServiceUrl.IndexOf("abha.abdm.gov.in", StringComparison.OrdinalIgnoreCase) >= 0)
+                try
                 {
-                    endpoint = "https://abha.abdm.gov.in/abha/api/v3/profile/account";
+                    string responseBody = await GetFromWrapperAsync("/api/v3/m1/profile", userToken);
+                    var dict = SimpleJson.Deserialize(responseBody);
+                    var dataDict = dict.ContainsKey("data") ? dict["data"] as Dictionary<string, object> : null;
+                    if (dataDict == null) return AbdmApiClient.Fail<AbhaProfile>("Invalid response format from wrapper");
+
+                    var profile = ParseProfileDict(dataDict);
+                    profile.IsNew = false;
+                    return AbdmApiClient.Ok(profile, "Profile fetched successfully.");
                 }
-
-                _http.DefaultRequestHeaders.Remove("X-Token");
-                _http.DefaultRequestHeaders.Remove("X-token");
-                _http.DefaultRequestHeaders.TryAddWithoutValidation(
-                    "X-Token", $"Bearer {cleanUserToken}");
-
-                var resp = await _http.GetAsync(endpoint);
-                var body = await resp.Content.ReadAsStringAsync();
-                LastRawResponse = body;
-                LogResponse("GetAbhaProfileAsync", body);
-
-                if (!resp.IsSuccessStatusCode)
+                catch (Exception ex)
                 {
-                    if (body.IndexOf("invalid x-token", StringComparison.OrdinalIgnoreCase) >= 0)
-                        return AbdmApiClient.Fail<AbhaProfile>("Session expired ya invalid ho gayi hai. Dobara login karein.\nEndpoint: " + endpoint);
-
-                    return AbdmApiClient.Fail<AbhaProfile>($"Profile Error [{resp.StatusCode}]\nEndpoint: {endpoint}\nResponse: {body}");
+                    return AbdmApiClient.Fail<AbhaProfile>(ex.Message);
                 }
-
-                var profile = ParseAbhaProfile(body);
-                profile.IsNew = false;
-                return AbdmApiClient.Ok(profile, "Profile fetched successfully (v3).");
             }
-            catch (Exception ex) { return AbdmApiClient.Fail<AbhaProfile>(ex.Message); }
+            else
+            {
+                try
+                {
+                    var token = await GetAccessTokenAsync();
+                    AddCommonHeaders(token);
+
+                    string cleanUserToken = (userToken ?? "").Trim();
+                    if (cleanUserToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        cleanUserToken = cleanUserToken.Substring(7).Trim();
+
+                    string endpoint = "https://abhasbx.abdm.gov.in/abha/api/v3/profile/account";
+                    if (!string.IsNullOrWhiteSpace(_cfg.AbhaServiceUrl) &&
+                        _cfg.AbhaServiceUrl.IndexOf("abha.abdm.gov.in", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        endpoint = "https://abha.abdm.gov.in/abha/api/v3/profile/account";
+                    }
+
+                    _http.DefaultRequestHeaders.Remove("X-Token");
+                    _http.DefaultRequestHeaders.Remove("X-token");
+                    _http.DefaultRequestHeaders.TryAddWithoutValidation(
+                        "X-Token", $"Bearer {cleanUserToken}");
+
+                    var resp = await _http.GetAsync(endpoint);
+                    var body = await resp.Content.ReadAsStringAsync();
+                    LastRawResponse = body;
+                    LogResponse("GetAbhaProfileAsync", body);
+
+                    if (!resp.IsSuccessStatusCode)
+                    {
+                        if (body.IndexOf("invalid x-token", StringComparison.OrdinalIgnoreCase) >= 0)
+                            return AbdmApiClient.Fail<AbhaProfile>("Session expired ya invalid ho gayi hai. Dobara login karein.\nEndpoint: " + endpoint);
+
+                        return AbdmApiClient.Fail<AbhaProfile>($"Profile Error [{resp.StatusCode}]\nEndpoint: {endpoint}\nResponse: {body}");
+                    }
+
+                    var profile = ParseAbhaProfile(body);
+                    profile.IsNew = false;
+                    return AbdmApiClient.Ok(profile, "Profile fetched successfully (v3).");
+                }
+                catch (Exception ex) { return AbdmApiClient.Fail<AbhaProfile>(ex.Message); }
+            }
         }
 
         // ??? Create ABHA Address ???????????????????????????????????????????
@@ -683,87 +927,136 @@ namespace ABDM.Api
         public async Task<AbdmResponse<CreateAbhaAddressResponse>> CreateAbhaAddressAsync(
             string txnId, string abhaAddress, string userToken = null)
         {
-            try
+            if (!_cfg.BaseUrl.Contains("abdm.gov.in"))
             {
-                var token = await GetAccessTokenAsync();
-                AddCommonHeaders(token);
-
-                string endpoint = "https://abhasbx.abdm.gov.in/abha/api/v3/enrollment/enrol/abha-address";
-                if (!string.IsNullOrWhiteSpace(_cfg.AbhaServiceUrl) &&
-                    _cfg.AbhaServiceUrl.IndexOf("abha.abdm.gov.in", StringComparison.OrdinalIgnoreCase) >= 0)
+                try
                 {
-                    endpoint = "https://abha.abdm.gov.in/abha/api/v3/enrollment/enrol/abha-address";
+                    string localPart = abhaAddress;
+                    if (localPart.Contains("@"))
+                        localPart = localPart.Substring(0, localPart.IndexOf('@'));
+
+                    string path = $"/api/v3/m1/create-abha?txnId={txnId}&abhaAddress={Uri.EscapeDataString(localPart)}";
+                    string responseBody = await PostToWrapperAsync(path, "{}", userToken);
+                    var dict = SimpleJson.Deserialize(responseBody);
+                    var dataDict = dict.ContainsKey("data") ? dict["data"] as Dictionary<string, object> : null;
+                    if (dataDict == null) return AbdmApiClient.Fail<CreateAbhaAddressResponse>("Invalid response format from wrapper");
+
+                    var result = new CreateAbhaAddressResponse
+                    {
+                        AbhaAddress = dataDict.ContainsKey("abhaAddress") ? dataDict["abhaAddress"]?.ToString() : abhaAddress,
+                        HealthIdNumber = dataDict.ContainsKey("healthIdNumber") ? dataDict["healthIdNumber"]?.ToString() : "",
+                        Status = dataDict.ContainsKey("status") ? dataDict["status"]?.ToString() : "ACTIVE"
+                    };
+                    return AbdmApiClient.Ok(result, "ABHA Address created successfully.");
                 }
-
-                // If we have a user-token (from enrollment verify), pass it as X-Token
-                if (!string.IsNullOrEmpty(userToken))
-                    _http.DefaultRequestHeaders.TryAddWithoutValidation(
-                        "X-Token", $"Bearer {userToken}");
-
-                // Strip @abdm suffix - API expects just the local part
-                string localPart = abhaAddress;
-                if (localPart.Contains("@"))
-                    localPart = localPart.Substring(0, localPart.IndexOf('@'));
-
-                var payload = SimpleJson.Serialize(new Dictionary<string, object>
+                catch (Exception ex)
                 {
-                    ["txnId"]       = txnId,
-                    ["abhaAddress"] = localPart,
-                    ["preferred"]   = 1
-                });
-
-                var resp = await _http.PostAsync(endpoint, JsonContent(payload));
-                var body = await resp.Content.ReadAsStringAsync();
-                LastRawResponse = body;
-
-                if (!resp.IsSuccessStatusCode)
-                    return AbdmApiClient.Fail<CreateAbhaAddressResponse>($"ABHA Address Error [{resp.StatusCode}]\nEndpoint: {endpoint}\nResponse: {body}");
-
-                var d = SimpleJson.Deserialize(body);
-                var result = new CreateAbhaAddressResponse
-                {
-                    AbhaAddress = d.ContainsKey("ABHAAddress") ? d["ABHAAddress"]?.ToString() 
-                                : d.ContainsKey("abhaAddress") ? d["abhaAddress"]?.ToString() 
-                                : abhaAddress,
-                    HealthIdNumber = d.ContainsKey("healthIdNumber") ? d["healthIdNumber"]?.ToString() : "",
-                    Status = d.ContainsKey("status") ? d["status"]?.ToString() : "ACTIVE"
-                };
-
-                return AbdmApiClient.Ok(result, "ABHA Address created successfully.");
+                    return AbdmApiClient.Fail<CreateAbhaAddressResponse>(ex.Message);
+                }
             }
-            catch (Exception ex) { return AbdmApiClient.Fail<CreateAbhaAddressResponse>(ex.Message); }
+            else
+            {
+                try
+                {
+                    var token = await GetAccessTokenAsync();
+                    AddCommonHeaders(token);
+
+                    string endpoint = "https://abhasbx.abdm.gov.in/abha/api/v3/enrollment/enrol/abha-address";
+                    if (!string.IsNullOrWhiteSpace(_cfg.AbhaServiceUrl) &&
+                        _cfg.AbhaServiceUrl.IndexOf("abha.abdm.gov.in", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        endpoint = "https://abha.abdm.gov.in/abha/api/v3/enrollment/enrol/abha-address";
+                    }
+
+                    // If we have a user-token (from enrollment verify), pass it as X-Token
+                    if (!string.IsNullOrEmpty(userToken))
+                        _http.DefaultRequestHeaders.TryAddWithoutValidation(
+                            "X-Token", $"Bearer {userToken}");
+
+                    // Strip @abdm suffix - API expects just the local part
+                    string localPart = abhaAddress;
+                    if (localPart.Contains("@"))
+                        localPart = localPart.Substring(0, localPart.IndexOf('@'));
+
+                    var payload = SimpleJson.Serialize(new Dictionary<string, object>
+                    {
+                        ["txnId"]       = txnId,
+                        ["abhaAddress"] = localPart,
+                        ["preferred"]   = 1
+                    });
+
+                    var resp = await _http.PostAsync(endpoint, JsonContent(payload));
+                    var body = await resp.Content.ReadAsStringAsync();
+                    LastRawResponse = body;
+
+                    if (!resp.IsSuccessStatusCode)
+                        return AbdmApiClient.Fail<CreateAbhaAddressResponse>($"ABHA Address Error [{resp.StatusCode}]\nEndpoint: {endpoint}\nResponse: {body}");
+
+                    var d = SimpleJson.Deserialize(body);
+                    var result = new CreateAbhaAddressResponse
+                    {
+                        AbhaAddress = d.ContainsKey("ABHAAddress") ? d["ABHAAddress"]?.ToString() 
+                                    : d.ContainsKey("abhaAddress") ? d["abhaAddress"]?.ToString() 
+                                    : abhaAddress,
+                        HealthIdNumber = d.ContainsKey("healthIdNumber") ? d["healthIdNumber"]?.ToString() : "",
+                        Status = d.ContainsKey("status") ? d["status"]?.ToString() : "ACTIVE"
+                    };
+
+                    return AbdmApiClient.Ok(result, "ABHA Address created successfully.");
+                }
+                catch (Exception ex) { return AbdmApiClient.Fail<CreateAbhaAddressResponse>(ex.Message); }
+            }
         }
 
         // ??? Get ABHA Card (PNG) ??????????????????????????????????????????????
 
         public async Task<AbdmResponse<AbhaCardResponse>> GetAbhaCardAsync(string userToken)
         {
-            try
+            if (!_cfg.BaseUrl.Contains("abdm.gov.in"))
             {
-                var token = await GetAccessTokenAsync();
-                AddCommonHeaders(token);
-                _http.DefaultRequestHeaders.TryAddWithoutValidation(
-                    "X-Token", $"Bearer {userToken}");
-                _http.DefaultRequestHeaders.Accept.Clear();
-                _http.DefaultRequestHeaders.Accept.Add(
-                    new MediaTypeWithQualityHeaderValue("image/png"));
-                _http.DefaultRequestHeaders.Accept.Add(
-                    new MediaTypeWithQualityHeaderValue("application/json"));
-
-                var resp = await _http.GetAsync($"{_cfg.AbhaServiceUrl}/profile/account/abha-card");
-                var bytes = await resp.Content.ReadAsByteArrayAsync();
-
-                if (!resp.IsSuccessStatusCode)
-                    return AbdmApiClient.Fail<AbhaCardResponse>($"Card Error [{resp.StatusCode}]: {System.Text.Encoding.UTF8.GetString(bytes)}");
-
-                var contentType = resp.Content.Headers.ContentType?.MediaType ?? "image/png";
-                return AbdmApiClient.Ok(new AbhaCardResponse
+                try
                 {
-                    ContentType = contentType,
-                    Content     = Convert.ToBase64String(bytes)
-                }, "Card fetched.");
+                    string base64Content = await GetFromWrapperAsync("/api/v3/m1/card", userToken);
+                    return AbdmApiClient.Ok(new AbhaCardResponse
+                    {
+                        ContentType = "image/png",
+                        Content     = base64Content
+                    }, "Card fetched.");
+                }
+                catch (Exception ex)
+                {
+                    return AbdmApiClient.Fail<AbhaCardResponse>(ex.Message);
+                }
             }
-            catch (Exception ex) { return AbdmApiClient.Fail<AbhaCardResponse>(ex.Message); }
+            else
+            {
+                try
+                {
+                    var token = await GetAccessTokenAsync();
+                    AddCommonHeaders(token);
+                    _http.DefaultRequestHeaders.TryAddWithoutValidation(
+                        "X-Token", $"Bearer {userToken}");
+                    _http.DefaultRequestHeaders.Accept.Clear();
+                    _http.DefaultRequestHeaders.Accept.Add(
+                        new MediaTypeWithQualityHeaderValue("image/png"));
+                    _http.DefaultRequestHeaders.Accept.Add(
+                        new MediaTypeWithQualityHeaderValue("application/json"));
+
+                    var resp = await _http.GetAsync($"{_cfg.AbhaServiceUrl}/profile/account/abha-card");
+                    var bytes = await resp.Content.ReadAsByteArrayAsync();
+
+                    if (!resp.IsSuccessStatusCode)
+                        return AbdmApiClient.Fail<AbhaCardResponse>($"Card Error [{resp.StatusCode}]: {System.Text.Encoding.UTF8.GetString(bytes)}");
+
+                    var contentType = resp.Content.Headers.ContentType?.MediaType ?? "image/png";
+                    return AbdmApiClient.Ok(new AbhaCardResponse
+                    {
+                        ContentType = contentType,
+                        Content     = Convert.ToBase64String(bytes)
+                    }, "Card fetched.");
+                }
+                catch (Exception ex) { return AbdmApiClient.Fail<AbhaCardResponse>(ex.Message); }
+            }
         }
 
         // ?? Mobile Update : Send OTP ?????????????????????????????????????????

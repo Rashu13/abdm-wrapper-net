@@ -16,9 +16,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="abdm\BaseForm.cs" />
     <Compile Remove="abdm\frm*" />
     <EmbeddedResource Remove="abdm\frm*" />
     <None Remove="abdm\frm*" />
+    <Compile Remove="AbdmWinFormsTest\**" />
+    <EmbeddedResource Remove="AbdmWinFormsTest\**" />
+    <None Remove="AbdmWinFormsTest\**" />
   </ItemGroup>
 
 </Project>
