@@ -135,5 +135,50 @@ namespace HMS.abdm
                 }
             }
         }
+
+        private void btnBioEnroll_Click(object sender, EventArgs e)
+        {
+            using (var frm = new frmABHABio(_client))
+            {
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    if (this.Modal)
+                    {
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
+                }
+            }
+        }
+
+        private void btnDlEnroll_Click(object sender, EventArgs e)
+        {
+            using (var frm = new frmABHADrivingLicense(_client))
+            {
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    if (this.Modal)
+                    {
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
+                }
+            }
+        }
+
+        private void btnScanUserQR_Click(object sender, EventArgs e)
+        {
+            using (var frm = new frmABHAScanUserQR())
+            {
+                if (frm.ShowDialog() == DialogResult.OK)
+                {
+                    if (this.Modal)
+                    {
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
+                }
+            }
+        }
     }
 }

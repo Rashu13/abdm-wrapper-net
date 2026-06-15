@@ -31,118 +31,26 @@ namespace HMS.abdm
             this.pnlHeader = new System.Windows.Forms.Panel();
             this.btnClose = new System.Windows.Forms.Button();
             this.lblTitle = new System.Windows.Forms.Label();
-            this.btnCreate = new System.Windows.Forms.Button();
-            this.btnScanShare = new System.Windows.Forms.Button();
-            this.btnLogin = new System.Windows.Forms.Button();
-            this.btnViewRequests = new System.Windows.Forms.Button();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.pnlHeader.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
-            this.SuspendLayout();
-            // 
-            // pnlHeader
-            // 
-            this.pnlHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.pnlHeader.Controls.Add(this.btnClose);
-            this.pnlHeader.Controls.Add(this.lblTitle);
-            this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlHeader.Location = new System.Drawing.Point(0, 0);
-            this.pnlHeader.Name = "pnlHeader";
-            this.pnlHeader.Size = new System.Drawing.Size(800, 50);
-            this.pnlHeader.TabIndex = 0;
-            // 
-            // btnClose
-            // 
-            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.FlatAppearance.BorderSize = 0;
-            this.btnClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnClose.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.btnClose.ForeColor = System.Drawing.Color.White;
-            this.btnClose.Location = new System.Drawing.Point(750, 0);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(50, 50);
-            this.btnClose.TabIndex = 1;
-            this.btnClose.Text = "X";
-            this.btnClose.UseVisualStyleBackColor = true;
-            this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
-            // 
-            // lblTitle
-            // 
-            this.lblTitle.AutoSize = true;
-            this.lblTitle.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, System.Drawing.FontStyle.Bold);
-            this.lblTitle.ForeColor = System.Drawing.Color.White;
-            this.lblTitle.Location = new System.Drawing.Point(15, 12);
-            this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(201, 28);
-            this.lblTitle.TabIndex = 0;
-            this.lblTitle.Text = "ABHA (ABDM) Portal";
-            // 
-            // btnCreate
-            // 
-            this.btnCreate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.btnCreate.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnCreate.FlatAppearance.BorderSize = 2;
-            this.btnCreate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCreate.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.btnCreate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnCreate.Location = new System.Drawing.Point(72, 150);
-            this.btnCreate.Name = "btnCreate";
-            this.btnCreate.Size = new System.Drawing.Size(220, 126);
-            this.btnCreate.TabIndex = 4;
-            this.btnCreate.Text = "Create New ABHA\r\n(Aadhaar OTP)";
-            this.btnCreate.UseVisualStyleBackColor = false;
-            this.btnCreate.Click += new System.EventHandler(this.btnCreate_Click);
-            // 
-            // btnScanShare
-            // 
-            this.btnScanShare.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.btnScanShare.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnScanShare.FlatAppearance.BorderSize = 2;
-            this.btnScanShare.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnScanShare.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.btnScanShare.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnScanShare.Location = new System.Drawing.Point(298, 150);
-            this.btnScanShare.Name = "btnScanShare";
-            this.btnScanShare.Size = new System.Drawing.Size(220, 126);
-            this.btnScanShare.TabIndex = 6;
-            this.btnScanShare.Text = "Scan & Share\r\n(Facility QR)";
-            this.btnScanShare.UseVisualStyleBackColor = false;
-            this.btnScanShare.Click += new System.EventHandler(this.btnScanShare_Click);
-            // 
-            // btnLogin
-            // 
-            this.btnLogin.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.btnLogin.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnLogin.FlatAppearance.BorderSize = 2;
-            this.btnLogin.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnLogin.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.btnLogin.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnLogin.Location = new System.Drawing.Point(524, 150);
-            this.btnLogin.Name = "btnLogin";
-            this.btnLogin.Size = new System.Drawing.Size(220, 126);
-            this.btnLogin.TabIndex = 5;
-            this.btnLogin.Text = "Login Existing ABHA\r\n(Mobile OTP)";
-            this.btnLogin.UseVisualStyleBackColor = false;
-            this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
-            // 
-            // btnViewRequests
-            // 
-            this.btnViewRequests.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.btnViewRequests.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnViewRequests.FlatAppearance.BorderSize = 2;
-            this.btnViewRequests.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnViewRequests.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.pnlHeader = new System.Windows.Forms.Panel();
-            this.btnClose = new System.Windows.Forms.Button();
-            this.lblTitle = new System.Windows.Forms.Label();
+            
+            // Creation Group
+            this.gbCreation = new System.Windows.Forms.GroupBox();
             this.btnCreate = new System.Windows.Forms.Button();
+            this.btnBioEnroll = new System.Windows.Forms.Button();
+            this.btnDlEnroll = new System.Windows.Forms.Button();
+
+            // Verification Group
+            this.gbVerification = new System.Windows.Forms.GroupBox();
             this.btnScanShare = new System.Windows.Forms.Button();
+            this.btnScanUserQR = new System.Windows.Forms.Button();
             this.btnLogin = new System.Windows.Forms.Button();
             this.btnViewRequests = new System.Windows.Forms.Button();
             this.btnAccountOps = new System.Windows.Forms.Button();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+
             this.pnlHeader.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            this.gbCreation.SuspendLayout();
+            this.gbVerification.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlHeader
@@ -153,7 +61,7 @@ namespace HMS.abdm
             this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlHeader.Location = new System.Drawing.Point(0, 0);
             this.pnlHeader.Name = "pnlHeader";
-            this.pnlHeader.Size = new System.Drawing.Size(800, 50);
+            this.pnlHeader.Size = new System.Drawing.Size(920, 50);
             this.pnlHeader.TabIndex = 0;
             // 
             // btnClose
@@ -163,7 +71,7 @@ namespace HMS.abdm
             this.btnClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnClose.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
             this.btnClose.ForeColor = System.Drawing.Color.White;
-            this.btnClose.Location = new System.Drawing.Point(750, 0);
+            this.btnClose.Location = new System.Drawing.Point(870, 0);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(50, 50);
             this.btnClose.TabIndex = 1;
@@ -178,120 +86,197 @@ namespace HMS.abdm
             this.lblTitle.ForeColor = System.Drawing.Color.White;
             this.lblTitle.Location = new System.Drawing.Point(15, 12);
             this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(201, 28);
+            this.lblTitle.Size = new System.Drawing.Size(434, 28);
             this.lblTitle.TabIndex = 0;
-            this.lblTitle.Text = "ABHA (ABDM) Portal";
+            this.lblTitle.Text = "Ayushman Bharat Health Account (ABDM) Portal";
+            // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Image = global::HMS.Properties.Resources.nhalogo;
+            this.pictureBox1.Location = new System.Drawing.Point(20, 65);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(160, 60);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox1.TabIndex = 17;
+            this.pictureBox1.TabStop = false;
+            // 
+            // gbCreation
+            // 
+            this.gbCreation.Controls.Add(this.btnCreate);
+            this.gbCreation.Controls.Add(this.btnBioEnroll);
+            this.gbCreation.Controls.Add(this.btnDlEnroll);
+            this.gbCreation.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            this.gbCreation.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
+            this.gbCreation.Location = new System.Drawing.Point(20, 140);
+            this.gbCreation.Name = "gbCreation";
+            this.gbCreation.Size = new System.Drawing.Size(260, 370);
+            this.gbCreation.TabIndex = 18;
+            this.gbCreation.TabStop = false;
+            this.gbCreation.Text = "ABHA Creation (Enrollment)";
             // 
             // btnCreate
             // 
-            this.btnCreate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.btnCreate.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
+            this.btnCreate.BackColor = System.Drawing.Color.White;
+            this.btnCreate.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
             this.btnCreate.FlatAppearance.BorderSize = 2;
             this.btnCreate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCreate.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.btnCreate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnCreate.Location = new System.Drawing.Point(72, 150);
+            this.btnCreate.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnCreate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
+            this.btnCreate.Location = new System.Drawing.Point(15, 35);
             this.btnCreate.Name = "btnCreate";
-            this.btnCreate.Size = new System.Drawing.Size(220, 126);
-            this.btnCreate.TabIndex = 4;
-            this.btnCreate.Text = "Create New ABHA\r\n(Aadhaar OTP)";
+            this.btnCreate.Size = new System.Drawing.Size(230, 95);
+            this.btnCreate.TabIndex = 1;
+            this.btnCreate.Text = "Aadhaar OTP\r\n(Mandatory)";
             this.btnCreate.UseVisualStyleBackColor = false;
             this.btnCreate.Click += new System.EventHandler(this.btnCreate_Click);
             // 
+            // btnBioEnroll
+            // 
+            this.btnBioEnroll.BackColor = System.Drawing.Color.White;
+            this.btnBioEnroll.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
+            this.btnBioEnroll.FlatAppearance.BorderSize = 2;
+            this.btnBioEnroll.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBioEnroll.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnBioEnroll.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
+            this.btnBioEnroll.Location = new System.Drawing.Point(15, 145);
+            this.btnBioEnroll.Name = "btnBioEnroll";
+            this.btnBioEnroll.Size = new System.Drawing.Size(230, 95);
+            this.btnBioEnroll.TabIndex = 2;
+            this.btnBioEnroll.Text = "Aadhaar Biometrics\r\n(Optional)";
+            this.btnBioEnroll.UseVisualStyleBackColor = false;
+            this.btnBioEnroll.Click += new System.EventHandler(this.btnBioEnroll_Click);
+            // 
+            // btnDlEnroll
+            // 
+            this.btnDlEnroll.BackColor = System.Drawing.Color.White;
+            this.btnDlEnroll.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
+            this.btnDlEnroll.FlatAppearance.BorderSize = 2;
+            this.btnDlEnroll.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnDlEnroll.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnDlEnroll.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
+            this.btnDlEnroll.Location = new System.Drawing.Point(15, 255);
+            this.btnDlEnroll.Name = "btnDlEnroll";
+            this.btnDlEnroll.Size = new System.Drawing.Size(230, 95);
+            this.btnDlEnroll.TabIndex = 3;
+            this.btnDlEnroll.Text = "Driving License\r\n(Optional)";
+            this.btnDlEnroll.UseVisualStyleBackColor = false;
+            this.btnDlEnroll.Click += new System.EventHandler(this.btnDlEnroll_Click);
+            // 
+            // gbVerification
+            // 
+            this.gbVerification.Controls.Add(this.btnScanShare);
+            this.gbVerification.Controls.Add(this.btnScanUserQR);
+            this.gbVerification.Controls.Add(this.btnLogin);
+            this.gbVerification.Controls.Add(this.btnViewRequests);
+            this.gbVerification.Controls.Add(this.btnAccountOps);
+            this.gbVerification.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            this.gbVerification.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
+            this.gbVerification.Location = new System.Drawing.Point(300, 140);
+            this.gbVerification.Name = "gbVerification";
+            this.gbVerification.Size = new System.Drawing.Size(600, 370);
+            this.gbVerification.TabIndex = 19;
+            this.gbVerification.TabStop = false;
+            this.gbVerification.Text = "ABHA Address Verification & Management";
+            // 
             // btnScanShare
             // 
-            this.btnScanShare.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.btnScanShare.BackColor = System.Drawing.Color.White;
             this.btnScanShare.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnScanShare.FlatAppearance.BorderSize = 2;
             this.btnScanShare.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnScanShare.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.btnScanShare.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnScanShare.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnScanShare.Location = new System.Drawing.Point(298, 150);
+            this.btnScanShare.Location = new System.Drawing.Point(20, 35);
             this.btnScanShare.Name = "btnScanShare";
-            this.btnScanShare.Size = new System.Drawing.Size(220, 126);
-            this.btnScanShare.TabIndex = 6;
-            this.btnScanShare.Text = "Scan & Share\r\n(Facility QR)";
+            this.btnScanShare.Size = new System.Drawing.Size(265, 95);
+            this.btnScanShare.TabIndex = 4;
+            this.btnScanShare.Text = "Facility QR Code\r\n(Scan & Share)";
             this.btnScanShare.UseVisualStyleBackColor = false;
             this.btnScanShare.Click += new System.EventHandler(this.btnScanShare_Click);
             // 
+            // btnScanUserQR
+            // 
+            this.btnScanUserQR.BackColor = System.Drawing.Color.White;
+            this.btnScanUserQR.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
+            this.btnScanUserQR.FlatAppearance.BorderSize = 2;
+            this.btnScanUserQR.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnScanUserQR.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnScanUserQR.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
+            this.btnScanUserQR.Location = new System.Drawing.Point(305, 35);
+            this.btnScanUserQR.Name = "btnScanUserQR";
+            this.btnScanUserQR.Size = new System.Drawing.Size(275, 95);
+            this.btnScanUserQR.TabIndex = 5;
+            this.btnScanUserQR.Text = "Scan Patient Card QR\r\n(Optional)";
+            this.btnScanUserQR.UseVisualStyleBackColor = false;
+            this.btnScanUserQR.Click += new System.EventHandler(this.btnScanUserQR_Click);
+            // 
             // btnLogin
             // 
-            this.btnLogin.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.btnLogin.BackColor = System.Drawing.Color.White;
             this.btnLogin.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnLogin.FlatAppearance.BorderSize = 2;
             this.btnLogin.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnLogin.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.btnLogin.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnLogin.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnLogin.Location = new System.Drawing.Point(524, 150);
+            this.btnLogin.Location = new System.Drawing.Point(20, 145);
             this.btnLogin.Name = "btnLogin";
-            this.btnLogin.Size = new System.Drawing.Size(220, 126);
-            this.btnLogin.TabIndex = 5;
-            this.btnLogin.Text = "Login Existing ABHA\r\n(Mobile OTP)";
+            this.btnLogin.Size = new System.Drawing.Size(265, 95);
+            this.btnLogin.TabIndex = 6;
+            this.btnLogin.Text = "Verify by OTP\r\n(ABHA Login)";
             this.btnLogin.UseVisualStyleBackColor = false;
             this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
             // 
             // btnViewRequests
             // 
-            this.btnViewRequests.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.btnViewRequests.BackColor = System.Drawing.Color.White;
             this.btnViewRequests.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnViewRequests.FlatAppearance.BorderSize = 2;
             this.btnViewRequests.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnViewRequests.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.btnViewRequests.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnViewRequests.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnViewRequests.Location = new System.Drawing.Point(72, 282);
+            this.btnViewRequests.Location = new System.Drawing.Point(305, 145);
             this.btnViewRequests.Name = "btnViewRequests";
-            this.btnViewRequests.Size = new System.Drawing.Size(220, 126);
+            this.btnViewRequests.Size = new System.Drawing.Size(275, 95);
             this.btnViewRequests.TabIndex = 7;
-            this.btnViewRequests.Text = "View Shared\r\nProfiles";
+            this.btnViewRequests.Text = "View Shared Profiles\r\n(Scan & Share List)";
             this.btnViewRequests.UseVisualStyleBackColor = false;
             this.btnViewRequests.Click += new System.EventHandler(this.btnViewRequests_Click);
             // 
             // btnAccountOps
             // 
-            this.btnAccountOps.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.btnAccountOps.BackColor = System.Drawing.Color.White;
             this.btnAccountOps.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnAccountOps.FlatAppearance.BorderSize = 2;
             this.btnAccountOps.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnAccountOps.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.btnAccountOps.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnAccountOps.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnAccountOps.Location = new System.Drawing.Point(298, 282);
+            this.btnAccountOps.Location = new System.Drawing.Point(20, 255);
             this.btnAccountOps.Name = "btnAccountOps";
-            this.btnAccountOps.Size = new System.Drawing.Size(220, 126);
+            this.btnAccountOps.Size = new System.Drawing.Size(560, 95);
             this.btnAccountOps.TabIndex = 8;
-            this.btnAccountOps.Text = "Account\r\nOperations";
+            this.btnAccountOps.Text = "ABHA Account Operations\r\n(Profile Update / Re-KYC)";
             this.btnAccountOps.UseVisualStyleBackColor = false;
             this.btnAccountOps.Click += new System.EventHandler(this.btnAccountOps_Click);
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Image = global::HMS.Properties.Resources.nhalogo;
-            this.pictureBox1.Location = new System.Drawing.Point(20, 71);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(154, 63);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox1.TabIndex = 17;
-            this.pictureBox1.TabStop = false;
             // 
             // frmABHAMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(920, 530);
+            this.Controls.Add(this.gbVerification);
+            this.Controls.Add(this.gbCreation);
             this.Controls.Add(this.pictureBox1);
-            this.Controls.Add(this.btnCreate);
-            this.Controls.Add(this.btnScanShare);
-            this.Controls.Add(this.btnLogin);
-            this.Controls.Add(this.btnViewRequests);
-            this.Controls.Add(this.btnAccountOps);
             this.Controls.Add(this.pnlHeader);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "frmABHAMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "ABHA Portal";
+            this.Text = "ABHA Portal Dashboard";
             this.pnlHeader.ResumeLayout(false);
             this.pnlHeader.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            this.gbCreation.ResumeLayout(false);
+            this.gbVerification.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -301,11 +286,18 @@ namespace HMS.abdm
         private System.Windows.Forms.Panel pnlHeader;
         private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.Button btnClose;
+        private System.Windows.Forms.PictureBox pictureBox1;
+        
+        private System.Windows.Forms.GroupBox gbCreation;
         private System.Windows.Forms.Button btnCreate;
+        private System.Windows.Forms.Button btnBioEnroll;
+        private System.Windows.Forms.Button btnDlEnroll;
+
+        private System.Windows.Forms.GroupBox gbVerification;
         private System.Windows.Forms.Button btnScanShare;
+        private System.Windows.Forms.Button btnScanUserQR;
         private System.Windows.Forms.Button btnLogin;
         private System.Windows.Forms.Button btnViewRequests;
         private System.Windows.Forms.Button btnAccountOps;
-        private System.Windows.Forms.PictureBox pictureBox1;
     }
 }
