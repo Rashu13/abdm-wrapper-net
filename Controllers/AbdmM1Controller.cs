@@ -9,6 +9,8 @@ using MongoDB.Driver;
 using AbdmWrapperNet.Models;
 using AbdmWrapperNet.Services;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using AbdmWrapperNet.Data;
 
 namespace AbdmWrapperNet.Controllers;
 
@@ -199,6 +201,63 @@ public class AbdmM1Controller : ControllerBase
             }
         }
         return BadRequest(response);
+    }
+
+    [HttpGet("scan-share-requests")]
+    public async Task<IActionResult> GetScanShareRequests()
+    {
+        var list = new List<object>();
+        try
+        {
+            var sqlDb = HttpContext.RequestServices.GetService(typeof(AppDbContext)) as AppDbContext;
+            if (sqlDb != null)
+            {
+                var logs = await sqlDb.RequestLogs
+                    .Where(l => l.Module == "HIP_SCAN_AND_SHARE")
+                    .OrderByDescending(l => l.CreatedOn)
+                    .Take(50)
+                    .ToListAsync();
+                
+                foreach (var log in logs)
+                {
+                    list.Add(new
+                    {
+                        Id = log.Id,
+                        AbhaAddress = log.AbhaAddress,
+                        CreatedOn = log.CreatedOn.ToString("yyyy-MM-dd HH:mm:ss"),
+                        Details = log.RequestDetails?.ToString() ?? "{}"
+                    });
+                }
+            }
+            else
+            {
+                var mongoDb = HttpContext.RequestServices.GetService(typeof(MongoDbContext)) as MongoDbContext;
+                if (mongoDb != null)
+                {
+                    var logs = await mongoDb.RequestLogs
+                        .Find(l => l.Module == "HIP_SCAN_AND_SHARE")
+                        .SortByDescending(l => l.CreatedOn)
+                        .Limit(50)
+                        .ToListAsync();
+                    
+                    foreach (var log in logs)
+                    {
+                        list.Add(new
+                        {
+                            Id = log.Id,
+                            AbhaAddress = log.AbhaAddress,
+                            CreatedOn = log.CreatedOn.ToString("yyyy-MM-dd HH:mm:ss"),
+                            Details = log.RequestDetails?.ToString() ?? "{}"
+                        });
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get scan share requests");
+        }
+        return Ok(list);
     }
 
     [HttpPost("mobile-verify-otp")]
