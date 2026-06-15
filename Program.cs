@@ -65,6 +65,7 @@ builder.Services.AddScoped<IDeepLinkingV3Service, DeepLinkingV3Service>();
 // HIU Services
 builder.Services.AddScoped<HIUConsentV3Service>();
 builder.Services.AddScoped<HIUHealthInformationV3Service>();
+builder.Services.AddScoped<HIUSubscriptionV3Service>();
 
 // Consent Request Mapping Service (tracks consentRequestId ↔ gatewayRequestId for HIU callbacks)
 if (isEfCore)
@@ -90,15 +91,12 @@ if (isEfCore)
 }
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.MapOpenApi();
+app.UseSwaggerUI(options =>
 {
-    app.MapOpenApi();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/openapi/v1.json", "ABDM Wrapper API V1");
-        options.RoutePrefix = "swagger";
-    });
-}
+    options.SwaggerEndpoint("/openapi/v1.json", "ABDM Wrapper API V1");
+    options.RoutePrefix = "swagger";
+});
 
 app.UseHttpsRedirection();
 

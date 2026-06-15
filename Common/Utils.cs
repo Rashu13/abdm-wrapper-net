@@ -37,7 +37,7 @@ public static class Utils
 
     public static string SetLinkTokenExpiry()
     {
-        return DateTime.UtcNow.AddMonths(6).ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture);
+        return DateTime.UtcNow.AddDays(30).ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture);
     }
 
     public static DateTime GetCurrentDateTime()

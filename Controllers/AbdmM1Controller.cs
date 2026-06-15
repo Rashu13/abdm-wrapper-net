@@ -111,4 +111,69 @@ public class AbdmM1Controller : ControllerBase
         }
         return BadRequest(response);
     }
+
+    [HttpPost("mobile-verify-otp")]
+    public async Task<IActionResult> MobileVerifyOtp([FromBody] MobileUpdateOtpRequest request, [FromHeader(Name = "X-Token")] string? userToken = null)
+    {
+        _logger.LogInformation("M1: Request to send mobile verification OTP.");
+        if (string.IsNullOrEmpty(request.UserToken) && !string.IsNullOrEmpty(userToken))
+        {
+            request.UserToken = userToken;
+        }
+        var response = await _client.MobileUpdateSendOtpAsync(request);
+        if (response.Success) return Ok(response);
+        return BadRequest(response);
+    }
+
+    [HttpPost("mobile-verify-confirm")]
+    public async Task<IActionResult> MobileVerifyConfirm([FromBody] MobileUpdateVerifyRequest request, [FromHeader(Name = "X-Token")] string? userToken = null)
+    {
+        _logger.LogInformation("M1: Request to verify mobile OTP.");
+        if (string.IsNullOrEmpty(request.UserToken) && !string.IsNullOrEmpty(userToken))
+        {
+            request.UserToken = userToken;
+        }
+        var response = await _client.MobileUpdateVerifyOtpAsync(request);
+        if (response.Success) return Ok(response);
+        return BadRequest(response);
+    }
+
+    [HttpPost("email-verify-link")]
+    public async Task<IActionResult> EmailVerifyLink([FromBody] EmailVerificationLinkRequest request, [FromHeader(Name = "X-Token")] string? userToken = null)
+    {
+        _logger.LogInformation("M1: Request for email verification link.");
+        if (string.IsNullOrEmpty(request.UserToken) && !string.IsNullOrEmpty(userToken))
+        {
+            request.UserToken = userToken;
+        }
+        var response = await _client.RequestEmailVerificationLinkAsync(request);
+        if (response.Success) return Ok(response);
+        return BadRequest(response);
+    }
+
+    [HttpPost("re-kyc-otp")]
+    public async Task<IActionResult> RequestReKycOtp([FromQuery] string abhaNumber, [FromQuery] string? abhaAddress = null, [FromHeader(Name = "X-Token")] string? userToken = null)
+    {
+        _logger.LogInformation("M1: Requesting Re-KYC OTP.");
+        if (string.IsNullOrEmpty(userToken))
+        {
+            return BadRequest(new { success = false, message = "X-Token header is mandatory" });
+        }
+        var response = await _client.RequestReKycOtpAsync(userToken, abhaNumber, abhaAddress);
+        if (response.Success) return Ok(response);
+        return BadRequest(response);
+    }
+
+    [HttpPost("re-kyc-verify")]
+    public async Task<IActionResult> VerifyReKycOtp([FromQuery] string transactionId, [FromQuery] string otp, [FromHeader(Name = "X-Token")] string? userToken = null)
+    {
+        _logger.LogInformation("M1: Verifying Re-KYC OTP.");
+        if (string.IsNullOrEmpty(userToken))
+        {
+            return BadRequest(new { success = false, message = "X-Token header is mandatory" });
+        }
+        var response = await _client.VerifyReKycOtpAsync(userToken, transactionId, otp);
+        if (response.Success) return Ok(response);
+        return BadRequest(response);
+    }
 }

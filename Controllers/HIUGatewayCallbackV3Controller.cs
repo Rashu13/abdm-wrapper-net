@@ -19,15 +19,18 @@ public class HIUGatewayCallbackV3Controller : ControllerBase
 {
     private readonly HIUConsentV3Service _consentService;
     private readonly HIUHealthInformationV3Service _healthInfoService;
+    private readonly HIUSubscriptionV3Service _subscriptionService;
     private readonly ILogger<HIUGatewayCallbackV3Controller> _logger;
 
     public HIUGatewayCallbackV3Controller(
         HIUConsentV3Service consentService,
         HIUHealthInformationV3Service healthInfoService,
+        HIUSubscriptionV3Service subscriptionService,
         ILogger<HIUGatewayCallbackV3Controller> logger)
     {
         _consentService = consentService;
         _healthInfoService = healthInfoService;
+        _subscriptionService = subscriptionService;
         _logger = logger;
     }
 
@@ -110,5 +113,48 @@ public class HIUGatewayCallbackV3Controller : ControllerBase
         Request.Headers.TryGetValue("X-HIU-ID", out var hiuId);
         var result = await _healthInfoService.ProcessEncryptedHealthInformationAsync(request!, hiuId.ToString());
         return StatusCode(result.HttpStatus == "OK" ? 202 : 400, result);
+    }
+
+    // ─── Subscription Callbacks ───────────────────────────────────────────────
+
+    /// <summary>
+    /// Gateway callback when subscription request is initialized.
+    /// POST /api/v3/hiu/subscription-requests/on-init
+    /// </summary>
+    [HttpPost("api/v3/hiu/subscription-requests/on-init")]
+    [HttpPost("api/v3/hiu/hiecm/subscription-requests/on-init")]
+    public async Task<IActionResult> OnInitSubscription([FromBody] SubscriptionOnInitV3Request request)
+    {
+        _logger.LogInformation("Gateway callback: subscription-requests/on-init");
+        int statusCode = await _subscriptionService.OnInitSubscriptionAsync(request);
+        return StatusCode(statusCode);
+    }
+
+    /// <summary>
+    /// Gateway callback when subscription status changes (approved/denied by patient).
+    /// POST /api/v3/hiu/subscription-requests/hiu/notify
+    /// </summary>
+    [HttpPost("api/v3/hiu/subscription-requests/hiu/notify")]
+    public async Task<IActionResult> OnNotifySubscription([FromBody] SubscriptionNotifyHIURequest request)
+    {
+        _logger.LogInformation("Gateway callback: subscription-requests/hiu/notify");
+        Request.Headers.TryGetValue("X-HIU-ID", out var hiuId);
+        Request.Headers.TryGetValue("REQUEST-ID", out var requestId);
+        int statusCode = await _subscriptionService.OnNotifySubscriptionAsync(request, hiuId.ToString(), requestId.ToString());
+        return StatusCode(statusCode);
+    }
+
+    /// <summary>
+    /// Gateway callback for events matching subscription categories.
+    /// POST /api/v3/hiu/subscription/notify
+    /// </summary>
+    [HttpPost("api/v3/hiu/subscription/notify")]
+    public async Task<IActionResult> OnEventNotifySubscription([FromBody] SubscriptionEventNotifyRequest request)
+    {
+        _logger.LogInformation("Gateway callback: subscription/notify");
+        Request.Headers.TryGetValue("X-HIU-ID", out var hiuId);
+        Request.Headers.TryGetValue("REQUEST-ID", out var requestId);
+        int statusCode = await _subscriptionService.OnEventNotifySubscriptionAsync(request, hiuId.ToString(), requestId.ToString());
+        return StatusCode(statusCode);
     }
 }

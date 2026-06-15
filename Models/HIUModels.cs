@@ -418,3 +418,258 @@ public class ConsentRequestMapping
     [JsonPropertyName("gatewayRequestId")]
     public string GatewayRequestId { get; set; } = string.Empty;
 }
+
+// ─── HIU Subscription Flow Models ───────────────────────────────────────────
+
+public class SubscriptionInitRequest
+{
+    [JsonPropertyName("requestId")]
+    public string RequestId { get; set; } = string.Empty;
+
+    [JsonPropertyName("timestamp")]
+    public string Timestamp { get; set; } = string.Empty;
+
+    [JsonPropertyName("subscription")]
+    public SubscriptionBody? Subscription { get; set; }
+}
+
+public class SubscriptionBody
+{
+    [JsonPropertyName("purpose")]
+    public ConsentPurpose? Purpose { get; set; }
+
+    [JsonPropertyName("patient")]
+    public ConsentPatientRef? Patient { get; set; }
+
+    [JsonPropertyName("hiu")]
+    public ConsentEntityRef? Hiu { get; set; }
+
+    [JsonPropertyName("hips")]
+    public List<SubscriptionHipRef>? Hips { get; set; }
+
+    [JsonPropertyName("categories")]
+    public List<string> Categories { get; set; } = new();
+
+    [JsonPropertyName("period")]
+    public SubscriptionPeriod? Period { get; set; }
+}
+
+public class SubscriptionHipRef
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("type")]
+    public string Type { get; set; } = string.Empty;
+}
+
+public class SubscriptionPeriod
+{
+    [JsonPropertyName("from")]
+    public string From { get; set; } = string.Empty;
+
+    [JsonPropertyName("to")]
+    public string To { get; set; } = string.Empty;
+}
+
+public class SubscriptionOnInitV3Request
+{
+    [JsonPropertyName("requestId")]
+    public string RequestId { get; set; } = string.Empty;
+
+    [JsonPropertyName("timestamp")]
+    public string Timestamp { get; set; } = string.Empty;
+
+    [JsonPropertyName("subscriptionRequest")]
+    public SubscriptionRequestId? SubscriptionRequest { get; set; }
+
+    [JsonPropertyName("error")]
+    public ErrorResponse? Error { get; set; }
+
+    [JsonPropertyName("response")]
+    public RespRequest? Response { get; set; }
+}
+
+public class SubscriptionRequestId
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+}
+
+public class SubscriptionOnNotifyV3Request
+{
+    [JsonPropertyName("requestId")]
+    public string RequestId { get; set; } = string.Empty;
+
+    [JsonPropertyName("timestamp")]
+    public string Timestamp { get; set; } = string.Empty;
+
+    [JsonPropertyName("acknowledgement")]
+    public SubscriptionAcknowledgement? Acknowledgement { get; set; }
+
+    [JsonPropertyName("error")]
+    public ErrorResponse? Error { get; set; }
+
+    [JsonPropertyName("response")]
+    public RespRequest? Response { get; set; }
+}
+
+public class SubscriptionAcknowledgement
+{
+    [JsonPropertyName("status")]
+    public string Status { get; set; } = string.Empty;
+
+    [JsonPropertyName("subscriptionRequestId")]
+    public string SubscriptionRequestId { get; set; } = string.Empty;
+}
+
+public class SubscriptionNotifyHIURequest
+{
+    [JsonPropertyName("requestId")]
+    public string RequestId { get; set; } = string.Empty;
+
+    [JsonPropertyName("timestamp")]
+    public string Timestamp { get; set; } = string.Empty;
+
+    [JsonPropertyName("notification")]
+    public SubscriptionNotificationDetail? Notification { get; set; }
+
+    [JsonPropertyName("error")]
+    public ErrorResponse? Error { get; set; }
+
+    [JsonPropertyName("response")]
+    public RespRequest? Response { get; set; }
+}
+
+public class SubscriptionNotificationDetail
+{
+    [JsonPropertyName("subscriptionRequestId")]
+    public string SubscriptionRequestId { get; set; } = string.Empty;
+
+    [JsonPropertyName("status")]
+    public string Status { get; set; } = string.Empty;
+
+    [JsonPropertyName("reason")]
+    public string? Reason { get; set; }
+
+    [JsonPropertyName("subscription")]
+    public SubscriptionDetailItem? Subscription { get; set; }
+}
+
+public class SubscriptionDetailItem
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+
+    [JsonPropertyName("patient")]
+    public ConsentPatientRef? Patient { get; set; }
+
+    [JsonPropertyName("hiu")]
+    public ConsentEntityRef? Hiu { get; set; }
+
+    [JsonPropertyName("sources")]
+    public List<SubscriptionSource>? Sources { get; set; }
+
+    [JsonPropertyName("period")]
+    public SubscriptionPeriod? Period { get; set; }
+}
+
+public class SubscriptionSource
+{
+    [JsonPropertyName("hip")]
+    public ConsentEntityRef? Hip { get; set; }
+
+    [JsonPropertyName("categories")]
+    public List<string> Categories { get; set; } = new();
+
+    [JsonPropertyName("period")]
+    public SubscriptionPeriod? Period { get; set; }
+}
+
+// Event notification (LINK/DATA) when care context is linked/added
+public class SubscriptionEventNotifyRequest
+{
+    [JsonPropertyName("requestId")]
+    public string RequestId { get; set; } = string.Empty;
+
+    [JsonPropertyName("timestamp")]
+    public string Timestamp { get; set; } = string.Empty;
+
+    [JsonPropertyName("event")]
+    public SubscriptionEventDetail? Event { get; set; }
+}
+
+public class SubscriptionEventDetail
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+
+    [JsonPropertyName("published")]
+    public string Published { get; set; } = string.Empty;
+
+    [JsonPropertyName("subscriptionId")]
+    public string SubscriptionId { get; set; } = string.Empty;
+
+    [JsonPropertyName("category")]
+    public string Category { get; set; } = string.Empty;
+
+    [JsonPropertyName("content")]
+    public SubscriptionEventContent? Content { get; set; }
+}
+
+public class SubscriptionEventContent
+{
+    [JsonPropertyName("patient")]
+    public ConsentPatientRef? Patient { get; set; }
+
+    [JsonPropertyName("hip")]
+    public ConsentEntityRef? Hip { get; set; }
+
+    [JsonPropertyName("contexts")]
+    public List<SubscriptionContextItem>? Contexts { get; set; }
+}
+
+public class SubscriptionContextItem
+{
+    [JsonPropertyName("careContexts")]
+    public List<SubscriptionCareContextRef>? CareContexts { get; set; }
+
+    [JsonPropertyName("hiType")]
+    public string HiType { get; set; } = string.Empty;
+}
+
+public class SubscriptionCareContextRef
+{
+    [JsonPropertyName("patientReference")]
+    public string PatientReference { get; set; } = string.Empty;
+
+    [JsonPropertyName("careContextReference")]
+    public string CareContextReference { get; set; } = string.Empty;
+}
+
+public class SubscriptionEventAcknowledgementRequest
+{
+    [JsonPropertyName("requestId")]
+    public string RequestId { get; set; } = string.Empty;
+
+    [JsonPropertyName("timestamp")]
+    public string Timestamp { get; set; } = string.Empty;
+
+    [JsonPropertyName("acknowledgement")]
+    public SubscriptionEventAcknowledgementDetail? Acknowledgement { get; set; }
+
+    [JsonPropertyName("response")]
+    public RespRequest? Response { get; set; }
+}
+
+public class SubscriptionEventAcknowledgementDetail
+{
+    [JsonPropertyName("status")]
+    public string Status { get; set; } = string.Empty;
+
+    [JsonPropertyName("eventId")]
+    public string EventId { get; set; } = string.Empty;
+}
