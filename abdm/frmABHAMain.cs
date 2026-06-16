@@ -210,5 +210,13 @@ namespace HMS.abdm
                 }
             }
         }
+
+        private void btnM2Testing_Click(object sender, EventArgs e)
+        {
+            using (var frm = new frmABDMM2())
+            {
+                frm.ShowDialog();
+            }
+        }
     }
 }

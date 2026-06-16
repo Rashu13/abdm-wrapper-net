@@ -380,6 +380,29 @@ namespace ABDM.Api
             }
         }
 
+        private async Task<string> PutToWrapperAsync(string path, string jsonPayload, string? userToken = null)
+        {
+            using (var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"{BaseUrl}{path}"))
+            {
+                requestMessage.Content = JsonContent(jsonPayload);
+                if (!string.IsNullOrEmpty(userToken))
+                {
+                    string cleanUserToken = userToken.Trim();
+                    if (cleanUserToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        cleanUserToken = cleanUserToken.Substring(7).Trim();
+                    requestMessage.Headers.TryAddWithoutValidation("X-Token", "Bearer " + cleanUserToken);
+                }
+                var resp = await _http.SendAsync(requestMessage);
+                var body = await resp.Content.ReadAsStringAsync();
+                LastRawResponse = body;
+                if (!resp.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Wrapper Error [{resp.StatusCode}]: {body}");
+                }
+                return body;
+            }
+        }
+
         private async Task<string> GetFromWrapperAsync(string path, string? userToken = null)
         {
             using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}{path}"))
@@ -1850,6 +1873,243 @@ namespace ABDM.Api
                     return value;
             }
             return "";
+        }
+
+        // ==========================================
+        // === MILESTONE 2 (M2) API CLIENT METHODS ===
+        // ==========================================
+
+        /// <summary>
+        /// Registers patients and their care contexts in the wrapper database (HIP).
+        /// </summary>
+        public async Task<AbdmResponse<string>> AddPatientsToWrapperAsync(string abhaAddress, string name, string gender, string dob, string patientRef, string patientMobile, List<Dictionary<string, object>> careContexts)
+        {
+            try
+            {
+                var patient = new Dictionary<string, object>
+                {
+                    ["abhaAddress"] = abhaAddress,
+                    ["name"] = name,
+                    ["gender"] = gender,
+                    ["dateOfBirth"] = dob,
+                    ["patientReference"] = patientRef,
+                    ["patientDisplay"] = name,
+                    ["patientMobile"] = patientMobile,
+                    ["hipId"] = _cfg.HipId ?? "IN0610090658",
+                    ["careContexts"] = careContexts
+                };
+
+                var payload = SimpleJson.Serialize(new List<object> { patient });
+                string responseBody = await PutToWrapperAsync("/v3/add-patients", payload);
+                return Ok(responseBody, "Patient registered successfully in wrapper database.");
+            }
+            catch (Exception ex)
+            {
+                return Fail<string>(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Initiates HIP-initiated care context linking (HIP).
+        /// </summary>
+        public async Task<AbdmResponse<string>> LinkCareContextsAsync(string abhaAddress, string requesterId, List<Dictionary<string, object>> careContexts)
+        {
+            try
+            {
+                var request = new Dictionary<string, object>
+                {
+                    ["requestId"] = Guid.NewGuid().ToString(),
+                    ["requesterId"] = requesterId,
+                    ["abhaAddress"] = abhaAddress,
+                    ["careContexts"] = careContexts
+                };
+
+                var payload = SimpleJson.Serialize(request);
+                string responseBody = await PostToWrapperAsync("/v3/link-carecontexts", payload);
+                return Ok(responseBody, "Linking initiated. Check status using request ID.");
+            }
+            catch (Exception ex)
+            {
+                return Fail<string>(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Checks the status of a care context linking request (HIP).
+        /// </summary>
+        public async Task<AbdmResponse<string>> GetLinkStatusAsync(string requestId)
+        {
+            try
+            {
+                string responseBody = await GetFromWrapperAsync($"/v3/link-status/{requestId}");
+                return Ok(responseBody, "Fetch status succeeded.");
+            }
+            catch (Exception ex)
+            {
+                return Fail<string>(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Sends deep linking notification SMS to patient (HIP).
+        /// </summary>
+        public async Task<AbdmResponse<string>> SendDeepLinkingSmsAsync(string phoneNo, string hipId, string hipName)
+        {
+            try
+            {
+                var request = new Dictionary<string, object>
+                {
+                    ["requestId"] = Guid.NewGuid().ToString(),
+                    ["timestamp"] = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                    ["notification"] = new Dictionary<string, object>
+                    {
+                        ["phoneNo"] = phoneNo,
+                        ["hip"] = new Dictionary<string, object>
+                        {
+                            ["id"] = hipId,
+                            ["name"] = hipName
+                        }
+                    }
+                };
+
+                var payload = SimpleJson.Serialize(request);
+                string responseBody = await PostToWrapperAsync("/v3/sms/notify", payload);
+                return Ok(responseBody, "SMS notification sent.");
+            }
+            catch (Exception ex)
+            {
+                return Fail<string>(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Initiates a consent request (HIU).
+        /// </summary>
+        public async Task<AbdmResponse<string>> InitiateConsentRequestAsync(string patientAbhaAddress, string purposeCode, List<string> hiTypes, string dateFrom, string dateTo, string eraseAt)
+        {
+            try
+            {
+                var consent = new Dictionary<string, object>
+                {
+                    ["purpose"] = new Dictionary<string, object>
+                    {
+                        ["text"] = "Referral",
+                        ["code"] = purposeCode,
+                        ["refUri"] = ""
+                    },
+                    ["patient"] = new Dictionary<string, object>
+                    {
+                        ["id"] = patientAbhaAddress
+                    },
+                    ["hiu"] = new Dictionary<string, object>
+                    {
+                        ["id"] = _cfg.HipId ?? "IN0610090658",
+                        ["name"] = _cfg.HipName ?? "MIDHA HOSPITAL"
+                    },
+                    ["requester"] = new Dictionary<string, object>
+                    {
+                        ["name"] = "Dr. Midha",
+                        ["identifier"] = new Dictionary<string, object>
+                        {
+                            ["type"] = "REGNO",
+                            ["value"] = "MCI-12345",
+                            ["system"] = "https://mciindia.org"
+                        }
+                    },
+                    ["hiTypes"] = hiTypes,
+                    ["permission"] = new Dictionary<string, object>
+                    {
+                        ["accessMode"] = "VIEW",
+                        ["dateRange"] = new Dictionary<string, object>
+                        {
+                            ["from"] = dateFrom,
+                            ["to"] = dateTo
+                        },
+                        ["dataEraseAt"] = eraseAt,
+                        ["frequency"] = new Dictionary<string, object>
+                        {
+                            ["unit"] = "HOUR",
+                            ["value"] = 1,
+                            ["repeats"] = 0
+                        }
+                    }
+                };
+
+                var request = new Dictionary<string, object>
+                {
+                    ["requestId"] = Guid.NewGuid().ToString(),
+                    ["timestamp"] = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                    ["consent"] = consent
+                };
+
+                var payload = SimpleJson.Serialize(request);
+                string responseBody = await PostToWrapperAsync("/v3/consent-init", payload);
+                return Ok(responseBody, "Consent request initiated. Check status using request ID.");
+            }
+            catch (Exception ex)
+            {
+                return Fail<string>(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Gets the status of a consent request (HIU).
+        /// </summary>
+        public async Task<AbdmResponse<string>> GetConsentStatusAsync(string requestId)
+        {
+            try
+            {
+                string responseBody = await GetFromWrapperAsync($"/v3/consent-status/{requestId}");
+                return Ok(responseBody, "Fetch consent status succeeded.");
+            }
+            catch (Exception ex)
+            {
+                return Fail<string>(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Requests encrypted health records from HIP via ABDM gateway (HIU).
+        /// </summary>
+        public async Task<AbdmResponse<string>> FetchHealthInformationAsync(string consentId, string dateFrom, string dateTo)
+        {
+            try
+            {
+                var request = new Dictionary<string, object>
+                {
+                    ["requestId"] = Guid.NewGuid().ToString(),
+                    ["consentId"] = consentId,
+                    ["dateRange"] = new Dictionary<string, object>
+                    {
+                        ["from"] = dateFrom,
+                        ["to"] = dateTo
+                    }
+                };
+
+                var payload = SimpleJson.Serialize(request);
+                string responseBody = await PostToWrapperAsync("/v3/health-information/fetch-records", payload);
+                return Ok(responseBody, "Health information fetch request initiated.");
+            }
+            catch (Exception ex)
+            {
+                return Fail<string>(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Gets the status and decrypted FHIR bundles for a health data request (HIU).
+        /// </summary>
+        public async Task<AbdmResponse<string>> GetHealthInformationStatusAsync(string requestId)
+        {
+            try
+            {
+                string responseBody = await GetFromWrapperAsync($"/v3/health-information/status/{requestId}");
+                return Ok(responseBody, "Fetch health records succeeded.");
+            }
+            catch (Exception ex)
+            {
+                return Fail<string>(ex.Message);
+            }
         }
 
     }

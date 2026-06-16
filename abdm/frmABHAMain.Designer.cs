@@ -48,6 +48,7 @@ namespace HMS.abdm
             this.btnLogin = new System.Windows.Forms.Button();
             this.btnViewRequests = new System.Windows.Forms.Button();
             this.btnAccountOps = new System.Windows.Forms.Button();
+            this.btnM2Testing = new System.Windows.Forms.Button();
 
             this.pnlHeader.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -205,6 +206,7 @@ namespace HMS.abdm
             this.gbVerification.Controls.Add(this.btnLogin);
             this.gbVerification.Controls.Add(this.btnViewRequests);
             this.gbVerification.Controls.Add(this.btnAccountOps);
+            this.gbVerification.Controls.Add(this.btnM2Testing);
             this.gbVerification.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, FontStyle.Bold);
             this.gbVerification.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.gbVerification.Location = new System.Drawing.Point(300, 140);
@@ -288,11 +290,27 @@ namespace HMS.abdm
             this.btnAccountOps.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.btnAccountOps.Location = new System.Drawing.Point(20, 255);
             this.btnAccountOps.Name = "btnAccountOps";
-            this.btnAccountOps.Size = new System.Drawing.Size(560, 95);
+            this.btnAccountOps.Size = new System.Drawing.Size(265, 95);
             this.btnAccountOps.TabIndex = 10;
             this.btnAccountOps.Text = "ABHA Account Operations\r\n(Profile Update / Re-KYC)";
             this.btnAccountOps.UseVisualStyleBackColor = false;
             this.btnAccountOps.Click += new System.EventHandler(this.btnAccountOps_Click);
+            // 
+            // btnM2Testing
+            // 
+            this.btnM2Testing.BackColor = System.Drawing.Color.White;
+            this.btnM2Testing.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
+            this.btnM2Testing.FlatAppearance.BorderSize = 2;
+            this.btnM2Testing.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnM2Testing.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.btnM2Testing.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
+            this.btnM2Testing.Location = new System.Drawing.Point(305, 255);
+            this.btnM2Testing.Name = "btnM2Testing";
+            this.btnM2Testing.Size = new System.Drawing.Size(275, 95);
+            this.btnM2Testing.TabIndex = 11;
+            this.btnM2Testing.Text = "Milestone 2 (M2)\r\nConsent & Health Data";
+            this.btnM2Testing.UseVisualStyleBackColor = false;
+            this.btnM2Testing.Click += new System.EventHandler(this.btnM2Testing_Click);
             // 
             // frmABHAMain
             // 
@@ -337,5 +355,6 @@ namespace HMS.abdm
         private System.Windows.Forms.Button btnLogin;
         private System.Windows.Forms.Button btnViewRequests;
         private System.Windows.Forms.Button btnAccountOps;
+        private System.Windows.Forms.Button btnM2Testing;
     }
 }

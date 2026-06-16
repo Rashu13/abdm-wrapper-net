@@ -159,9 +159,10 @@ public class HIPLinkV3Service : IHIPLinkV3Service
                 };
             }
 
+            var gatewayErrorMsg = !string.IsNullOrEmpty(response?.Message) ? response.Message : "Unable to generate linkToken";
             await _requestLogService.SaveLinkTokenRequestAsync(
                 request, generateTokenRequestId, RequestStatus.LINK_TOKEN_REQUEST_ERROR,
-                new List<ErrorV3Response> { new() { Error = new ErrorResponse { Code = "1000", Message = "Unable to generate linkToken" } } });
+                new List<ErrorV3Response> { new() { Error = new ErrorResponse { Code = "1000", Message = gatewayErrorMsg } } });
 
             return Error(request.RequestId, "LinkToken generation failed");
         }

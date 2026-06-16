@@ -31,17 +31,31 @@ namespace HMS.abdm
                     {
                         client.Timeout = TimeSpan.FromSeconds(3);
                         System.Net.Http.HttpResponseMessage? resp = null;
-                        try
-                        {
-                            resp = client.GetAsync("http://localhost:8082/api/v3/m1/scan-share-requests").GetAwaiter().GetResult();
-                        }
-                        catch
+                        string? configBaseUrl = System.Configuration.ConfigurationManager.AppSettings["AbdmSettings:BaseUrl"];
+                        if (!string.IsNullOrEmpty(configBaseUrl))
                         {
                             try
                             {
-                                resp = client.GetAsync("http://localhost:5155/api/v3/m1/scan-share-requests").GetAwaiter().GetResult();
+                                string url = configBaseUrl.TrimEnd('/') + "/api/v3/m1/scan-share-requests";
+                                resp = client.GetAsync(url).GetAwaiter().GetResult();
                             }
                             catch { }
+                        }
+
+                        if (resp == null || !resp.IsSuccessStatusCode)
+                        {
+                            try
+                            {
+                                resp = client.GetAsync("http://localhost:8082/api/v3/m1/scan-share-requests").GetAwaiter().GetResult();
+                            }
+                            catch
+                            {
+                                try
+                                {
+                                    resp = client.GetAsync("http://localhost:5155/api/v3/m1/scan-share-requests").GetAwaiter().GetResult();
+                                }
+                                catch { }
+                            }
                         }
 
                         if (resp != null && resp.IsSuccessStatusCode)
