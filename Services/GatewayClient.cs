@@ -92,6 +92,10 @@ public class GatewayClient : IGatewayClient
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var sessionPath = _config.Gateway.CreateSessionPath?.TrimStart('/') ?? "";
+            if (client.BaseAddress != null && client.BaseAddress.AbsolutePath.EndsWith("/gateway/") && sessionPath.StartsWith("gateway/"))
+            {
+                sessionPath = sessionPath["gateway/".Length..];
+            }
             var fullUrl = client.BaseAddress != null ? new Uri(client.BaseAddress, sessionPath).ToString() : sessionPath;
             _logger.LogInformation($"Requesting new access token from gateway full URL: {fullUrl}");
             var response = await client.PostAsync(sessionPath, content);
@@ -148,6 +152,10 @@ public class GatewayClient : IGatewayClient
             var json = JsonSerializer.Serialize(body);
 
             var cleanPath = path?.TrimStart('/') ?? "";
+            if (client.BaseAddress != null && client.BaseAddress.AbsolutePath.EndsWith("/gateway/") && cleanPath.StartsWith("gateway/"))
+            {
+                cleanPath = cleanPath["gateway/".Length..];
+            }
             if (_config.LogCurl)
             {
                 var fullUrl = client.BaseAddress != null ? new Uri(client.BaseAddress, cleanPath).ToString() : cleanPath;
