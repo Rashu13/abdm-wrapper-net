@@ -91,8 +91,9 @@ public class GatewayClient : IGatewayClient
             var json = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            _logger.LogInformation($"Requesting new access token from gateway path: {_config.Gateway.CreateSessionPath}");
             var sessionPath = _config.Gateway.CreateSessionPath?.TrimStart('/') ?? "";
+            var fullUrl = client.BaseAddress != null ? new Uri(client.BaseAddress, sessionPath).ToString() : sessionPath;
+            _logger.LogInformation($"Requesting new access token from gateway full URL: {fullUrl}");
             var response = await client.PostAsync(sessionPath, content);
             response.EnsureSuccessStatusCode();
 
