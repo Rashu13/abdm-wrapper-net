@@ -50,6 +50,10 @@ public class GatewayClient : IGatewayClient
 
         if (!string.IsNullOrEmpty(baseUrl))
         {
+            if (!baseUrl.EndsWith("/"))
+            {
+                baseUrl += "/";
+            }
             client.BaseAddress = new Uri(baseUrl);
         }
         
@@ -88,7 +92,8 @@ public class GatewayClient : IGatewayClient
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             _logger.LogInformation($"Requesting new access token from gateway path: {_config.Gateway.CreateSessionPath}");
-            var response = await client.PostAsync(_config.Gateway.CreateSessionPath, content);
+            var sessionPath = _config.Gateway.CreateSessionPath?.TrimStart('/') ?? "";
+            var response = await client.PostAsync(sessionPath, content);
             response.EnsureSuccessStatusCode();
 
             var responseString = await response.Content.ReadAsStringAsync();
@@ -141,13 +146,15 @@ public class GatewayClient : IGatewayClient
 
             var json = JsonSerializer.Serialize(body);
 
+            var cleanPath = path?.TrimStart('/') ?? "";
             if (_config.LogCurl)
             {
-                LogCurlRequest(client.BaseAddress + path, json, client.DefaultRequestHeaders);
+                var fullUrl = client.BaseAddress != null ? new Uri(client.BaseAddress, cleanPath).ToString() : cleanPath;
+                LogCurlRequest(fullUrl, json, client.DefaultRequestHeaders);
             }
 
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync(path, content);
+            var response = await client.PostAsync(cleanPath, content);
             
             var responseString = await response.Content.ReadAsStringAsync();
             _logger.LogInformation($"Gateway call status: {response.StatusCode}");
