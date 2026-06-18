@@ -61,6 +61,7 @@ builder.Services.AddScoped<IConsentV3Service, ConsentV3Service>();
 builder.Services.AddScoped<IHIPHealthInformationV3Service, HIPHealthInformationV3Service>();
 builder.Services.AddScoped<IProfileShareV3Service, ProfileShareV3Service>();
 builder.Services.AddScoped<IDeepLinkingV3Service, DeepLinkingV3Service>();
+builder.Services.AddScoped<IFhirMapperService, FhirMapperService>();
 
 // HIU Services
 builder.Services.AddScoped<HIUConsentV3Service>();

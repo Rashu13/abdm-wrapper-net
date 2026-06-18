@@ -29,6 +29,7 @@ public class AppDbContext : DbContext
     public DbSet<ConsentPatient> ConsentPatients { get; set; } = null!;
     public DbSet<ConsentRequestMapping> ConsentRequestMappings { get; set; } = null!;
     public DbSet<AbhaConsentLog> AbhaConsentLogs { get; set; } = null!;
+    public DbSet<HealthDataRecord> HealthDataRecords { get; set; } = null!;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -118,6 +119,13 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(a => a.Id);
             entity.Property(a => a.Id).ValueGeneratedOnAdd();
+        });
+
+        // HealthDataRecord Configuration
+        modelBuilder.Entity<HealthDataRecord>(entity =>
+        {
+            entity.HasKey(h => h.Id);
+            entity.Property(h => h.Id).ValueGeneratedOnAdd();
         });
     }
 

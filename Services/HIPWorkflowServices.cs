@@ -101,23 +101,25 @@ public class HIPHealthInformationV3Service : IHIPHealthInformationV3Service
     private readonly IRequestLogV3Service _requestLogService;
     private readonly IPatientV3Service _patientService;
     private readonly ICryptographyService _cryptographyService;
+    private readonly IFhirMapperService _fhirMapperService;
     private readonly ILogger<HIPHealthInformationV3Service> _logger;
 
     public HIPHealthInformationV3Service(
         IRequestLogV3Service requestLogService,
         IPatientV3Service patientService,
         ICryptographyService cryptographyService,
+        IFhirMapperService fhirMapperService,
         ILogger<HIPHealthInformationV3Service> logger)
     {
         _requestLogService = requestLogService;
         _patientService = patientService;
         _cryptographyService = cryptographyService;
+        _fhirMapperService = fhirMapperService;
         _logger = logger;
     }
 
     /// <summary>
     /// Gateway sends health-information request → HIP fetches FHIR data from its HIS and pushes to HIU.
-    /// NOTE: This saves the request to DB. Actual FHIR bundle generation depends on HIS integration.
     /// </summary>
     public async Task HealthInformationAsync(HIPHealthInformationRequest request, IHeaderDictionary headers)
     {
@@ -129,12 +131,108 @@ public class HIPHealthInformationV3Service : IHIPHealthInformationV3Service
             await _requestLogService.SaveHealthInformationRequestAsync(
                 request, RequestStatus.HEALTH_INFORMATION_REQUEST_SUCCESS);
 
-            // TODO: Hospital-specific implementation:
-            // 1. Fetch FHIR bundles from HIS using consent details (consentId, date range)
-            // 2. Encrypt bundles using keyMaterial from the request (ECDH)
-            // 3. POST encrypted bundles to request.HiRequest.DataPushUrl
-            // Example push structure documented in ABDM specification.
-            _logger.LogInformation("Health info saved. FHIR bundle push requires HIS integration.");
+            if (request.HiRequest?.Consent?.Id == null)
+            {
+                _logger.LogError("Consent ID is missing from the Health Information Request");
+                return;
+            }
+
+            var consentId = request.HiRequest.Consent.Id;
+            var patient = await _patientService.GetPatientByConsentIdAsync(consentId);
+            if (patient == null)
+            {
+                _logger.LogError($"No patient found with granted consent ID: {consentId}");
+                return;
+            }
+
+            var consent = patient.Consents?.FirstOrDefault(c => c.ConsentDetail != null && c.ConsentDetail.ConsentId == consentId);
+            if (consent?.ConsentDetail?.CareContexts == null || !consent.ConsentDetail.CareContexts.Any())
+            {
+                _logger.LogInformation("No care contexts approved for this consent.");
+                return;
+            }
+
+            var careContexts = consent.ConsentDetail.CareContexts;
+            var healthInformationBundles = new List<HealthInformationBundle>();
+            var abhaAddress = patient.AbhaAddress;
+            
+            using var httpClient = new System.Net.Http.HttpClient();
+
+            foreach (var cc in careContexts)
+            {
+                var record = await _patientService.GetHealthDataRecordAsync(abhaAddress, cc.CareContextReference ?? "");
+                if (record != null && !string.IsNullOrEmpty(record.FhirJsonPayload))
+                {
+                    try 
+                    {
+                        // Use native .NET C# FHIR Mapper!
+                        var fhirBundleStr = await _fhirMapperService.GeneratePrescriptionBundleAsync(record.FhirJsonPayload);
+                        
+                        healthInformationBundles.Add(new HealthInformationBundle
+                        {
+                            CareContextReference = cc.CareContextReference,
+                            BundleContent = fhirBundleStr
+                        });
+                        _logger.LogInformation($"Successfully generated C# FHIR bundle for {cc.CareContextReference}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Could not map FHIR in .NET Core for {cc.CareContextReference}. Exception: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning($"No health data record found in DB for care context: {cc.CareContextReference}");
+                }
+            }
+
+            if (!healthInformationBundles.Any())
+            {
+                _logger.LogWarning("No FHIR bundles could be generated. Aborting push.");
+                return;
+            }
+
+            // 3. Encrypt bundles using keyMaterial from the request
+            var encryptionResponse = _cryptographyService.Encrypt(request, healthInformationBundles);
+
+            // 4. POST encrypted bundles to HIU's DataPushUrl
+            var dataPushPayload = new
+            {
+                pageNumber = 1,
+                pageCount = 1,
+                transactionId = request.TransactionId,
+                entries = encryptionResponse.HealthInformationBundles.Select(b => new
+                {
+                    content = b.BundleContent,
+                    media = "application/fhir+json",
+                    checksum = "MD5",
+                    careContextReference = b.CareContextReference
+                }).ToList(),
+                keyMaterial = new
+                {
+                    cryptoAlg = "ECDH",
+                    curve = "Curve25519",
+                    dhPublicKey = new
+                    {
+                        expiry = request.HiRequest?.KeyMaterial?.DhPublicKey?.Expiry,
+                        parameters = "Curve25519",
+                        keyValue = encryptionResponse.KeyToShare
+                    },
+                    nonce = encryptionResponse.SenderNonce
+                }
+            };
+
+            var dataPushUrl = request.HiRequest?.DataPushUrl;
+            if (!string.IsNullOrEmpty(dataPushUrl))
+            {
+                _logger.LogInformation($"Pushing encrypted data to HIU at {dataPushUrl}");
+                var pushContent = new System.Net.Http.StringContent(
+                    System.Text.Json.JsonSerializer.Serialize(dataPushPayload), 
+                    System.Text.Encoding.UTF8, "application/json");
+                    
+                var pushResponse = await httpClient.PostAsync(dataPushUrl, pushContent);
+                _logger.LogInformation($"Data push response: {pushResponse.StatusCode}");
+            }
         }
         catch (Exception ex)
         {

@@ -370,4 +370,36 @@ public class SqlServerPatientV3Service : IPatientV3Service
     {
         return await GetPatientDetailsAsync(abhaAddress, hipId);
     }
+
+    public async Task<HealthDataRecord?> GetHealthDataRecordAsync(string abhaAddress, string careContextReference)
+    {
+        return await _context.HealthDataRecords
+            .FirstOrDefaultAsync(h => h.AbhaAddress == abhaAddress && h.CareContextReference == careContextReference);
+    }
+
+    public async Task AddHealthDataRecordAsync(HealthDataRecord record)
+    {
+        var existing = await _context.HealthDataRecords
+            .FirstOrDefaultAsync(h => h.AbhaAddress == record.AbhaAddress && h.CareContextReference == record.CareContextReference);
+        
+        if (existing != null)
+        {
+            existing.FhirJsonPayload = record.FhirJsonPayload;
+            existing.RecordType = record.RecordType;
+            _context.HealthDataRecords.Update(existing);
+        }
+        else
+        {
+            await _context.HealthDataRecords.AddAsync(record);
+        }
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<Patient?> GetPatientByConsentIdAsync(string consentId)
+    {
+        // Since Consents is stored as a JSON string via ValueConverter, we can't use .Any() in LINQ to SQL directly.
+        // We use string match since consentId is a unique UUID.
+        var patients = await _context.Patients.ToListAsync(); // Fallback if EF.Property fails
+        return patients.FirstOrDefault(p => p.Consents != null && p.Consents.Any(c => c.ConsentDetail != null && c.ConsentDetail.ConsentId == consentId));
+    }
 }

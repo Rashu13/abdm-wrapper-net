@@ -391,4 +391,20 @@ public class PatientV3Service : IPatientV3Service
         // Simple fallback since HIP Client calls are stubs for now
         return await GetPatientDetailsAsync(abhaAddress, hipId);
     }
+
+    public Task<HealthDataRecord?> GetHealthDataRecordAsync(string abhaAddress, string careContextReference)
+    {
+        throw new NotImplementedException("Not implemented in Mongo DB Context");
+    }
+
+    public Task AddHealthDataRecordAsync(HealthDataRecord record)
+    {
+        throw new NotImplementedException("Not implemented in Mongo DB Context");
+    }
+
+    public async Task<Patient?> GetPatientByConsentIdAsync(string consentId)
+    {
+        var filter = Builders<Patient>.Filter.Eq("consents.consentDetail.consentId", consentId);
+        return await _context.Patients.Find(filter).FirstOrDefaultAsync();
+    }
 }

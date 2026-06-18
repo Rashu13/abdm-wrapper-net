@@ -63,4 +63,22 @@ public class PatientV3Controller : ControllerBase
 
         return Ok(patient);
     }
+
+    /// <summary>
+    /// This controller is used by HIS/WinForms to save Health Data Record (Prescription) JSON
+    /// </summary>
+    [HttpPost("health-data")]
+    public async Task<IActionResult> SaveHealthData([FromBody] HealthDataRecord record)
+    {
+        _logger.LogInformation($"Request to save health data for care context {record.CareContextReference} and ABHA {record.AbhaAddress}");
+        
+        if (string.IsNullOrEmpty(record.AbhaAddress) || string.IsNullOrEmpty(record.CareContextReference) || string.IsNullOrEmpty(record.FhirJsonPayload))
+        {
+            return BadRequest(new { Message = "AbhaAddress, CareContextReference, and FhirJsonPayload are mandatory" });
+        }
+
+        await _patientService.AddHealthDataRecordAsync(record);
+        
+        return Ok(new { Message = "Health data record saved successfully." });
+    }
 }

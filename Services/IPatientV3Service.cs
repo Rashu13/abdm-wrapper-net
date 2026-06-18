@@ -18,7 +18,10 @@ public interface IPatientV3Service
     Task UpdatePatientConsentAsync(string abhaAddress, string consentId, string consentStatus, string lastUpdated, string hipId);
     Task<bool> CheckCareContextsAsync(string abhaAddress, string hipId, List<CareContext> careContexts);
     Task<List<CareContext>> GetSameCareContextsAsync(string abhaAddress, string hipId, List<CareContext> careContexts);
+    Task<HealthDataRecord?> GetHealthDataRecordAsync(string abhaAddress, string careContextReference);
+    Task AddHealthDataRecordAsync(HealthDataRecord record);
     Task<bool> IsConsentValidAsync(string abhaAddress, string consentId, string hipId);
     Task<Patient?> GetPatientAsync(string abhaAddress, string hipId);
     Task<FacadeV3Response> UpsertPatientsAsync(List<Patient> patients);
+    Task<Patient?> GetPatientByConsentIdAsync(string consentId);
 }
