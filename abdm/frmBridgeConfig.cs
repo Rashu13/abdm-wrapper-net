@@ -10,7 +10,7 @@ namespace HMS.abdm
     public partial class frmBridgeConfig : Form
     {
         // Replace with your running Wrapper API Base URL
-        private readonly string _wrapperBaseUrl = "http://localhost:8082"; 
+        private readonly string _wrapperBaseUrl = "https://sbx.wati.digital"; 
         private readonly HttpClient _httpClient;
 
         public frmBridgeConfig()
