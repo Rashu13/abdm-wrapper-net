@@ -28,288 +28,288 @@ namespace HMS.abdm
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.pnlHeader = new System.Windows.Forms.Panel();
-            this.btnClose = new System.Windows.Forms.Button();
-            this.lblTitle = new System.Windows.Forms.Label();
-            this.lblHeading = new System.Windows.Forms.Label();
-            this.lblAadhaar = new System.Windows.Forms.Label();
-            this.txtAadhaar1 = new System.Windows.Forms.TextBox();
-            this.txtAadhaar2 = new System.Windows.Forms.TextBox();
-            this.txtAadhaar3 = new System.Windows.Forms.TextBox();
-            this.btnSubmit = new System.Windows.Forms.Button();
-            this.btnCancel = new System.Windows.Forms.Button();
-            this.pnlBanner = new System.Windows.Forms.Panel();
-            this.lblBanner = new System.Windows.Forms.Label();
-            this.lblMobile = new System.Windows.Forms.Label();
-            this.txtMobile = new System.Windows.Forms.TextBox();
-            this.lblOTP = new System.Windows.Forms.Label();
-            this.txtOTP = new System.Windows.Forms.TextBox();
-            this.lblResendOTP = new System.Windows.Forms.Label();
-            this.lblMobileNote = new System.Windows.Forms.Label();
-            this.timerOtp = new System.Windows.Forms.Timer(this.components);
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.pnlHeader.SuspendLayout();
-            this.pnlBanner.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
-            this.SuspendLayout();
+            components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmABHA));
+            pnlHeader = new Panel();
+            btnClose = new Button();
+            lblTitle = new Label();
+            lblHeading = new Label();
+            lblAadhaar = new Label();
+            txtAadhaar1 = new TextBox();
+            txtAadhaar2 = new TextBox();
+            txtAadhaar3 = new TextBox();
+            btnSubmit = new Button();
+            btnCancel = new Button();
+            pnlBanner = new Panel();
+            lblBanner = new Label();
+            lblMobile = new Label();
+            txtMobile = new TextBox();
+            lblOTP = new Label();
+            txtOTP = new TextBox();
+            lblResendOTP = new Label();
+            lblMobileNote = new Label();
+            timerOtp = new System.Windows.Forms.Timer(components);
+            pictureBox1 = new PictureBox();
+            pnlHeader.SuspendLayout();
+            pnlBanner.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+            SuspendLayout();
             // 
             // pnlHeader
             // 
-            this.pnlHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.pnlHeader.Controls.Add(this.btnClose);
-            this.pnlHeader.Controls.Add(this.lblTitle);
-            this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlHeader.Location = new System.Drawing.Point(0, 0);
-            this.pnlHeader.Name = "pnlHeader";
-            this.pnlHeader.Size = new System.Drawing.Size(650, 45);
-            this.pnlHeader.TabIndex = 0;
+            pnlHeader.BackColor = Color.FromArgb(55, 115, 200);
+            pnlHeader.Controls.Add(btnClose);
+            pnlHeader.Controls.Add(lblTitle);
+            pnlHeader.Dock = DockStyle.Top;
+            pnlHeader.Location = new Point(0, 0);
+            pnlHeader.Name = "pnlHeader";
+            pnlHeader.Size = new Size(650, 45);
+            pnlHeader.TabIndex = 0;
             // 
             // btnClose
             // 
-            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.FlatAppearance.BorderSize = 0;
-            this.btnClose.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Red;
-            this.btnClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnClose.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.btnClose.ForeColor = System.Drawing.Color.White;
-            this.btnClose.Location = new System.Drawing.Point(605, 0);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(45, 45);
-            this.btnClose.TabIndex = 1;
-            this.btnClose.Text = "X";
-            this.btnClose.UseVisualStyleBackColor = true;
-            this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
+            btnClose.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnClose.FlatAppearance.BorderSize = 0;
+            btnClose.FlatAppearance.MouseOverBackColor = Color.Red;
+            btnClose.FlatStyle = FlatStyle.Flat;
+            btnClose.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnClose.ForeColor = Color.White;
+            btnClose.Location = new Point(605, 0);
+            btnClose.Name = "btnClose";
+            btnClose.Size = new Size(45, 45);
+            btnClose.TabIndex = 1;
+            btnClose.Text = "X";
+            btnClose.UseVisualStyleBackColor = true;
+            btnClose.Click += btnClose_Click;
             // 
             // lblTitle
             // 
-            this.lblTitle.AutoSize = true;
-            this.lblTitle.Font = new System.Drawing.Font("Segoe UI Semibold", 11F, System.Drawing.FontStyle.Bold);
-            this.lblTitle.ForeColor = System.Drawing.Color.White;
-            this.lblTitle.Location = new System.Drawing.Point(12, 10);
-            this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(302, 25);
-            this.lblTitle.TabIndex = 0;
-            this.lblTitle.Text = "Ayushman Bharat Health Account";
+            lblTitle.AutoSize = true;
+            lblTitle.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
+            lblTitle.ForeColor = Color.White;
+            lblTitle.Location = new Point(12, 10);
+            lblTitle.Name = "lblTitle";
+            lblTitle.Size = new Size(302, 25);
+            lblTitle.TabIndex = 0;
+            lblTitle.Text = "Ayushman Bharat Health Account";
             // 
             // lblHeading
             // 
-            this.lblHeading.AutoSize = true;
-            this.lblHeading.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
-            this.lblHeading.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
-            this.lblHeading.Location = new System.Drawing.Point(210, 70);
-            this.lblHeading.Name = "lblHeading";
-            this.lblHeading.Size = new System.Drawing.Size(259, 32);
-            this.lblHeading.TabIndex = 1;
-            this.lblHeading.Text = "ABHA REGISTRATION";
+            lblHeading.AutoSize = true;
+            lblHeading.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            lblHeading.ForeColor = Color.FromArgb(230, 100, 50);
+            lblHeading.Location = new Point(210, 70);
+            lblHeading.Name = "lblHeading";
+            lblHeading.Size = new Size(259, 32);
+            lblHeading.TabIndex = 1;
+            lblHeading.Text = "ABHA REGISTRATION";
             // 
             // lblAadhaar
             // 
-            this.lblAadhaar.AutoSize = true;
-            this.lblAadhaar.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
-            this.lblAadhaar.Location = new System.Drawing.Point(40, 140);
-            this.lblAadhaar.Name = "lblAadhaar";
-            this.lblAadhaar.Size = new System.Drawing.Size(154, 23);
-            this.lblAadhaar.TabIndex = 2;
-            this.lblAadhaar.Text = "Aadhaar Number *";
+            lblAadhaar.AutoSize = true;
+            lblAadhaar.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            lblAadhaar.Location = new Point(40, 140);
+            lblAadhaar.Name = "lblAadhaar";
+            lblAadhaar.Size = new Size(154, 23);
+            lblAadhaar.TabIndex = 2;
+            lblAadhaar.Text = "Aadhaar Number *";
             // 
             // txtAadhaar1
             // 
-            this.txtAadhaar1.Font = new System.Drawing.Font("Segoe UI", 12F);
-            this.txtAadhaar1.Location = new System.Drawing.Point(210, 135);
-            this.txtAadhaar1.MaxLength = 4;
-            this.txtAadhaar1.Name = "txtAadhaar1";
-            this.txtAadhaar1.Size = new System.Drawing.Size(80, 34);
-            this.txtAadhaar1.TabIndex = 3;
-            this.txtAadhaar1.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.txtAadhaar1.TextChanged += new System.EventHandler(this.txtAadhaar1_TextChanged);
+            txtAadhaar1.Font = new Font("Segoe UI", 12F);
+            txtAadhaar1.Location = new Point(210, 135);
+            txtAadhaar1.MaxLength = 4;
+            txtAadhaar1.Name = "txtAadhaar1";
+            txtAadhaar1.Size = new Size(80, 34);
+            txtAadhaar1.TabIndex = 3;
+            txtAadhaar1.TextAlign = HorizontalAlignment.Center;
+            txtAadhaar1.TextChanged += txtAadhaar1_TextChanged;
             // 
             // txtAadhaar2
             // 
-            this.txtAadhaar2.Font = new System.Drawing.Font("Segoe UI", 12F);
-            this.txtAadhaar2.Location = new System.Drawing.Point(305, 135);
-            this.txtAadhaar2.MaxLength = 4;
-            this.txtAadhaar2.Name = "txtAadhaar2";
-            this.txtAadhaar2.Size = new System.Drawing.Size(80, 34);
-            this.txtAadhaar2.TabIndex = 4;
-            this.txtAadhaar2.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.txtAadhaar2.TextChanged += new System.EventHandler(this.txtAadhaar2_TextChanged);
+            txtAadhaar2.Font = new Font("Segoe UI", 12F);
+            txtAadhaar2.Location = new Point(305, 135);
+            txtAadhaar2.MaxLength = 4;
+            txtAadhaar2.Name = "txtAadhaar2";
+            txtAadhaar2.Size = new Size(80, 34);
+            txtAadhaar2.TabIndex = 4;
+            txtAadhaar2.TextAlign = HorizontalAlignment.Center;
+            txtAadhaar2.TextChanged += txtAadhaar2_TextChanged;
             // 
             // txtAadhaar3
             // 
-            this.txtAadhaar3.Font = new System.Drawing.Font("Segoe UI", 12F);
-            this.txtAadhaar3.Location = new System.Drawing.Point(400, 135);
-            this.txtAadhaar3.MaxLength = 4;
-            this.txtAadhaar3.Name = "txtAadhaar3";
-            this.txtAadhaar3.Size = new System.Drawing.Size(80, 34);
-            this.txtAadhaar3.TabIndex = 5;
-            this.txtAadhaar3.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            txtAadhaar3.Font = new Font("Segoe UI", 12F);
+            txtAadhaar3.Location = new Point(400, 135);
+            txtAadhaar3.MaxLength = 4;
+            txtAadhaar3.Name = "txtAadhaar3";
+            txtAadhaar3.Size = new Size(80, 34);
+            txtAadhaar3.TabIndex = 5;
+            txtAadhaar3.TextAlign = HorizontalAlignment.Center;
             // 
             // btnSubmit
             // 
-            this.btnSubmit.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
-            this.btnSubmit.FlatAppearance.BorderSize = 0;
-            this.btnSubmit.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSubmit.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
-            this.btnSubmit.ForeColor = System.Drawing.Color.White;
-            this.btnSubmit.Location = new System.Drawing.Point(210, 280);
-            this.btnSubmit.Name = "btnSubmit";
-            this.btnSubmit.Size = new System.Drawing.Size(120, 45);
-            this.btnSubmit.TabIndex = 6;
-            this.btnSubmit.Text = "Submit";
-            this.btnSubmit.UseVisualStyleBackColor = false;
-            this.btnSubmit.Click += new System.EventHandler(this.btnSubmit_Click);
+            btnSubmit.BackColor = Color.FromArgb(230, 100, 50);
+            btnSubmit.FlatAppearance.BorderSize = 0;
+            btnSubmit.FlatStyle = FlatStyle.Flat;
+            btnSubmit.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            btnSubmit.ForeColor = Color.White;
+            btnSubmit.Location = new Point(210, 280);
+            btnSubmit.Name = "btnSubmit";
+            btnSubmit.Size = new Size(120, 45);
+            btnSubmit.TabIndex = 6;
+            btnSubmit.Text = "Submit";
+            btnSubmit.UseVisualStyleBackColor = false;
+            btnSubmit.Click += btnSubmit_Click;
             // 
             // btnCancel
             // 
-            this.btnCancel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnCancel.FlatAppearance.BorderSize = 0;
-            this.btnCancel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCancel.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
-            this.btnCancel.ForeColor = System.Drawing.Color.White;
-            this.btnCancel.Location = new System.Drawing.Point(340, 280);
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(120, 45);
-            this.btnCancel.TabIndex = 7;
-            this.btnCancel.Text = "Cancel";
-            this.btnCancel.UseVisualStyleBackColor = false;
-            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            btnCancel.BackColor = Color.FromArgb(55, 115, 200);
+            btnCancel.FlatAppearance.BorderSize = 0;
+            btnCancel.FlatStyle = FlatStyle.Flat;
+            btnCancel.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            btnCancel.ForeColor = Color.White;
+            btnCancel.Location = new Point(340, 280);
+            btnCancel.Name = "btnCancel";
+            btnCancel.Size = new Size(120, 45);
+            btnCancel.TabIndex = 7;
+            btnCancel.Text = "Cancel";
+            btnCancel.UseVisualStyleBackColor = false;
+            btnCancel.Click += btnCancel_Click;
             // 
             // pnlBanner
             // 
-            this.pnlBanner.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(100)))));
-            this.pnlBanner.Controls.Add(this.lblBanner);
-            this.pnlBanner.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlBanner.Location = new System.Drawing.Point(0, 350);
-            this.pnlBanner.Name = "pnlBanner";
-            this.pnlBanner.Size = new System.Drawing.Size(650, 50);
-            this.pnlBanner.TabIndex = 8;
+            pnlBanner.BackColor = Color.FromArgb(0, 0, 100);
+            pnlBanner.Controls.Add(lblBanner);
+            pnlBanner.Dock = DockStyle.Bottom;
+            pnlBanner.Location = new Point(0, 350);
+            pnlBanner.Name = "pnlBanner";
+            pnlBanner.Size = new Size(650, 50);
+            pnlBanner.TabIndex = 8;
             // 
             // lblBanner
             // 
-            this.lblBanner.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.lblBanner.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lblBanner.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.lblBanner.ForeColor = System.Drawing.Color.Yellow;
-            this.lblBanner.Location = new System.Drawing.Point(0, 0);
-            this.lblBanner.Name = "lblBanner";
-            this.lblBanner.Size = new System.Drawing.Size(650, 50);
-            this.lblBanner.TabIndex = 0;
-            this.lblBanner.Text = "Click here to Download ABHA CARD if already Registered";
-            this.lblBanner.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            lblBanner.Cursor = Cursors.Hand;
+            lblBanner.Dock = DockStyle.Fill;
+            lblBanner.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblBanner.ForeColor = Color.Yellow;
+            lblBanner.Location = new Point(0, 0);
+            lblBanner.Name = "lblBanner";
+            lblBanner.Size = new Size(650, 50);
+            lblBanner.TabIndex = 0;
+            lblBanner.Text = "Click here to Download ABHA CARD if already Registered";
+            lblBanner.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblMobile
             // 
-            this.lblMobile.AutoSize = true;
-            this.lblMobile.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
-            this.lblMobile.Location = new System.Drawing.Point(40, 190);
-            this.lblMobile.Name = "lblMobile";
-            this.lblMobile.Size = new System.Drawing.Size(135, 46);
-            this.lblMobile.TabIndex = 9;
-            this.lblMobile.Text = "Correspondence\r\nMobile No.";
+            lblMobile.AutoSize = true;
+            lblMobile.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            lblMobile.Location = new Point(40, 190);
+            lblMobile.Name = "lblMobile";
+            lblMobile.Size = new Size(135, 46);
+            lblMobile.TabIndex = 9;
+            lblMobile.Text = "Correspondence\r\nMobile No.";
             // 
             // txtMobile
             // 
-            this.txtMobile.Font = new System.Drawing.Font("Segoe UI", 12F);
-            this.txtMobile.Location = new System.Drawing.Point(210, 195);
-            this.txtMobile.MaxLength = 10;
-            this.txtMobile.Name = "txtMobile";
-            this.txtMobile.Size = new System.Drawing.Size(175, 34);
-            this.txtMobile.TabIndex = 10;
+            txtMobile.Font = new Font("Segoe UI", 12F);
+            txtMobile.Location = new Point(210, 195);
+            txtMobile.MaxLength = 10;
+            txtMobile.Name = "txtMobile";
+            txtMobile.Size = new Size(175, 34);
+            txtMobile.TabIndex = 10;
             // 
             // lblOTP
             // 
-            this.lblOTP.AutoSize = true;
-            this.lblOTP.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
-            this.lblOTP.Location = new System.Drawing.Point(400, 200);
-            this.lblOTP.Name = "lblOTP";
-            this.lblOTP.Size = new System.Drawing.Size(41, 23);
-            this.lblOTP.TabIndex = 11;
-            this.lblOTP.Text = "OTP";
+            lblOTP.AutoSize = true;
+            lblOTP.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            lblOTP.Location = new Point(400, 200);
+            lblOTP.Name = "lblOTP";
+            lblOTP.Size = new Size(41, 23);
+            lblOTP.TabIndex = 11;
+            lblOTP.Text = "OTP";
             // 
             // txtOTP
             // 
-            this.txtOTP.Font = new System.Drawing.Font("Segoe UI", 12F);
-            this.txtOTP.Location = new System.Drawing.Point(450, 195);
-            this.txtOTP.MaxLength = 6;
-            this.txtOTP.Name = "txtOTP";
-            this.txtOTP.Size = new System.Drawing.Size(80, 34);
-            this.txtOTP.TabIndex = 12;
+            txtOTP.Font = new Font("Segoe UI", 12F);
+            txtOTP.Location = new Point(450, 195);
+            txtOTP.MaxLength = 6;
+            txtOTP.Name = "txtOTP";
+            txtOTP.Size = new Size(80, 34);
+            txtOTP.TabIndex = 12;
             // 
             // lblResendOTP
             // 
-            this.lblResendOTP.AutoSize = true;
-            this.lblResendOTP.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.lblResendOTP.Font = new System.Drawing.Font("Segoe UI", 8F, System.Drawing.FontStyle.Underline);
-            this.lblResendOTP.ForeColor = System.Drawing.Color.Gray;
-            this.lblResendOTP.Location = new System.Drawing.Point(540, 195);
-            this.lblResendOTP.Name = "lblResendOTP";
-            this.lblResendOTP.Size = new System.Drawing.Size(111, 38);
-            this.lblResendOTP.TabIndex = 13;
-            this.lblResendOTP.Text = "ReSend OTP (31)\r\nUpto 2 times";
-            this.lblResendOTP.Click += new System.EventHandler(this.lblResendOTP_Click);
+            lblResendOTP.AutoSize = true;
+            lblResendOTP.Cursor = Cursors.Hand;
+            lblResendOTP.Font = new Font("Segoe UI", 8F, FontStyle.Underline);
+            lblResendOTP.ForeColor = Color.Gray;
+            lblResendOTP.Location = new Point(540, 195);
+            lblResendOTP.Name = "lblResendOTP";
+            lblResendOTP.Size = new Size(111, 38);
+            lblResendOTP.TabIndex = 13;
+            lblResendOTP.Text = "ReSend OTP (31)\r\nUpto 2 times";
+            lblResendOTP.Click += lblResendOTP_Click;
             // 
             // lblMobileNote
             // 
-            this.lblMobileNote.AutoSize = true;
-            this.lblMobileNote.Font = new System.Drawing.Font("Segoe UI", 8.5F, System.Drawing.FontStyle.Bold);
-            this.lblMobileNote.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(150)))), ((int)(((byte)(0)))));
-            this.lblMobileNote.Location = new System.Drawing.Point(40, 245);
-            this.lblMobileNote.Name = "lblMobileNote";
-            this.lblMobileNote.Size = new System.Drawing.Size(593, 20);
-            this.lblMobileNote.TabIndex = 14;
-            this.lblMobileNote.Text = "Note: This mobile number will be used for all the communications related to ABHA." +
-    "";
+            lblMobileNote.AutoSize = true;
+            lblMobileNote.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            lblMobileNote.ForeColor = Color.FromArgb(0, 150, 0);
+            lblMobileNote.Location = new Point(40, 245);
+            lblMobileNote.Name = "lblMobileNote";
+            lblMobileNote.Size = new Size(593, 20);
+            lblMobileNote.TabIndex = 14;
+            lblMobileNote.Text = "Note: This mobile number will be used for all the communications related to ABHA.";
             // 
             // timerOtp
             // 
-            this.timerOtp.Interval = 1000;
-            this.timerOtp.Tick += new System.EventHandler(this.timerOtp_Tick);
+            timerOtp.Interval = 1000;
+            timerOtp.Tick += timerOtp_Tick;
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = global::HMS.Properties.Resources.nhalogo;
-            this.pictureBox1.Location = new System.Drawing.Point(4, 51);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(171, 63);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox1.TabIndex = 15;
-            this.pictureBox1.TabStop = false;
+            pictureBox1.Image = (Image)resources.GetObject("pictureBox1.Image");
+            pictureBox1.Location = new Point(4, 51);
+            pictureBox1.Name = "pictureBox1";
+            pictureBox1.Size = new Size(171, 63);
+            pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
+            pictureBox1.TabIndex = 15;
+            pictureBox1.TabStop = false;
             // 
             // frmABHA
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(650, 400);
-            this.Controls.Add(this.pictureBox1);
-            this.Controls.Add(this.lblMobileNote);
-            this.Controls.Add(this.lblResendOTP);
-            this.Controls.Add(this.txtOTP);
-            this.Controls.Add(this.lblOTP);
-            this.Controls.Add(this.txtMobile);
-            this.Controls.Add(this.lblMobile);
-            this.Controls.Add(this.pnlBanner);
-            this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.btnSubmit);
-            this.Controls.Add(this.txtAadhaar3);
-            this.Controls.Add(this.txtAadhaar2);
-            this.Controls.Add(this.txtAadhaar1);
-            this.Controls.Add(this.lblAadhaar);
-            this.Controls.Add(this.lblHeading);
-            this.Controls.Add(this.pnlHeader);
-            this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Name = "frmABHA";
-            this.ShowIcon = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Load += new System.EventHandler(this.frmABHA_Load);
-            this.pnlHeader.ResumeLayout(false);
-            this.pnlHeader.PerformLayout();
-            this.pnlBanner.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AutoScaleDimensions = new SizeF(120F, 120F);
+            AutoScaleMode = AutoScaleMode.Dpi;
+            BackColor = Color.White;
+            ClientSize = new Size(650, 400);
+            Controls.Add(pictureBox1);
+            Controls.Add(lblMobileNote);
+            Controls.Add(lblResendOTP);
+            Controls.Add(txtOTP);
+            Controls.Add(lblOTP);
+            Controls.Add(txtMobile);
+            Controls.Add(lblMobile);
+            Controls.Add(pnlBanner);
+            Controls.Add(btnCancel);
+            Controls.Add(btnSubmit);
+            Controls.Add(txtAadhaar3);
+            Controls.Add(txtAadhaar2);
+            Controls.Add(txtAadhaar1);
+            Controls.Add(lblAadhaar);
+            Controls.Add(lblHeading);
+            Controls.Add(pnlHeader);
+            Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            FormBorderStyle = FormBorderStyle.None;
+            Name = "frmABHA";
+            ShowIcon = false;
+            StartPosition = FormStartPosition.CenterScreen;
+            Load += frmABHA_Load;
+            pnlHeader.ResumeLayout(false);
+            pnlHeader.PerformLayout();
+            pnlBanner.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+            ResumeLayout(false);
+            PerformLayout();
 
         }
 

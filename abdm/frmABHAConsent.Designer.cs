@@ -16,348 +16,340 @@ namespace HMS.abdm
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmABHAConsent));
-            this.pnlHeader = new System.Windows.Forms.Panel();
-            this.btnClose = new System.Windows.Forms.Button();
-            this.lblTitle = new System.Windows.Forms.Label();
-            this.pnlContent = new System.Windows.Forms.Panel();
-            this.lblNote = new System.Windows.Forms.Label();
-            this.pnlComplex2 = new System.Windows.Forms.Panel();
-            this.lblExplainSuffix = new System.Windows.Forms.Label();
-            this.txtExplain = new System.Windows.Forms.TextBox();
-            this.chk7 = new System.Windows.Forms.CheckBox();
-            this.pnlComplex1 = new System.Windows.Forms.Panel();
-            this.lblBeneficiarySuffix = new System.Windows.Forms.Label();
-            this.txtBeneficiary = new System.Windows.Forms.TextBox();
-            this.chk6 = new System.Windows.Forms.CheckBox();
-            this.chk5 = new System.Windows.Forms.CheckBox();
-            this.chk4 = new System.Windows.Forms.CheckBox();
-            this.chk3 = new System.Windows.Forms.CheckBox();
-            this.chk2 = new System.Windows.Forms.CheckBox();
-            this.chk1 = new System.Windows.Forms.CheckBox();
-            this.lblDeclare = new System.Windows.Forms.Label();
-            this.pnlFooter = new System.Windows.Forms.Panel();
-            this.btnCancel = new System.Windows.Forms.Button();
-            this.btnAgree = new System.Windows.Forms.Button();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.pnlHeader.SuspendLayout();
-            this.pnlContent.SuspendLayout();
-            this.pnlComplex2.SuspendLayout();
-            this.pnlComplex1.SuspendLayout();
-            this.pnlFooter.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
-            this.SuspendLayout();
+            pnlHeader = new Panel();
+            pictureBox1 = new PictureBox();
+            btnClose = new Button();
+            lblTitle = new Label();
+            pnlContent = new Panel();
+            lblNote = new Label();
+            pnlComplex2 = new Panel();
+            lblExplainSuffix = new Label();
+            txtExplain = new TextBox();
+            chk7 = new CheckBox();
+            pnlComplex1 = new Panel();
+            lblBeneficiarySuffix = new Label();
+            txtBeneficiary = new TextBox();
+            chk6 = new CheckBox();
+            chk5 = new CheckBox();
+            chk4 = new CheckBox();
+            chk3 = new CheckBox();
+            chk2 = new CheckBox();
+            chk1 = new CheckBox();
+            lblDeclare = new Label();
+            pnlFooter = new Panel();
+            btnCancel = new Button();
+            btnAgree = new Button();
+            pnlHeader.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+            pnlContent.SuspendLayout();
+            pnlComplex2.SuspendLayout();
+            pnlComplex1.SuspendLayout();
+            pnlFooter.SuspendLayout();
+            SuspendLayout();
             // 
             // pnlHeader
             // 
-            this.pnlHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.pnlHeader.Controls.Add(this.pictureBox1);
-            this.pnlHeader.Controls.Add(this.btnClose);
-            this.pnlHeader.Controls.Add(this.lblTitle);
-            this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlHeader.Location = new System.Drawing.Point(0, 0);
-            this.pnlHeader.Name = "pnlHeader";
-            this.pnlHeader.Size = new System.Drawing.Size(900, 85);
-            this.pnlHeader.TabIndex = 0;
-            // 
-            // btnClose
-            // 
-            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.FlatAppearance.BorderSize = 0;
-            this.btnClose.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Red;
-            this.btnClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnClose.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.btnClose.ForeColor = System.Drawing.Color.White;
-            this.btnClose.Location = new System.Drawing.Point(855, 1);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(45, 45);
-            this.btnClose.TabIndex = 1;
-            this.btnClose.Text = "X";
-            this.btnClose.UseVisualStyleBackColor = true;
-            this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
-            // 
-            // lblTitle
-            // 
-            this.lblTitle.AutoSize = true;
-            this.lblTitle.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
-            this.lblTitle.ForeColor = System.Drawing.Color.White;
-            this.lblTitle.Location = new System.Drawing.Point(12, 10);
-            this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(599, 23);
-            this.lblTitle.TabIndex = 0;
-            this.lblTitle.Text = "Creating a nudge: Making ABDM implementation easier - Consent Language";
-            // 
-            // pnlContent
-            // 
-            this.pnlContent.AutoScroll = true;
-            this.pnlContent.BackColor = System.Drawing.Color.White;
-            this.pnlContent.Controls.Add(this.lblNote);
-            this.pnlContent.Controls.Add(this.pnlComplex2);
-            this.pnlContent.Controls.Add(this.pnlComplex1);
-            this.pnlContent.Controls.Add(this.chk5);
-            this.pnlContent.Controls.Add(this.chk4);
-            this.pnlContent.Controls.Add(this.chk3);
-            this.pnlContent.Controls.Add(this.chk2);
-            this.pnlContent.Controls.Add(this.chk1);
-            this.pnlContent.Controls.Add(this.lblDeclare);
-            this.pnlContent.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlContent.Location = new System.Drawing.Point(0, 85);
-            this.pnlContent.Name = "pnlContent";
-            this.pnlContent.Padding = new System.Windows.Forms.Padding(20);
-            this.pnlContent.Size = new System.Drawing.Size(900, 465);
-            this.pnlContent.TabIndex = 1;
-            // 
-            // lblNote
-            // 
-            this.lblNote.Dock = System.Windows.Forms.DockStyle.Top;
-            this.lblNote.Font = new System.Drawing.Font("Segoe UI", 8F, System.Drawing.FontStyle.Italic);
-            this.lblNote.Location = new System.Drawing.Point(20, 340);
-            this.lblNote.Name = "lblNote";
-            this.lblNote.Padding = new System.Windows.Forms.Padding(10, 10, 0, 0);
-            this.lblNote.Size = new System.Drawing.Size(860, 60);
-            this.lblNote.TabIndex = 8;
-            this.lblNote.Text = resources.GetString("lblNote.Text");
-            // 
-            // pnlComplex2
-            // 
-            this.pnlComplex2.Controls.Add(this.lblExplainSuffix);
-            this.pnlComplex2.Controls.Add(this.txtExplain);
-            this.pnlComplex2.Controls.Add(this.chk7);
-            this.pnlComplex2.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlComplex2.Location = new System.Drawing.Point(20, 300);
-            this.pnlComplex2.Name = "pnlComplex2";
-            this.pnlComplex2.Padding = new System.Windows.Forms.Padding(40, 5, 0, 5);
-            this.pnlComplex2.Size = new System.Drawing.Size(860, 40);
-            this.pnlComplex2.TabIndex = 7;
-            // 
-            // lblExplainSuffix
-            // 
-            this.lblExplainSuffix.AutoSize = true;
-            this.lblExplainSuffix.Dock = System.Windows.Forms.DockStyle.Left;
-            this.lblExplainSuffix.Location = new System.Drawing.Point(240, 5);
-            this.lblExplainSuffix.Name = "lblExplainSuffix";
-            this.lblExplainSuffix.Padding = new System.Windows.Forms.Padding(5, 5, 0, 0);
-            this.lblExplainSuffix.Size = new System.Drawing.Size(597, 25);
-            this.lblExplainSuffix.TabIndex = 2;
-            this.lblExplainSuffix.Text = "have been explained about the consent as stated above and hereby provide my conse" +
-    "nt.";
-            // 
-            // txtExplain
-            // 
-            this.txtExplain.Dock = System.Windows.Forms.DockStyle.Left;
-            this.txtExplain.Location = new System.Drawing.Point(82, 5);
-            this.txtExplain.Name = "txtExplain";
-            this.txtExplain.Size = new System.Drawing.Size(158, 27);
-            this.txtExplain.TabIndex = 1;
-            // 
-            // chk7
-            // 
-            this.chk7.AutoSize = true;
-            this.chk7.Dock = System.Windows.Forms.DockStyle.Left;
-            this.chk7.Location = new System.Drawing.Point(40, 5);
-            this.chk7.Name = "chk7";
-            this.chk7.Size = new System.Drawing.Size(42, 30);
-            this.chk7.TabIndex = 0;
-            this.chk7.Text = "I, ";
-            this.chk7.UseVisualStyleBackColor = true;
-            // 
-            // pnlComplex1
-            // 
-            this.pnlComplex1.Controls.Add(this.lblBeneficiarySuffix);
-            this.pnlComplex1.Controls.Add(this.txtBeneficiary);
-            this.pnlComplex1.Controls.Add(this.chk6);
-            this.pnlComplex1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlComplex1.Location = new System.Drawing.Point(20, 260);
-            this.pnlComplex1.Name = "pnlComplex1";
-            this.pnlComplex1.Padding = new System.Windows.Forms.Padding(40, 5, 0, 5);
-            this.pnlComplex1.Size = new System.Drawing.Size(860, 40);
-            this.pnlComplex1.TabIndex = 6;
-            // 
-            // lblBeneficiarySuffix
-            // 
-            this.lblBeneficiarySuffix.AutoSize = true;
-            this.lblBeneficiarySuffix.Dock = System.Windows.Forms.DockStyle.Left;
-            this.lblBeneficiarySuffix.Location = new System.Drawing.Point(240, 5);
-            this.lblBeneficiarySuffix.Name = "lblBeneficiarySuffix";
-            this.lblBeneficiarySuffix.Padding = new System.Windows.Forms.Padding(5, 5, 0, 0);
-            this.lblBeneficiarySuffix.Size = new System.Drawing.Size(614, 25);
-            this.lblBeneficiarySuffix.TabIndex = 2;
-            this.lblBeneficiarySuffix.Text = "confirm that I have duly informed and explained the beneficiary of the contents o" +
-    "f consent.";
-            // 
-            // txtBeneficiary
-            // 
-            this.txtBeneficiary.Dock = System.Windows.Forms.DockStyle.Left;
-            this.txtBeneficiary.Location = new System.Drawing.Point(82, 5);
-            this.txtBeneficiary.Name = "txtBeneficiary";
-            this.txtBeneficiary.Size = new System.Drawing.Size(158, 27);
-            this.txtBeneficiary.TabIndex = 1;
-            // 
-            // chk6
-            // 
-            this.chk6.AutoSize = true;
-            this.chk6.Dock = System.Windows.Forms.DockStyle.Left;
-            this.chk6.Location = new System.Drawing.Point(40, 5);
-            this.chk6.Name = "chk6";
-            this.chk6.Size = new System.Drawing.Size(42, 30);
-            this.chk6.TabIndex = 0;
-            this.chk6.Text = "I, ";
-            this.chk6.UseVisualStyleBackColor = true;
-            // 
-            // chk5
-            // 
-            this.chk5.Dock = System.Windows.Forms.DockStyle.Top;
-            this.chk5.Font = new System.Drawing.Font("Segoe UI", 8.5F);
-            this.chk5.Location = new System.Drawing.Point(20, 220);
-            this.chk5.Name = "chk5";
-            this.chk5.Padding = new System.Windows.Forms.Padding(10, 0, 0, 10);
-            this.chk5.Size = new System.Drawing.Size(860, 40);
-            this.chk5.TabIndex = 5;
-            this.chk5.Text = "I consent to the anonymization and subsequent use of my government health records" +
-    " for public health purposes.";
-            this.chk5.TextAlign = System.Drawing.ContentAlignment.TopLeft;
-            this.chk5.UseVisualStyleBackColor = true;
-            // 
-            // chk4
-            // 
-            this.chk4.Dock = System.Windows.Forms.DockStyle.Top;
-            this.chk4.Font = new System.Drawing.Font("Segoe UI", 8.5F);
-            this.chk4.Location = new System.Drawing.Point(20, 180);
-            this.chk4.Name = "chk4";
-            this.chk4.Padding = new System.Windows.Forms.Padding(10, 0, 0, 10);
-            this.chk4.Size = new System.Drawing.Size(860, 40);
-            this.chk4.TabIndex = 4;
-            this.chk4.Text = "I authorize the sharing of all my health records with healthcare provider(s) for " +
-    "the purpose of providing healthcare services to me during this encounter.";
-            this.chk4.TextAlign = System.Drawing.ContentAlignment.TopLeft;
-            this.chk4.UseVisualStyleBackColor = true;
-            // 
-            // chk3
-            // 
-            this.chk3.Dock = System.Windows.Forms.DockStyle.Top;
-            this.chk3.Font = new System.Drawing.Font("Segoe UI", 8.5F);
-            this.chk3.Location = new System.Drawing.Point(20, 135);
-            this.chk3.Name = "chk3";
-            this.chk3.Padding = new System.Windows.Forms.Padding(10, 0, 0, 10);
-            this.chk3.Size = new System.Drawing.Size(860, 45);
-            this.chk3.TabIndex = 3;
-            this.chk3.Text = "I consent to usage of my ABHA address and ABHA number for linking of my legacy (p" +
-    "ast) government health records and those which will be generated during this enc" +
-    "ounter.";
-            this.chk3.TextAlign = System.Drawing.ContentAlignment.TopLeft;
-            this.chk3.UseVisualStyleBackColor = true;
-            // 
-            // chk2
-            // 
-            this.chk2.Dock = System.Windows.Forms.DockStyle.Top;
-            this.chk2.Font = new System.Drawing.Font("Segoe UI", 8.5F);
-            this.chk2.Location = new System.Drawing.Point(20, 90);
-            this.chk2.Name = "chk2";
-            this.chk2.Padding = new System.Windows.Forms.Padding(10, 0, 0, 10);
-            this.chk2.Size = new System.Drawing.Size(860, 45);
-            this.chk2.TabIndex = 2;
-            this.chk2.Text = "I intend to create Ayushman Bharat Health Account Number (\"ABHA number\") and Ayus" +
-    "hman Bharat Health Account address (\"ABHA Address\") using document other than Aa" +
-    "dhaar.";
-            this.chk2.TextAlign = System.Drawing.ContentAlignment.TopLeft;
-            this.chk2.UseVisualStyleBackColor = true;
-            // 
-            // chk1
-            // 
-            this.chk1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.chk1.Font = new System.Drawing.Font("Segoe UI", 8.5F);
-            this.chk1.Location = new System.Drawing.Point(20, 20);
-            this.chk1.Name = "chk1";
-            this.chk1.Padding = new System.Windows.Forms.Padding(10, 0, 0, 10);
-            this.chk1.Size = new System.Drawing.Size(860, 70);
-            this.chk1.TabIndex = 1;
-            this.chk1.Text = resources.GetString("chk1.Text");
-            this.chk1.TextAlign = System.Drawing.ContentAlignment.TopLeft;
-            this.chk1.UseVisualStyleBackColor = true;
-            // 
-            // lblDeclare
-            // 
-            this.lblDeclare.AutoSize = true;
-            this.lblDeclare.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.lblDeclare.Location = new System.Drawing.Point(23, 20);
-            this.lblDeclare.Name = "lblDeclare";
-            this.lblDeclare.Size = new System.Drawing.Size(154, 20);
-            this.lblDeclare.TabIndex = 0;
-            this.lblDeclare.Text = "I hereby declare that:";
-            // 
-            // pnlFooter
-            // 
-            this.pnlFooter.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(240)))));
-            this.pnlFooter.Controls.Add(this.btnCancel);
-            this.pnlFooter.Controls.Add(this.btnAgree);
-            this.pnlFooter.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlFooter.Location = new System.Drawing.Point(0, 550);
-            this.pnlFooter.Name = "pnlFooter";
-            this.pnlFooter.Size = new System.Drawing.Size(900, 60);
-            this.pnlFooter.TabIndex = 2;
-            // 
-            // btnCancel
-            // 
-            this.btnCancel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
-            this.btnCancel.FlatAppearance.BorderSize = 0;
-            this.btnCancel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCancel.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
-            this.btnCancel.ForeColor = System.Drawing.Color.Black;
-            this.btnCancel.Location = new System.Drawing.Point(450, 10);
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(120, 40);
-            this.btnCancel.TabIndex = 1;
-            this.btnCancel.Text = "Cancel";
-            this.btnCancel.UseVisualStyleBackColor = false;
-            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
-            // 
-            // btnAgree
-            // 
-            this.btnAgree.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
-            this.btnAgree.FlatAppearance.BorderSize = 0;
-            this.btnAgree.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnAgree.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
-            this.btnAgree.ForeColor = System.Drawing.Color.White;
-            this.btnAgree.Location = new System.Drawing.Point(320, 10);
-            this.btnAgree.Name = "btnAgree";
-            this.btnAgree.Size = new System.Drawing.Size(120, 40);
-            this.btnAgree.TabIndex = 0;
-            this.btnAgree.Text = "I Agree";
-            this.btnAgree.UseVisualStyleBackColor = false;
-            this.btnAgree.Click += new System.EventHandler(this.btnAgree_Click);
+            pnlHeader.BackColor = Color.FromArgb(55, 115, 200);
+            pnlHeader.Controls.Add(pictureBox1);
+            pnlHeader.Controls.Add(btnClose);
+            pnlHeader.Controls.Add(lblTitle);
+            pnlHeader.Dock = DockStyle.Top;
+            pnlHeader.Location = new Point(0, 0);
+            pnlHeader.Name = "pnlHeader";
+            pnlHeader.Size = new Size(900, 85);
+            pnlHeader.TabIndex = 0;
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = global::HMS.Properties.Resources.nhalogo;
-            this.pictureBox1.Location = new System.Drawing.Point(703, 10);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(154, 63);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox1.TabIndex = 17;
-            this.pictureBox1.TabStop = false;
+            pictureBox1.Image = (Image)resources.GetObject("pictureBox1.Image");
+            pictureBox1.Location = new Point(703, 10);
+            pictureBox1.Name = "pictureBox1";
+            pictureBox1.Size = new Size(154, 63);
+            pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
+            pictureBox1.TabIndex = 17;
+            pictureBox1.TabStop = false;
+            // 
+            // btnClose
+            // 
+            btnClose.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnClose.FlatAppearance.BorderSize = 0;
+            btnClose.FlatAppearance.MouseOverBackColor = Color.Red;
+            btnClose.FlatStyle = FlatStyle.Flat;
+            btnClose.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnClose.ForeColor = Color.White;
+            btnClose.Location = new Point(855, 1);
+            btnClose.Name = "btnClose";
+            btnClose.Size = new Size(45, 45);
+            btnClose.TabIndex = 1;
+            btnClose.Text = "X";
+            btnClose.UseVisualStyleBackColor = true;
+            btnClose.Click += btnClose_Click;
+            // 
+            // lblTitle
+            // 
+            lblTitle.AutoSize = true;
+            lblTitle.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            lblTitle.ForeColor = Color.White;
+            lblTitle.Location = new Point(12, 10);
+            lblTitle.Name = "lblTitle";
+            lblTitle.Size = new Size(599, 23);
+            lblTitle.TabIndex = 0;
+            lblTitle.Text = "Creating a nudge: Making ABDM implementation easier - Consent Language";
+            // 
+            // pnlContent
+            // 
+            pnlContent.AutoScroll = true;
+            pnlContent.BackColor = Color.White;
+            pnlContent.Controls.Add(lblNote);
+            pnlContent.Controls.Add(pnlComplex2);
+            pnlContent.Controls.Add(pnlComplex1);
+            pnlContent.Controls.Add(chk5);
+            pnlContent.Controls.Add(chk4);
+            pnlContent.Controls.Add(chk3);
+            pnlContent.Controls.Add(chk2);
+            pnlContent.Controls.Add(chk1);
+            pnlContent.Controls.Add(lblDeclare);
+            pnlContent.Dock = DockStyle.Fill;
+            pnlContent.Location = new Point(0, 85);
+            pnlContent.Name = "pnlContent";
+            pnlContent.Padding = new Padding(20);
+            pnlContent.Size = new Size(900, 465);
+            pnlContent.TabIndex = 1;
+            // 
+            // lblNote
+            // 
+            lblNote.Dock = DockStyle.Top;
+            lblNote.Font = new Font("Segoe UI", 8F, FontStyle.Italic);
+            lblNote.Location = new Point(20, 340);
+            lblNote.Name = "lblNote";
+            lblNote.Padding = new Padding(10, 10, 0, 0);
+            lblNote.Size = new Size(860, 60);
+            lblNote.TabIndex = 8;
+            lblNote.Text = resources.GetString("lblNote.Text");
+            // 
+            // pnlComplex2
+            // 
+            pnlComplex2.Controls.Add(lblExplainSuffix);
+            pnlComplex2.Controls.Add(txtExplain);
+            pnlComplex2.Controls.Add(chk7);
+            pnlComplex2.Dock = DockStyle.Top;
+            pnlComplex2.Location = new Point(20, 300);
+            pnlComplex2.Name = "pnlComplex2";
+            pnlComplex2.Padding = new Padding(40, 5, 0, 5);
+            pnlComplex2.Size = new Size(860, 40);
+            pnlComplex2.TabIndex = 7;
+            // 
+            // lblExplainSuffix
+            // 
+            lblExplainSuffix.AutoSize = true;
+            lblExplainSuffix.Dock = DockStyle.Left;
+            lblExplainSuffix.Location = new Point(240, 5);
+            lblExplainSuffix.Name = "lblExplainSuffix";
+            lblExplainSuffix.Padding = new Padding(5, 5, 0, 0);
+            lblExplainSuffix.Size = new Size(597, 25);
+            lblExplainSuffix.TabIndex = 2;
+            lblExplainSuffix.Text = "have been explained about the consent as stated above and hereby provide my consent.";
+            // 
+            // txtExplain
+            // 
+            txtExplain.Dock = DockStyle.Left;
+            txtExplain.Location = new Point(82, 5);
+            txtExplain.Name = "txtExplain";
+            txtExplain.Size = new Size(158, 27);
+            txtExplain.TabIndex = 1;
+            // 
+            // chk7
+            // 
+            chk7.AutoSize = true;
+            chk7.Dock = DockStyle.Left;
+            chk7.Location = new Point(40, 5);
+            chk7.Name = "chk7";
+            chk7.Size = new Size(42, 30);
+            chk7.TabIndex = 0;
+            chk7.Text = "I, ";
+            chk7.UseVisualStyleBackColor = true;
+            // 
+            // pnlComplex1
+            // 
+            pnlComplex1.Controls.Add(lblBeneficiarySuffix);
+            pnlComplex1.Controls.Add(txtBeneficiary);
+            pnlComplex1.Controls.Add(chk6);
+            pnlComplex1.Dock = DockStyle.Top;
+            pnlComplex1.Location = new Point(20, 260);
+            pnlComplex1.Name = "pnlComplex1";
+            pnlComplex1.Padding = new Padding(40, 5, 0, 5);
+            pnlComplex1.Size = new Size(860, 40);
+            pnlComplex1.TabIndex = 6;
+            // 
+            // lblBeneficiarySuffix
+            // 
+            lblBeneficiarySuffix.AutoSize = true;
+            lblBeneficiarySuffix.Dock = DockStyle.Left;
+            lblBeneficiarySuffix.Location = new Point(240, 5);
+            lblBeneficiarySuffix.Name = "lblBeneficiarySuffix";
+            lblBeneficiarySuffix.Padding = new Padding(5, 5, 0, 0);
+            lblBeneficiarySuffix.Size = new Size(614, 25);
+            lblBeneficiarySuffix.TabIndex = 2;
+            lblBeneficiarySuffix.Text = "confirm that I have duly informed and explained the beneficiary of the contents of consent.";
+            // 
+            // txtBeneficiary
+            // 
+            txtBeneficiary.Dock = DockStyle.Left;
+            txtBeneficiary.Location = new Point(82, 5);
+            txtBeneficiary.Name = "txtBeneficiary";
+            txtBeneficiary.Size = new Size(158, 27);
+            txtBeneficiary.TabIndex = 1;
+            // 
+            // chk6
+            // 
+            chk6.AutoSize = true;
+            chk6.Dock = DockStyle.Left;
+            chk6.Location = new Point(40, 5);
+            chk6.Name = "chk6";
+            chk6.Size = new Size(42, 30);
+            chk6.TabIndex = 0;
+            chk6.Text = "I, ";
+            chk6.UseVisualStyleBackColor = true;
+            // 
+            // chk5
+            // 
+            chk5.Dock = DockStyle.Top;
+            chk5.Font = new Font("Segoe UI", 8.5F);
+            chk5.Location = new Point(20, 220);
+            chk5.Name = "chk5";
+            chk5.Padding = new Padding(10, 0, 0, 10);
+            chk5.Size = new Size(860, 40);
+            chk5.TabIndex = 5;
+            chk5.Text = "I consent to the anonymization and subsequent use of my government health records for public health purposes.";
+            chk5.TextAlign = ContentAlignment.TopLeft;
+            chk5.UseVisualStyleBackColor = true;
+            // 
+            // chk4
+            // 
+            chk4.Dock = DockStyle.Top;
+            chk4.Font = new Font("Segoe UI", 8.5F);
+            chk4.Location = new Point(20, 180);
+            chk4.Name = "chk4";
+            chk4.Padding = new Padding(10, 0, 0, 10);
+            chk4.Size = new Size(860, 40);
+            chk4.TabIndex = 4;
+            chk4.Text = "I authorize the sharing of all my health records with healthcare provider(s) for the purpose of providing healthcare services to me during this encounter.";
+            chk4.TextAlign = ContentAlignment.TopLeft;
+            chk4.UseVisualStyleBackColor = true;
+            // 
+            // chk3
+            // 
+            chk3.Dock = DockStyle.Top;
+            chk3.Font = new Font("Segoe UI", 8.5F);
+            chk3.Location = new Point(20, 135);
+            chk3.Name = "chk3";
+            chk3.Padding = new Padding(10, 0, 0, 10);
+            chk3.Size = new Size(860, 45);
+            chk3.TabIndex = 3;
+            chk3.Text = "I consent to usage of my ABHA address and ABHA number for linking of my legacy (past) government health records and those which will be generated during this encounter.";
+            chk3.TextAlign = ContentAlignment.TopLeft;
+            chk3.UseVisualStyleBackColor = true;
+            // 
+            // chk2
+            // 
+            chk2.Dock = DockStyle.Top;
+            chk2.Font = new Font("Segoe UI", 8.5F);
+            chk2.Location = new Point(20, 90);
+            chk2.Name = "chk2";
+            chk2.Padding = new Padding(10, 0, 0, 10);
+            chk2.Size = new Size(860, 45);
+            chk2.TabIndex = 2;
+            chk2.Text = "I intend to create Ayushman Bharat Health Account Number (\"ABHA number\") and Ayushman Bharat Health Account address (\"ABHA Address\") using document other than Aadhaar.";
+            chk2.TextAlign = ContentAlignment.TopLeft;
+            chk2.UseVisualStyleBackColor = true;
+            // 
+            // chk1
+            // 
+            chk1.Dock = DockStyle.Top;
+            chk1.Font = new Font("Segoe UI", 8.5F);
+            chk1.Location = new Point(20, 20);
+            chk1.Name = "chk1";
+            chk1.Padding = new Padding(10, 0, 0, 10);
+            chk1.Size = new Size(860, 70);
+            chk1.TabIndex = 1;
+            chk1.Text = resources.GetString("chk1.Text");
+            chk1.TextAlign = ContentAlignment.TopLeft;
+            chk1.UseVisualStyleBackColor = true;
+            // 
+            // lblDeclare
+            // 
+            lblDeclare.AutoSize = true;
+            lblDeclare.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            lblDeclare.Location = new Point(23, 20);
+            lblDeclare.Name = "lblDeclare";
+            lblDeclare.Size = new Size(154, 20);
+            lblDeclare.TabIndex = 0;
+            lblDeclare.Text = "I hereby declare that:";
+            // 
+            // pnlFooter
+            // 
+            pnlFooter.BackColor = Color.FromArgb(240, 240, 240);
+            pnlFooter.Controls.Add(btnCancel);
+            pnlFooter.Controls.Add(btnAgree);
+            pnlFooter.Dock = DockStyle.Bottom;
+            pnlFooter.Location = new Point(0, 550);
+            pnlFooter.Name = "pnlFooter";
+            pnlFooter.Size = new Size(900, 60);
+            pnlFooter.TabIndex = 2;
+            // 
+            // btnCancel
+            // 
+            btnCancel.BackColor = Color.FromArgb(200, 200, 200);
+            btnCancel.FlatAppearance.BorderSize = 0;
+            btnCancel.FlatStyle = FlatStyle.Flat;
+            btnCancel.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            btnCancel.ForeColor = Color.Black;
+            btnCancel.Location = new Point(450, 10);
+            btnCancel.Name = "btnCancel";
+            btnCancel.Size = new Size(120, 40);
+            btnCancel.TabIndex = 1;
+            btnCancel.Text = "Cancel";
+            btnCancel.UseVisualStyleBackColor = false;
+            btnCancel.Click += btnCancel_Click;
+            // 
+            // btnAgree
+            // 
+            btnAgree.BackColor = Color.FromArgb(230, 100, 50);
+            btnAgree.FlatAppearance.BorderSize = 0;
+            btnAgree.FlatStyle = FlatStyle.Flat;
+            btnAgree.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            btnAgree.ForeColor = Color.White;
+            btnAgree.Location = new Point(320, 10);
+            btnAgree.Name = "btnAgree";
+            btnAgree.Size = new Size(120, 40);
+            btnAgree.TabIndex = 0;
+            btnAgree.Text = "I Agree";
+            btnAgree.UseVisualStyleBackColor = false;
+            btnAgree.Click += btnAgree_Click;
             // 
             // frmABHAConsent
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.ClientSize = new System.Drawing.Size(900, 610);
-            this.Controls.Add(this.pnlContent);
-            this.Controls.Add(this.pnlFooter);
-            this.Controls.Add(this.pnlHeader);
-            this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Name = "frmABHAConsent";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.pnlHeader.ResumeLayout(false);
-            this.pnlHeader.PerformLayout();
-            this.pnlContent.ResumeLayout(false);
-            this.pnlContent.PerformLayout();
-            this.pnlComplex2.ResumeLayout(false);
-            this.pnlComplex2.PerformLayout();
-            this.pnlComplex1.ResumeLayout(false);
-            this.pnlComplex1.PerformLayout();
-            this.pnlFooter.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(120F, 120F);
+            AutoScaleMode = AutoScaleMode.Dpi;
+            ClientSize = new Size(900, 610);
+            Controls.Add(pnlContent);
+            Controls.Add(pnlFooter);
+            Controls.Add(pnlHeader);
+            Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            FormBorderStyle = FormBorderStyle.None;
+            Name = "frmABHAConsent";
+            StartPosition = FormStartPosition.CenterScreen;
+            pnlHeader.ResumeLayout(false);
+            pnlHeader.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+            pnlContent.ResumeLayout(false);
+            pnlContent.PerformLayout();
+            pnlComplex2.ResumeLayout(false);
+            pnlComplex2.PerformLayout();
+            pnlComplex1.ResumeLayout(false);
+            pnlComplex1.PerformLayout();
+            pnlFooter.ResumeLayout(false);
+            ResumeLayout(false);
 
         }
 

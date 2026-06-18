@@ -159,7 +159,7 @@ public class GatewayClient : IGatewayClient
             if (_config.LogCurl)
             {
                 var fullUrl = client.BaseAddress != null ? new Uri(client.BaseAddress, cleanPath).ToString() : cleanPath;
-                LogCurlRequest(fullUrl, json, client.DefaultRequestHeaders);
+                LogCurlRequest(fullUrl, json, client.DefaultRequestHeaders, "POST");
             }
 
             var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -196,15 +196,130 @@ public class GatewayClient : IGatewayClient
         }
     }
 
-    private void LogCurlRequest(string url, string jsonBody, System.Net.Http.Headers.HttpRequestHeaders headers)
+    private void LogCurlRequest(string url, string jsonBody, System.Net.Http.Headers.HttpRequestHeaders headers, string method = "POST")
     {
         var sb = new StringBuilder();
-        sb.Append($"curl -X POST \"{url}\"");
+        sb.Append($"curl -X {method} \"{url}\"");
         foreach (var header in headers)
         {
             sb.Append($" -H \"{header.Key}: {string.Join(", ", header.Value)}\"");
         }
         sb.Append($" -d '{jsonBody}'");
         _logger.LogInformation($"[CURL] {sb}");
+    }
+
+    public async Task<GenericV3Response?> PatchToGatewayAsync<T>(string path, T body, Dictionary<string, string>? customHeaders = null)
+    {
+        try
+        {
+            var token = await GetAccessTokenAsync();
+            using var client = CreateHttpClient();
+            
+            client.DefaultRequestHeaders.Add("Authorization", token);
+            client.DefaultRequestHeaders.Add("X-CM-ID", _config.Environment);
+
+            if (customHeaders != null)
+            {
+                foreach (var header in customHeaders)
+                {
+                    if (client.DefaultRequestHeaders.Contains(header.Key))
+                    {
+                        client.DefaultRequestHeaders.Remove(header.Key);
+                    }
+                    client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                }
+            }
+
+            var json = JsonSerializer.Serialize(body);
+
+            var cleanPath = path?.TrimStart('/') ?? "";
+            if (client.BaseAddress != null && client.BaseAddress.AbsolutePath.EndsWith("/gateway/") && cleanPath.StartsWith("gateway/"))
+            {
+                cleanPath = cleanPath["gateway/".Length..];
+            }
+            if (_config.LogCurl)
+            {
+                var fullUrl = client.BaseAddress != null ? new Uri(client.BaseAddress, cleanPath).ToString() : cleanPath;
+                LogCurlRequest(fullUrl, json, client.DefaultRequestHeaders, "PATCH");
+            }
+
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await client.PatchAsync(cleanPath, content);
+            
+            var responseString = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation($"Gateway call status: {response.StatusCode}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                if (string.IsNullOrWhiteSpace(responseString))
+                {
+                    return new GenericV3Response { HttpStatus = "OK" };
+                }
+                return JsonSerializer.Deserialize<GenericV3Response>(responseString);
+            }
+
+            return new GenericV3Response
+            {
+                HttpStatus = response.StatusCode.ToString(),
+                Status = "Error",
+                Message = responseString
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error calling Gateway path: {path}");
+            return new GenericV3Response
+            {
+                HttpStatus = "InternalServerError",
+                Status = "Error",
+                Message = ex.Message
+            };
+        }
+    }
+
+    public async Task<string> GetFromGatewayAsync(string path, Dictionary<string, string>? customHeaders = null)
+    {
+        try
+        {
+            var token = await GetAccessTokenAsync();
+            using var client = CreateHttpClient();
+            
+            client.DefaultRequestHeaders.Add("Authorization", token);
+            client.DefaultRequestHeaders.Add("X-CM-ID", _config.Environment);
+
+            if (customHeaders != null)
+            {
+                foreach (var header in customHeaders)
+                {
+                    if (client.DefaultRequestHeaders.Contains(header.Key))
+                    {
+                        client.DefaultRequestHeaders.Remove(header.Key);
+                    }
+                    client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                }
+            }
+
+            var cleanPath = path?.TrimStart('/') ?? "";
+            if (client.BaseAddress != null && client.BaseAddress.AbsolutePath.EndsWith("/gateway/") && cleanPath.StartsWith("gateway/"))
+            {
+                cleanPath = cleanPath["gateway/".Length..];
+            }
+            if (_config.LogCurl)
+            {
+                var fullUrl = client.BaseAddress != null ? new Uri(client.BaseAddress, cleanPath).ToString() : cleanPath;
+                LogCurlRequest(fullUrl, "", client.DefaultRequestHeaders, "GET");
+            }
+
+            var response = await client.GetAsync(cleanPath);
+            var responseString = await response.Content.ReadAsStringAsync();
+            
+            _logger.LogInformation($"Gateway GET call status: {response.StatusCode}");
+            return responseString;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error calling Gateway GET path: {path}");
+            return JsonSerializer.Serialize(new { error = ex.Message });
+        }
     }
 }
