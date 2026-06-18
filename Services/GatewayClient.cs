@@ -143,6 +143,8 @@ public class GatewayClient : IGatewayClient
             
             client.DefaultRequestHeaders.Add("Authorization", token);
             client.DefaultRequestHeaders.Add("X-CM-ID", cmId);
+            client.DefaultRequestHeaders.Add("REQUEST-ID", Guid.NewGuid().ToString());
+            client.DefaultRequestHeaders.Add("TIMESTAMP", Utils.GetCurrentTimeStamp());
 
             if (customHeaders != null)
             {
@@ -228,6 +230,8 @@ public class GatewayClient : IGatewayClient
             
             client.DefaultRequestHeaders.Add("Authorization", token);
             client.DefaultRequestHeaders.Add("X-CM-ID", cmId);
+            client.DefaultRequestHeaders.Add("REQUEST-ID", Guid.NewGuid().ToString());
+            client.DefaultRequestHeaders.Add("TIMESTAMP", Utils.GetCurrentTimeStamp());
 
             if (customHeaders != null)
             {
@@ -301,6 +305,8 @@ public class GatewayClient : IGatewayClient
             
             client.DefaultRequestHeaders.Add("Authorization", token);
             client.DefaultRequestHeaders.Add("X-CM-ID", cmId);
+            client.DefaultRequestHeaders.Add("REQUEST-ID", Guid.NewGuid().ToString());
+            client.DefaultRequestHeaders.Add("TIMESTAMP", Utils.GetCurrentTimeStamp());
 
             if (customHeaders != null)
             {
