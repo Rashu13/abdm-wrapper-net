@@ -84,7 +84,10 @@ public class GatewayClient : IGatewayClient
             };
 
             using var client = CreateHttpClient();
-            client.DefaultRequestHeaders.Add("X-CM-ID", _config.Environment);
+            string cmId = _config.Environment.Equals("prod", StringComparison.OrdinalIgnoreCase) || 
+                          _config.Environment.Equals("production", StringComparison.OrdinalIgnoreCase) 
+                          ? "abdm" : "sbx";
+            client.DefaultRequestHeaders.Add("X-CM-ID", cmId);
             client.DefaultRequestHeaders.Add("REQUEST-ID", Guid.NewGuid().ToString());
             client.DefaultRequestHeaders.Add("TIMESTAMP", Utils.GetCurrentTimeStamp());
 
@@ -134,8 +137,12 @@ public class GatewayClient : IGatewayClient
             var token = await GetAccessTokenAsync();
             using var client = CreateHttpClient();
             
+            string cmId = _config.Environment.Equals("prod", StringComparison.OrdinalIgnoreCase) || 
+                          _config.Environment.Equals("production", StringComparison.OrdinalIgnoreCase) 
+                          ? "abdm" : "sbx";
+            
             client.DefaultRequestHeaders.Add("Authorization", token);
-            client.DefaultRequestHeaders.Add("X-CM-ID", _config.Environment);
+            client.DefaultRequestHeaders.Add("X-CM-ID", cmId);
 
             if (customHeaders != null)
             {
@@ -215,8 +222,12 @@ public class GatewayClient : IGatewayClient
             var token = await GetAccessTokenAsync();
             using var client = CreateHttpClient();
             
+            string cmId = _config.Environment.Equals("prod", StringComparison.OrdinalIgnoreCase) || 
+                          _config.Environment.Equals("production", StringComparison.OrdinalIgnoreCase) 
+                          ? "abdm" : "sbx";
+            
             client.DefaultRequestHeaders.Add("Authorization", token);
-            client.DefaultRequestHeaders.Add("X-CM-ID", _config.Environment);
+            client.DefaultRequestHeaders.Add("X-CM-ID", cmId);
 
             if (customHeaders != null)
             {
@@ -284,8 +295,12 @@ public class GatewayClient : IGatewayClient
             var token = await GetAccessTokenAsync();
             using var client = CreateHttpClient();
             
+            string cmId = _config.Environment.Equals("prod", StringComparison.OrdinalIgnoreCase) || 
+                          _config.Environment.Equals("production", StringComparison.OrdinalIgnoreCase) 
+                          ? "abdm" : "sbx";
+            
             client.DefaultRequestHeaders.Add("Authorization", token);
-            client.DefaultRequestHeaders.Add("X-CM-ID", _config.Environment);
+            client.DefaultRequestHeaders.Add("X-CM-ID", cmId);
 
             if (customHeaders != null)
             {

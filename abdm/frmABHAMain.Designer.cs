@@ -32,6 +32,7 @@ namespace HMS.abdm
             this.btnClose = new System.Windows.Forms.Button();
             this.lblTitle = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.btnBridgeConfig = new System.Windows.Forms.Button();
             
             // Creation Group
             this.gbCreation = new System.Windows.Forms.GroupBox();
@@ -102,6 +103,22 @@ namespace HMS.abdm
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 17;
             this.pictureBox1.TabStop = false;
+            // 
+            // btnBridgeConfig
+            // 
+            this.btnBridgeConfig.BackColor = System.Drawing.Color.White;
+            this.btnBridgeConfig.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
+            this.btnBridgeConfig.FlatAppearance.BorderSize = 2;
+            this.btnBridgeConfig.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnBridgeConfig.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.btnBridgeConfig.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
+            this.btnBridgeConfig.Location = new System.Drawing.Point(700, 65);
+            this.btnBridgeConfig.Name = "btnBridgeConfig";
+            this.btnBridgeConfig.Size = new System.Drawing.Size(200, 50);
+            this.btnBridgeConfig.TabIndex = 18;
+            this.btnBridgeConfig.Text = "Gateway Configuration";
+            this.btnBridgeConfig.UseVisualStyleBackColor = false;
+            this.btnBridgeConfig.Click += new System.EventHandler(this.btnBridgeConfig_Click);
             // 
             // gbCreation
             // 
@@ -320,6 +337,7 @@ namespace HMS.abdm
             this.ClientSize = new System.Drawing.Size(920, 530);
             this.Controls.Add(this.gbVerification);
             this.Controls.Add(this.gbCreation);
+            this.Controls.Add(this.btnBridgeConfig);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.pnlHeader);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
@@ -341,6 +359,7 @@ namespace HMS.abdm
         private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.Button btnClose;
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.Button btnBridgeConfig;
         
         private System.Windows.Forms.GroupBox gbCreation;
         private System.Windows.Forms.Button btnCreate;

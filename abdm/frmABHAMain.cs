@@ -218,5 +218,13 @@ namespace HMS.abdm
                 frm.ShowDialog();
             }
         }
+
+        private void btnBridgeConfig_Click(object sender, EventArgs e)
+        {
+            using (var frm = new frmBridgeConfig())
+            {
+                frm.ShowDialog();
+            }
+        }
     }
 }

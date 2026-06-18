@@ -1,4 +1,4 @@
-namespace ABDM.WinForms
+namespace HMS.abdm
 {
     partial class frmBridgeConfig
     {
