@@ -164,7 +164,7 @@ public class HIPLinkV3Service : IHIPLinkV3Service
                 request, generateTokenRequestId, RequestStatus.LINK_TOKEN_REQUEST_ERROR,
                 new List<ErrorV3Response> { new() { Error = new ErrorResponse { Code = "1000", Message = gatewayErrorMsg } } });
 
-            return Error(request.RequestId, "LinkToken generation failed");
+            return Error(request.RequestId, $"LinkToken generation failed. Gateway Response: {gatewayErrorMsg}");
         }
         catch (Exception ex)
         {
