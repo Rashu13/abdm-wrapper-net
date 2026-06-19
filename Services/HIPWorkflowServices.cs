@@ -18,17 +18,20 @@ public class ConsentV3Service : IConsentV3Service
 {
     private readonly IGatewayClient _gateway;
     private readonly IRequestLogV3Service _requestLogService;
+    private readonly IPatientV3Service _patientService;
     private readonly AbdmConfig _config;
     private readonly ILogger<ConsentV3Service> _logger;
 
     public ConsentV3Service(
         IGatewayClient gateway,
         IRequestLogV3Service requestLogService,
+        IPatientV3Service patientService,
         IOptions<AbdmConfig> config,
         ILogger<ConsentV3Service> logger)
     {
         _gateway = gateway;
         _requestLogService = requestLogService;
+        _patientService = patientService;
         _config = config.Value;
         _logger = logger;
     }
@@ -45,6 +48,33 @@ public class ConsentV3Service : IConsentV3Service
         try
         {
             _logger.LogInformation($"HIP consent notify: {request.Notification?.ConsentId}, status: {request.Notification?.Status}");
+
+            if (request.Notification != null)
+            {
+                var consentId = request.Notification.ConsentId;
+                var status = request.Notification.Status;
+                var abhaAddress = request.Notification.ConsentDetail?.Patient?.Id;
+
+                if (!string.IsNullOrEmpty(abhaAddress))
+                {
+                    if (status.Equals("GRANTED", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var consent = new Consent
+                        {
+                            Status = status,
+                            LastUpdatedOn = Utils.GetCurrentTimeStamp(),
+                            GrantedOn = Utils.GetCurrentTimeStamp(),
+                            ConsentDetail = request.Notification.ConsentDetail,
+                            Signature = request.Notification.Signature ?? string.Empty
+                        };
+                        await _patientService.AddConsentAsync(abhaAddress, consent, hipId.ToString());
+                    }
+                    else
+                    {
+                        await _patientService.UpdatePatientConsentAsync(abhaAddress, consentId, status, Utils.GetCurrentTimeStamp(), hipId.ToString());
+                    }
+                }
+            }
 
             await _requestLogService.DataTransferNotifyAsync(
                 request,
