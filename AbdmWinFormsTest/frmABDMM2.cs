@@ -61,7 +61,8 @@ namespace HMS.abdm
                     new Dictionary<string, object>
                     {
                         ["referenceNumber"] = txtHipCareContextRef.Text.Trim(),
-                        ["display"] = txtHipCareContextDisplay.Text.Trim()
+                        ["display"] = txtHipCareContextDisplay.Text.Trim(),
+                        ["hiType"] = "Prescription"
                     }
                 };
 
@@ -76,6 +77,65 @@ namespace HMS.abdm
                 );
 
                 ShowResult(resp.Success, resp.Message, resp.Data);
+
+                // ==========================================
+                // Automatically push Health Data (Prescription) 
+                // using the original data from this form!
+                // ==========================================
+                if (resp.Success)
+                {
+                    try
+                    {
+                        var parchiJson = new
+                        {
+                            bundleType = "PrescriptionRecord",
+                            careContextReference = txtHipCareContextRef.Text.Trim(),
+                            authoredOn = DateTime.UtcNow.ToString("o"),
+                            patient = new
+                            {
+                                name = txtHipPatientName.Text.Trim(),
+                                patientReference = txtHipPatientRef.Text.Trim(),
+                                gender = cmbHipGender.Text.Trim(),
+                                birthDate = txtHipDob.Text.Trim()
+                            },
+                            practitioners = new[] { new { name = "Doctor", practitionerId = "DOC-01" } },
+                            organisation = new { facilityName = "MIDHA HOSPITAL", facilityId = "IN0610090658" },
+                            prescriptions = new[]
+                            {
+                                new { medicine = "Dummy Original Medicine 500mg", dosage = "1-0-1" }
+                            }
+                        };
+
+                        var recordData = new
+                        {
+                            AbhaAddress = txtHipAbhaAddress.Text.Trim(),
+                            CareContextReference = txtHipCareContextRef.Text.Trim(),
+                            RecordType = "PrescriptionRecord",
+                            FhirJsonPayload = System.Text.Json.JsonSerializer.Serialize(parchiJson)
+                        };
+
+                        using (var client = new System.Net.Http.HttpClient())
+                        {
+                            string wrapperBaseUrl = System.Configuration.ConfigurationManager.AppSettings["WrapperBaseUrl"] ?? "https://sbx.wati.digital";
+                            string apiUrl = $"{wrapperBaseUrl.TrimEnd('/')}/v3/patient/health-data"; 
+                            var content = new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(recordData), System.Text.Encoding.UTF8, "application/json");
+                            
+                            var healthResp = await client.PostAsync(apiUrl, content);
+                            if (healthResp.IsSuccessStatusCode)
+                            {
+                                txtLog.AppendText("\n[DATA PUSH] SUCCESS: Patient Health Data (Prescription) is pushed to Wrapper!\n");
+                            }
+                            else
+                            {
+                                txtLog.AppendText($"\n[DATA PUSH] ERROR: Failed to push Health Data to Wrapper. Status: {healthResp.StatusCode}\n");
+                            }
+                        }
+                    }
+                    catch (Exception pushEx)
+                    {
+                        txtLog.AppendText($"\n[DATA PUSH] EXCEPTION: {pushEx.Message}\n");
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -106,7 +166,8 @@ namespace HMS.abdm
                     new Dictionary<string, object>
                     {
                         ["referenceNumber"] = txtHipCareContextRef.Text.Trim(),
-                        ["display"] = txtHipCareContextDisplay.Text.Trim()
+                        ["display"] = txtHipCareContextDisplay.Text.Trim(),
+                        ["hiType"] = "Prescription"
                     }
                 };
 
@@ -214,11 +275,16 @@ namespace HMS.abdm
                 btnRequestConsent.Enabled = false;
                 btnRequestConsent.Text = "Requesting...";
 
-                var hiTypes = new List<string>();
-                if (chkConsultation.Checked) hiTypes.Add("OPConsultation");
-                if (chkPrescription.Checked) hiTypes.Add("Prescription");
-                if (chkDiagnostic.Checked) hiTypes.Add("DiagnosticReport");
-                if (hiTypes.Count == 0) hiTypes.Add("OPConsultation"); // Default
+                var hiTypes = new List<string>
+                {
+                    "DiagnosticReport",
+                    "DischargeSummary",
+                    "HealthDocumentRecord",
+                    "ImmunizationRecord",
+                    "OPConsultation",
+                    "Prescription",
+                    "WellnessRecord"
+                };
 
                 var resp = await _client.InitiateConsentRequestAsync(
                     txtHiuPatientAbha.Text.Trim(),

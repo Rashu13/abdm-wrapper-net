@@ -41,7 +41,7 @@ public class AbdmM1Controller : ControllerBase
                 var consentLog = new AbhaConsentLog
                 {
                     LoginId = request.LoginId ?? string.Empty,
-                    ConsentTimestamp = request.ConsentTimestamp ?? DateTime.UtcNow,
+                    ConsentTimestamp = (request.ConsentTimestamp ?? DateTime.UtcNow).ToUniversalTime(),
                     OperatorName = request.OperatorName ?? string.Empty,
                     BeneficiaryName = request.BeneficiaryName ?? string.Empty,
                     Chk1 = request.Chk1 ?? false,

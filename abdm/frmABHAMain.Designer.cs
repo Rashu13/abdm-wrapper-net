@@ -33,6 +33,7 @@ namespace HMS.abdm
             this.lblTitle = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.btnBridgeConfig = new System.Windows.Forms.Button();
+            this.btnTestAbdm = new System.Windows.Forms.Button();
             
             // Creation Group
             this.gbCreation = new System.Windows.Forms.GroupBox();
@@ -119,6 +120,22 @@ namespace HMS.abdm
             this.btnBridgeConfig.Text = "Gateway Configuration";
             this.btnBridgeConfig.UseVisualStyleBackColor = false;
             this.btnBridgeConfig.Click += new System.EventHandler(this.btnBridgeConfig_Click);
+            // 
+            // btnTestAbdm
+            // 
+            this.btnTestAbdm.BackColor = System.Drawing.Color.White;
+            this.btnTestAbdm.FlatAppearance.BorderColor = System.Drawing.Color.Green;
+            this.btnTestAbdm.FlatAppearance.BorderSize = 2;
+            this.btnTestAbdm.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnTestAbdm.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.btnTestAbdm.ForeColor = System.Drawing.Color.Green;
+            this.btnTestAbdm.Location = new System.Drawing.Point(480, 65);
+            this.btnTestAbdm.Name = "btnTestAbdm";
+            this.btnTestAbdm.Size = new System.Drawing.Size(200, 50);
+            this.btnTestAbdm.TabIndex = 20;
+            this.btnTestAbdm.Text = "TEST: Push Parchi";
+            this.btnTestAbdm.UseVisualStyleBackColor = false;
+            this.btnTestAbdm.Click += new System.EventHandler(this.btnTestAbdm_Click);
             // 
             // gbCreation
             // 
@@ -338,6 +355,7 @@ namespace HMS.abdm
             this.Controls.Add(this.gbVerification);
             this.Controls.Add(this.gbCreation);
             this.Controls.Add(this.btnBridgeConfig);
+            this.Controls.Add(this.btnTestAbdm);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.pnlHeader);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
@@ -360,6 +378,7 @@ namespace HMS.abdm
         private System.Windows.Forms.Button btnClose;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Button btnBridgeConfig;
+        private System.Windows.Forms.Button btnTestAbdm;
         
         private System.Windows.Forms.GroupBox gbCreation;
         private System.Windows.Forms.Button btnCreate;

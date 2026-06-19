@@ -199,7 +199,7 @@ public class HIPLinkV3Service : IHIPLinkV3Service
             var headers = new Dictionary<string, string>
             {
                 ["X-HIP-ID"] = request.RequesterId,
-                ["Authorization"] = $"Bearer {linkToken}",
+                ["X-LINK-TOKEN"] = $"Bearer {linkToken}",
                 ["REQUEST-ID"] = request.RequestId,
                 ["TIMESTAMP"] = Utils.GetCurrentTimeStamp()
             };
@@ -221,11 +221,12 @@ public class HIPLinkV3Service : IHIPLinkV3Service
                 };
             }
 
+            var errorMsg = !string.IsNullOrEmpty(response?.Message) ? response.Message : "Unable to link care contexts";
             await _requestLogService.PersistHipLinkRequestAsync(
                 request, RequestStatus.ADD_CARE_CONTEXT_ERROR,
-                new List<ErrorV3Response> { new() { Error = new ErrorResponse { Code = "1000", Message = "Unable to link care contexts" } } });
+                new List<ErrorV3Response> { new() { Error = new ErrorResponse { Code = "1000", Message = errorMsg } } });
 
-            return Error(request.RequestId, "Unable to link care contexts");
+            return Error(request.RequestId, $"Gateway Error: {errorMsg}");
         }
         catch (Exception ex)
         {

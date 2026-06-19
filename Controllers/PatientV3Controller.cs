@@ -77,6 +77,7 @@ public class PatientV3Controller : ControllerBase
             return BadRequest(new { Message = "AbhaAddress, CareContextReference, and FhirJsonPayload are mandatory" });
         }
 
+        record.CreatedAt = DateTime.UtcNow;
         await _patientService.AddHealthDataRecordAsync(record);
         
         return Ok(new { Message = "Health data record saved successfully." });

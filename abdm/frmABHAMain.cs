@@ -226,5 +226,62 @@ namespace HMS.abdm
                 frm.ShowDialog();
             }
         }
+
+        private async void btnTestAbdm_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var parchiJson = new
+                {
+                    bundleType = "PrescriptionRecord",
+                    careContextReference = "OPD-1001",
+                    authoredOn = DateTime.UtcNow.ToString("o"),
+                    patient = new
+                    {
+                        name = "Test Patient",
+                        patientReference = "PT-001",
+                        gender = "male",
+                        birthDate = "1990-01-01"
+                    },
+                    practitioners = new[] { new { name = "Dr. Midha", practitionerId = "DOC-01" } },
+                    organisation = new { facilityName = "MIDHA HOSPITAL", facilityId = "IN0610090658" },
+                    prescriptions = new[]
+                    {
+                        new { medicine = "Paracetamol 500mg", dosage = "1-1-1" }
+                    }
+                };
+
+                var recordData = new
+                {
+                    AbhaAddress = "testpatient@sbx",
+                    CareContextReference = "OPD-1001",
+                    RecordType = "PrescriptionRecord",
+                    FhirJsonPayload = System.Text.Json.JsonSerializer.Serialize(parchiJson)
+                };
+
+                using (var client = new System.Net.Http.HttpClient())
+                {
+                    // Yahan par "localhost:5221" ko hatakar apne Wrapper ka asal domain/URL daal dein! 
+                    // Yahan par humne aapka naya online Wrapper URL daal diya hai!
+                    string wrapperBaseUrl = System.Configuration.ConfigurationManager.AppSettings["AbdmSettings:WrapperUrl"] ?? "https://sbx.wati.digital";
+                    string apiUrl = $"{wrapperBaseUrl.TrimEnd('/')}/v3/patient/health-data"; 
+                    var content = new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(recordData), System.Text.Encoding.UTF8, "application/json");
+                    
+                    var response = await client.PostAsync(apiUrl, content);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        MessageBox.Show("Parchi Wrapper Database mein chali gayi! ABDM Push tayyar hai.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Error saving data: {response.StatusCode}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Exception: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
     }
 }
