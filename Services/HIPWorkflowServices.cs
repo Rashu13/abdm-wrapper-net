@@ -196,7 +196,15 @@ public class HIPHealthInformationV3Service : IHIPHealthInformationV3Service
                     try 
                     {
                         // Use native .NET C# FHIR Mapper!
-                        var fhirBundleStr = await _fhirMapperService.GeneratePrescriptionBundleAsync(record.FhirJsonPayload);
+                        string fhirBundleStr;
+                        if (record.RecordType != null && (record.RecordType.Equals("OPConsultationRecord", StringComparison.OrdinalIgnoreCase) || record.RecordType.Equals("OPConsultation", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            fhirBundleStr = await _fhirMapperService.GenerateOPConsultationBundleAsync(record.FhirJsonPayload);
+                        }
+                        else
+                        {
+                            fhirBundleStr = await _fhirMapperService.GeneratePrescriptionBundleAsync(record.FhirJsonPayload);
+                        }
                         
                         healthInformationBundles.Add(new HealthInformationBundle
                         {
