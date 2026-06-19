@@ -56,13 +56,23 @@ namespace HMS.abdm
                 btnRegisterPatient.Enabled = false;
                 btnRegisterPatient.Text = "Registering...";
 
+                string hiType = "Prescription";
+                string recordType = "PrescriptionRecord";
+                if (txtHipCareContextDisplay.Text.IndexOf("Consult", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    txtHipCareContextDisplay.Text.IndexOf("OP", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    txtHipCareContextRef.Text.IndexOf("OP", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    hiType = "OPConsultation";
+                    recordType = "OPConsultationRecord";
+                }
+
                 var careContexts = new List<Dictionary<string, object>>
                 {
                     new Dictionary<string, object>
                     {
                         ["referenceNumber"] = txtHipCareContextRef.Text.Trim(),
                         ["display"] = txtHipCareContextDisplay.Text.Trim(),
-                        ["hiType"] = "Prescription"
+                        ["hiType"] = hiType
                     }
                 };
 
@@ -79,7 +89,7 @@ namespace HMS.abdm
                 ShowResult(resp.Success, resp.Message, resp.Data);
 
                 // ==========================================
-                // Automatically push Health Data (Prescription) 
+                // Automatically push Health Data (Prescription / OPConsultation) 
                 // using the original data from this form!
                 // ==========================================
                 if (resp.Success)
@@ -88,7 +98,7 @@ namespace HMS.abdm
                     {
                         var parchiJson = new
                         {
-                            bundleType = "PrescriptionRecord",
+                            bundleType = recordType,
                             careContextReference = txtHipCareContextRef.Text.Trim(),
                             authoredOn = DateTime.UtcNow.ToString("o"),
                             patient = new
@@ -100,6 +110,7 @@ namespace HMS.abdm
                             },
                             practitioners = new[] { new { name = "Doctor", practitionerId = "DOC-01" } },
                             organisation = new { facilityName = "MIDHA HOSPITAL", facilityId = "IN0610090658" },
+                            clinicalNotes = hiType == "OPConsultation" ? "OPD Consultation - Patient complained of headache and body pain." : null,
                             prescriptions = new[]
                             {
                                 new { medicine = "Dummy Original Medicine 500mg", dosage = "1-0-1" }
@@ -110,7 +121,7 @@ namespace HMS.abdm
                         {
                             AbhaAddress = txtHipAbhaAddress.Text.Trim(),
                             CareContextReference = txtHipCareContextRef.Text.Trim(),
-                            RecordType = "PrescriptionRecord",
+                            RecordType = recordType,
                             FhirJsonPayload = System.Text.Json.JsonSerializer.Serialize(parchiJson)
                         };
 
@@ -123,7 +134,7 @@ namespace HMS.abdm
                             var healthResp = await client.PostAsync(apiUrl, content);
                             if (healthResp.IsSuccessStatusCode)
                             {
-                                txtLog.AppendText("\n[DATA PUSH] SUCCESS: Patient Health Data (Prescription) is pushed to Wrapper!\n");
+                                txtLog.AppendText($"\n[DATA PUSH] SUCCESS: Patient Health Data ({hiType}) is pushed to Wrapper!\n");
                             }
                             else
                             {
@@ -161,13 +172,21 @@ namespace HMS.abdm
                 btnInitiateLink.Enabled = false;
                 btnInitiateLink.Text = "Initiating...";
 
+                string hiType = "Prescription";
+                if (txtHipCareContextDisplay.Text.IndexOf("Consult", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    txtHipCareContextDisplay.Text.IndexOf("OP", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    txtHipCareContextRef.Text.IndexOf("OP", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    hiType = "OPConsultation";
+                }
+
                 var careContexts = new List<Dictionary<string, object>>
                 {
                     new Dictionary<string, object>
                     {
                         ["referenceNumber"] = txtHipCareContextRef.Text.Trim(),
                         ["display"] = txtHipCareContextDisplay.Text.Trim(),
-                        ["hiType"] = "Prescription"
+                        ["hiType"] = hiType
                     }
                 };
 
