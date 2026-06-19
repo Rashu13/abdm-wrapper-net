@@ -386,6 +386,10 @@ public class SqlServerPatientV3Service : IPatientV3Service
         {
             existing.FhirJsonPayload = record.FhirJsonPayload;
             existing.RecordType = record.RecordType;
+            if (existing.CreatedAt.Kind == DateTimeKind.Unspecified)
+            {
+                existing.CreatedAt = DateTime.SpecifyKind(existing.CreatedAt, DateTimeKind.Utc);
+            }
             _context.HealthDataRecords.Update(existing);
         }
         else

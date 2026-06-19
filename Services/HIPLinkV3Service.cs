@@ -204,6 +204,9 @@ public class HIPLinkV3Service : IHIPLinkV3Service
                 ["TIMESTAMP"] = Utils.GetCurrentTimeStamp()
             };
 
+            await _requestLogService.PersistHipLinkRequestAsync(
+                request, RequestStatus.USER_INIT_REQUEST_RECEIVED_BY_WRAPPER, null);
+
             var response = await _gateway.PostToGatewayAsync(
                 _config.Gateway.AddCareContextsPath ?? "api/v3/link/carecontext",
                 addCareContextsBody, headers);
@@ -211,8 +214,8 @@ public class HIPLinkV3Service : IHIPLinkV3Service
             bool ok = response?.HttpStatus is "OK" or "Accepted" || response?.HttpStatus?.StartsWith("2") == true;
             if (ok)
             {
-                await _requestLogService.PersistHipLinkRequestAsync(
-                    request, RequestStatus.ADD_CARE_CONTEXT_ACCEPTED, null);
+                await _requestLogService.UpdateStatusAsync(
+                    request.RequestId, RequestStatus.ADD_CARE_CONTEXT_ACCEPTED);
                 return new FacadeV3Response
                 {
                     ClientRequestId = request.RequestId,
@@ -222,9 +225,10 @@ public class HIPLinkV3Service : IHIPLinkV3Service
             }
 
             var errorMsg = !string.IsNullOrEmpty(response?.Message) ? response.Message : "Unable to link care contexts";
-            await _requestLogService.PersistHipLinkRequestAsync(
-                request, RequestStatus.ADD_CARE_CONTEXT_ERROR,
-                new List<ErrorV3Response> { new() { Error = new ErrorResponse { Code = "1000", Message = errorMsg } } });
+            var errorList = new List<ErrorV3Response> { new() { Error = new ErrorResponse { Code = "1000", Message = errorMsg } } };
+            
+            await _requestLogService.UpdateErrorAsync(
+                request.RequestId, errorList, RequestStatus.ADD_CARE_CONTEXT_ERROR);
 
             return Error(request.RequestId, $"Gateway Error: {errorMsg}");
         }
