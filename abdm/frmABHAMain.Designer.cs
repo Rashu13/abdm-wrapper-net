@@ -129,11 +129,11 @@ namespace HMS.abdm
             this.btnTestAbdm.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnTestAbdm.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             this.btnTestAbdm.ForeColor = System.Drawing.Color.Green;
-            this.btnTestAbdm.Location = new System.Drawing.Point(480, 65);
+            this.btnTestAbdm.Location = new System.Drawing.Point(260, 65);
             this.btnTestAbdm.Name = "btnTestAbdm";
-            this.btnTestAbdm.Size = new System.Drawing.Size(200, 50);
+            this.btnTestAbdm.Size = new System.Drawing.Size(400, 50);
             this.btnTestAbdm.TabIndex = 20;
-            this.btnTestAbdm.Text = "TEST: Push Parchi";
+            this.btnTestAbdm.Text = "Write Prescription (Dwai / PDF)";
             this.btnTestAbdm.UseVisualStyleBackColor = false;
             this.btnTestAbdm.Click += new System.EventHandler(this.btnTestAbdm_Click);
             // 
