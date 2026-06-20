@@ -334,6 +334,7 @@ namespace HMS.abdm
                     if (linkSuccess)
                     {
                         MessageBox.Show("All actions completed successfully!\n1. Patient registered in DB\n2. Health record saved\n3. Care context link request sent to ABDM.", "Flow Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        InitializeDefaultValues(); // Automatically regenerate reference IDs for next prescription
                     }
                 }
             }
