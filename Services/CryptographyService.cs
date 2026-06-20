@@ -14,6 +14,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math.EC;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
+using Org.BouncyCastle.Crypto.EC;
 using AbdmWrapperNet.Models;
 
 namespace AbdmWrapperNet.Services;
@@ -32,7 +33,7 @@ public class CryptographyService : ICryptographyService
     {
         try
         {
-            X9ECParameters ecParameters = ECNamedCurveTable.GetByName(CurveName);
+            X9ECParameters ecParameters = CustomNamedCurves.GetByName(CurveName);
             ECDomainParameters domainParams = new ECDomainParameters(
                 ecParameters.Curve,
                 ecParameters.G,
@@ -230,7 +231,7 @@ public class CryptographyService : ICryptographyService
 
     private ECPrivateKeyParameters LoadPrivateKey(byte[] data)
     {
-        X9ECParameters ecP = ECNamedCurveTable.GetByName(CurveName);
+        X9ECParameters ecP = CustomNamedCurves.GetByName(CurveName);
         ECDomainParameters domainParams = new ECDomainParameters(ecP.Curve, ecP.G, ecP.N, ecP.H, ecP.GetSeed());
         var d = new Org.BouncyCastle.Math.BigInteger(1, data);
         return new ECPrivateKeyParameters(d, domainParams);
@@ -238,7 +239,7 @@ public class CryptographyService : ICryptographyService
 
     private ECPublicKeyParameters LoadPublicKeyFromUncompressedPoint(byte[] data)
     {
-        X9ECParameters ecP = ECNamedCurveTable.GetByName(CurveName);
+        X9ECParameters ecP = CustomNamedCurves.GetByName(CurveName);
         ECDomainParameters domainParams = new ECDomainParameters(ecP.Curve, ecP.G, ecP.N, ecP.H, ecP.GetSeed());
         ECPoint q = ecP.Curve.DecodePoint(data);
         return new ECPublicKeyParameters(q, domainParams);
