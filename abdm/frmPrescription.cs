@@ -130,6 +130,32 @@ namespace HMS.abdm
                 return false;
             }
 
+            // Auto-generate PDF prescription report if not manually attached
+            if (_pdfBytes == null)
+            {
+                AppendLog("No manual PDF uploaded. Auto-generating prescription PDF report...");
+                var medListForPdf = new List<string[]>();
+                foreach (ListViewItem item in lvMedicines.Items)
+                {
+                    medListForPdf.Add(new string[] { item.Text, item.SubItems[1].Text });
+                }
+                
+                _pdfBytes = GeneratePrescriptionPdf(
+                    txtPatientName.Text.Trim(),
+                    txtAbhaAddress.Text.Trim(),
+                    cmbGender.Text.Trim(),
+                    txtDob.Text.Trim(),
+                    txtCareContextRef.Text.Trim(),
+                    medListForPdf
+                );
+                _pdfFileName = $"Prescription_{txtCareContextRef.Text.Trim()}.pdf";
+                lblPdfStatus.Text = $"Auto-Generated: {_pdfFileName} ({(_pdfBytes.Length / 1024.0):F1} KB)";
+                lblPdfStatus.ForeColor = Color.DarkGreen;
+                
+                // Automatically switch record type to HealthDocumentRecord to include the PDF attachment
+                cmbRecordType.SelectedIndex = 2; // HealthDocumentRecord
+            }
+
             try
             {
                 AppendLog("1. Registering Patient and Care Context in Wrapper DB...");
@@ -348,6 +374,76 @@ namespace HMS.abdm
         private void AppendLog(string message)
         {
             txtLogs.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}");
+        }
+
+        public static byte[] GeneratePrescriptionPdf(string patientName, string abhaAddress, string gender, string dob, string careContextRef, List<string[]> medicines)
+        {
+            using (var ms = new MemoryStream())
+            {
+                using (var writer = new StreamWriter(ms, Encoding.ASCII))
+                {
+                    writer.Write("%PDF-1.4\n");
+                    var objectOffsets = new List<long>();
+                    
+                    // Object 1: Catalog
+                    objectOffsets.Add(ms.Position);
+                    writer.Write("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+                    
+                    // Object 2: Pages
+                    objectOffsets.Add(ms.Position);
+                    writer.Write("2 0 obj\n<< /Type /Pages /Kids [ 3 0 R ] /Count 1 >>\nendobj\n");
+                    
+                    var sb = new StringBuilder();
+                    sb.Append("BT\n/F1 14 Tf\n50 750 Td\n(MIDHA HOSPITAL - PRESCRIPTION REPORT) Tj\nET\n");
+                    sb.Append($"BT\n/F1 10 Tf\n50 710 Td\n(Patient Name: {patientName}) Tj\nET\n");
+                    sb.Append($"BT\n/F1 10 Tf\n50 690 Td\n(ABHA Address: {abhaAddress}) Tj\nET\n");
+                    sb.Append($"BT\n/F1 10 Tf\n50 670 Td\n(Gender: {gender}  |  DOB: {dob}) Tj\nET\n");
+                    sb.Append($"BT\n/F1 10 Tf\n50 650 Td\n(Care Context Ref: {careContextRef}) Tj\nET\n");
+                    sb.Append($"BT\n/F1 10 Tf\n50 630 Td\n(Date: {DateTime.Now:dd-MMM-yyyy HH:mm}) Tj\nET\n");
+                    
+                    sb.Append("BT\n/F1 12 Tf\n50 590 Td\n(Prescribed Medicines:) Tj\nET\n");
+                    
+                    int y = 570;
+                    foreach (var med in medicines)
+                    {
+                        sb.Append($"BT\n/F1 10 Tf\n50 {y} Td\n(- {med[0]}  -  Dosage: {med[1]}) Tj\nET\n");
+                        y -= 20;
+                    }
+                    
+                    sb.Append($"BT\n/F1 10 Tf\n50 {y - 40} Td\n(Signed: Dr. Midha) Tj\nET\n");
+                    
+                    string contentStream = sb.ToString();
+                    byte[] contentBytes = Encoding.ASCII.GetBytes(contentStream);
+                    
+                    // Object 3: Page
+                    objectOffsets.Add(ms.Position);
+                    writer.Write("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [ 0 0 595 842 ] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n");
+                    
+                    // Object 4: Content
+                    objectOffsets.Add(ms.Position);
+                    writer.Write($"4 0 obj\n<< /Length {contentBytes.Length} >>\nstream\n");
+                    writer.Flush();
+                    ms.Write(contentBytes, 0, contentBytes.Length);
+                    writer.Write("\nendstream\nendobj\n");
+                    
+                    // Object 5: Font
+                    objectOffsets.Add(ms.Position);
+                    writer.Write("5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n");
+                    
+                    // Xref
+                    long xrefOffset = ms.Position;
+                    writer.Write($"xref\n0 {objectOffsets.Count + 1}\n0000000000 65535 f \n");
+                    foreach (var offset in objectOffsets)
+                    {
+                        writer.Write($"{offset:D10} 00000 n \n");
+                    }
+                    
+                    // Trailer
+                    writer.Write($"trailer\n<< /Size {objectOffsets.Count + 1} /Root 1 0 R >>\nstartxref\n{xrefOffset}\n%%EOF\n");
+                    writer.Flush();
+                }
+                return ms.ToArray();
+            }
         }
     }
 }
