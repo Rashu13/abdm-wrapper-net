@@ -33,26 +33,16 @@ public class CryptographyService : ICryptographyService
     {
         try
         {
-            X9ECParameters ecParameters = CustomNamedCurves.GetByName(CurveName);
-            ECDomainParameters domainParams = new ECDomainParameters(
-                ecParameters.Curve,
-                ecParameters.G,
-                ecParameters.N,
-                ecParameters.H,
-                ecParameters.GetSeed()
-            );
-
-            ECKeyGenerationParameters keyGenParams = new ECKeyGenerationParameters(domainParams, new SecureRandom());
-            ECKeyPairGenerator generator = new ECKeyPairGenerator();
-            generator.Init(keyGenParams);
+            X25519KeyPairGenerator generator = new X25519KeyPairGenerator();
+            generator.Init(new X25519KeyGenerationParameters(new SecureRandom()));
 
             AsymmetricCipherKeyPair keyPair = generator.GenerateKeyPair();
             
-            ECPrivateKeyParameters privateKey = (ECPrivateKeyParameters)keyPair.Private;
-            ECPublicKeyParameters publicKey = (ECPublicKeyParameters)keyPair.Public;
+            X25519PrivateKeyParameters privateKey = (X25519PrivateKeyParameters)keyPair.Private;
+            X25519PublicKeyParameters publicKey = (X25519PublicKeyParameters)keyPair.Public;
 
-            byte[] privateKeyBytes = privateKey.D.ToByteArrayUnsigned();
-            byte[] publicKeyBytes = publicKey.Q.GetEncoded(false); // Uncompressed point encoding
+            byte[] privateKeyBytes = privateKey.GetEncoded();
+            byte[] publicKeyBytes = publicKey.GetEncoded(); 
 
             byte[] nonceBytes = new byte[32];
             new SecureRandom().NextBytes(nonceBytes);
@@ -208,47 +198,57 @@ public class CryptographyService : ICryptographyService
 
     private byte[] DoEcdh(byte[] privateKeyBytes, byte[] publicKeyBytes, bool useX509ForPublic)
     {
-        ECPrivateKeyParameters privateKeyParams = LoadPrivateKey(privateKeyBytes);
-        ECPublicKeyParameters publicKeyParams = useX509ForPublic 
+        X25519PrivateKeyParameters privateKeyParams = LoadPrivateKey(privateKeyBytes);
+        X25519PublicKeyParameters publicKeyParams = useX509ForPublic 
             ? LoadPublicKeyFromX509(publicKeyBytes) 
             : LoadPublicKeyFromUncompressedPoint(publicKeyBytes);
 
-        ECDHBasicAgreement agreement = new ECDHBasicAgreement();
+        X25519Agreement agreement = new X25519Agreement();
         agreement.Init(privateKeyParams);
         
-        var secretBigInt = agreement.CalculateAgreement(publicKeyParams);
-        byte[] secret = secretBigInt.ToByteArrayUnsigned();
-
-        if (secret.Length < 32)
-        {
-            byte[] paddedSecret = new byte[32];
-            Array.Copy(secret, 0, paddedSecret, 32 - secret.Length, secret.Length);
-            return paddedSecret;
-        }
+        byte[] secret = new byte[agreement.AgreementSize];
+        agreement.CalculateAgreement(publicKeyParams, secret, 0);
 
         return secret;
     }
 
-    private ECPrivateKeyParameters LoadPrivateKey(byte[] data)
+    private X25519PrivateKeyParameters LoadPrivateKey(byte[] data)
     {
-        X9ECParameters ecP = CustomNamedCurves.GetByName(CurveName);
-        ECDomainParameters domainParams = new ECDomainParameters(ecP.Curve, ecP.G, ecP.N, ecP.H, ecP.GetSeed());
-        var d = new Org.BouncyCastle.Math.BigInteger(1, data);
-        return new ECPrivateKeyParameters(d, domainParams);
+        return new X25519PrivateKeyParameters(data, 0);
     }
 
-    private ECPublicKeyParameters LoadPublicKeyFromUncompressedPoint(byte[] data)
+    private X25519PublicKeyParameters LoadPublicKeyFromUncompressedPoint(byte[] data)
     {
-        X9ECParameters ecP = CustomNamedCurves.GetByName(CurveName);
-        ECDomainParameters domainParams = new ECDomainParameters(ecP.Curve, ecP.G, ecP.N, ecP.H, ecP.GetSeed());
-        ECPoint q = ecP.Curve.DecodePoint(data);
-        return new ECPublicKeyParameters(q, domainParams);
+        if (data.Length == 32)
+        {
+            return new X25519PublicKeyParameters(data, 0);
+        }
+        else if (data.Length == 65 && data[0] == 0x04)
+        {
+            // Uncompressed point: 0x04 || X (32 bytes) || Y (32 bytes)
+            // For X25519, the public key is just the X coordinate
+            byte[] x = new byte[32];
+            Array.Copy(data, 1, x, 0, 32);
+            return new X25519PublicKeyParameters(x, 0);
+        }
+        else if (data.Length > 32)
+        {
+            // Fallback: try parsing as X509 SubjectPublicKeyInfo
+            try
+            {
+                var pubKey = PublicKeyFactory.CreateKey(data);
+                if (pubKey is X25519PublicKeyParameters x25519Key)
+                    return x25519Key;
+            }
+            catch {}
+        }
+        throw new ArgumentException("Invalid public key format for X25519");
     }
 
-    private ECPublicKeyParameters LoadPublicKeyFromX509(byte[] data)
+    private X25519PublicKeyParameters LoadPublicKeyFromX509(byte[] data)
     {
         AsymmetricKeyParameter pubKey = PublicKeyFactory.CreateKey(data);
-        return (ECPublicKeyParameters)pubKey;
+        return (X25519PublicKeyParameters)pubKey;
     }
 
     private byte[] GenerateAesKey(byte[] xorOfRandoms, byte[] sharedSecret)
@@ -268,7 +268,7 @@ public class CryptographyService : ICryptographyService
     private string GetEncodedHipPublicKey(string base64PublicKey)
     {
         byte[] publicKeyBytes = Convert.FromBase64String(base64PublicKey);
-        ECPublicKeyParameters publicKeyParams = LoadPublicKeyFromUncompressedPoint(publicKeyBytes);
+        X25519PublicKeyParameters publicKeyParams = LoadPublicKeyFromUncompressedPoint(publicKeyBytes);
         
         byte[] subjectPublicKeyInfoBytes = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(publicKeyParams).GetEncoded();
         return Convert.ToBase64String(subjectPublicKeyInfoBytes);
