@@ -63,8 +63,10 @@ public class HIUHealthInformationV3Service
                 };
             }
 
-            // Build the gateway request
-            // Real implementation would generate ECDH key pair for encryption, but here we use stub key material.
+            // Generate real ECDH key pair for encryption
+            var cryptoService = new CryptographyService(Microsoft.Extensions.Logging.Abstractions.NullLogger<CryptographyService>.Instance);
+            var hiuKeys = cryptoService.GenerateKeys();
+
             var gatewayRequest = new
             {
                 requestId = clientRequest.RequestId,
@@ -72,7 +74,11 @@ public class HIUHealthInformationV3Service
                 hiRequest = new
                 {
                     consent = new { id = clientRequest.ConsentId },
-                    dateRange = clientRequest.DateRange ?? new DateRange { From = "2020-01-01T00:00:00Z", To = Utils.GetCurrentTimeStamp() },
+                    dateRange = new 
+                    { 
+                        from = clientRequest.DateRange?.From ?? "2020-01-01T00:00:00.000Z", 
+                        to = clientRequest.DateRange?.To ?? Utils.GetCurrentTimeStamp() 
+                    },
                     dataPushUrl = _config.HiuSetup?.DataPushUrl ?? string.Empty,
                     keyMaterial = new
                     {
@@ -80,11 +86,11 @@ public class HIUHealthInformationV3Service
                         curve = "Curve25519",
                         dhPublicKey = new
                         {
-                            expiry = DateTime.UtcNow.AddHours(24).ToString("o"),
+                            expiry = DateTime.UtcNow.AddHours(24).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
                             parameters = "Curve25519/32byte random key",
-                            keyValue = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32))
+                            keyValue = hiuKeys.PublicKey
                         },
-                        nonce = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32))
+                        nonce = hiuKeys.Nonce
                     }
                 }
             };
