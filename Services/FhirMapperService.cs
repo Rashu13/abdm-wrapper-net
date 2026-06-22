@@ -25,6 +25,26 @@ public class FhirMapperService : IFhirMapperService
     private const string IDENTIFIER_TYPE_SYSTEM = "http://terminology.hl7.org/CodeSystem/v2-0203";
     private const string SNOMED_URL = "http://snomed.info/sct";
 
+    private Meta CreateMeta(string profileUrl)
+    {
+        return new Meta
+        {
+            VersionId = "1",
+            LastUpdated = DateTimeOffset.UtcNow,
+            Profile = new[] { profileUrl }
+        };
+    }
+
+    private AdministrativeGender ParseGender(string? genderStr)
+    {
+        if (string.IsNullOrEmpty(genderStr)) return AdministrativeGender.Unknown;
+        var clean = genderStr.Trim().ToLowerInvariant();
+        if (clean == "m" || clean == "male") return AdministrativeGender.Male;
+        if (clean == "f" || clean == "female") return AdministrativeGender.Female;
+        if (clean == "other" || clean == "o") return AdministrativeGender.Other;
+        return AdministrativeGender.Unknown;
+    }
+
     public System.Threading.Tasks.Task<string> GeneratePrescriptionBundleAsync(string fhirJsonPayload)
     {
         using var document = JsonDocument.Parse(fhirJsonPayload);
@@ -45,21 +65,23 @@ public class FhirMapperService : IFhirMapperService
         var patient = new Patient
         {
             Id = patientRef,
-            Meta = new Meta { Profile = new[] { PROFILE_PATIENT } },
-            Name = new List<HumanName> { new HumanName { Text = patientName } }
+            Meta = CreateMeta(PROFILE_PATIENT),
+            Name = new List<HumanName> { new HumanName { Text = patientName } },
+            Gender = ParseGender(GetString(patientElement, "gender"))
         };
         patient.Identifier.Add(new Identifier
         {
             System = "https://healthid.abdm.gov.in",
             Value = patientRef,
-            Type = new CodeableConcept(IDENTIFIER_TYPE_SYSTEM, "MR", "Medical record number")
+            Type = new CodeableConcept
+            {
+                Text = "Medical record number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "MR", "Medical record number")
+                }
+            }
         });
-
-        var genderStr = GetString(patientElement, "gender");
-        if (Enum.TryParse<AdministrativeGender>(genderStr, true, out var gender))
-        {
-            patient.Gender = gender;
-        }
 
         var birthDateStr = GetString(patientElement, "birthDate");
         if (!string.IsNullOrEmpty(birthDateStr))
@@ -79,14 +101,21 @@ public class FhirMapperService : IFhirMapperService
         var practitioner = new Practitioner
         {
             Id = practitionerId,
-            Meta = new Meta { Profile = new[] { PROFILE_PRACTITIONER } },
+            Meta = CreateMeta(PROFILE_PRACTITIONER),
             Name = new List<HumanName> { new HumanName { Text = practitionerName } }
         };
         practitioner.Identifier.Add(new Identifier
         {
             System = "https://doctor.abdm.gov.in",
             Value = practitionerId,
-            Type = new CodeableConcept(IDENTIFIER_TYPE_SYSTEM, "MD", "Medical record number")
+            Type = new CodeableConcept
+            {
+                Text = "Medical record number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "MD", "Medical record number")
+                }
+            }
         });
 
         // 3. Create Organization
@@ -95,23 +124,30 @@ public class FhirMapperService : IFhirMapperService
         var organization = new Organization
         {
             Id = orgId,
-            Meta = new Meta { Profile = new[] { PROFILE_ORGANIZATION } },
+            Meta = CreateMeta(PROFILE_ORGANIZATION),
             Name = orgName
         };
         organization.Identifier.Add(new Identifier
         {
             System = "https://facility.abdm.gov.in",
             Value = orgId,
-            Type = new CodeableConcept(IDENTIFIER_TYPE_SYSTEM, "PRN", "Provider number")
+            Type = new CodeableConcept
+            {
+                Text = "Provider number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "PRN", "Provider number")
+                }
+            }
         });
 
         // 4. Create Encounter
         var encounter = new Encounter
         {
             Id = "Encounter-1",
-            Meta = new Meta { Profile = new[] { PROFILE_ENCOUNTER } },
+            Meta = CreateMeta(PROFILE_ENCOUNTER),
             Status = Encounter.EncounterStatus.InProgress,
-            Class = new Coding("http://terminology.hl7.org/CodeSystem/v3-Confidentiality", "AMB", "ambulatory"),
+            Class = new Coding("http://terminology.hl7.org/CodeSystem/v3-Confidentiality", "AMB", "Ambulatory"),
             Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
             Period = new Period { Start = authoredOn }
         };
@@ -120,12 +156,19 @@ public class FhirMapperService : IFhirMapperService
         var composition = new Composition
         {
             Id = "Composition-1",
-            Meta = new Meta { Profile = new[] { PROFILE_PRESCRIPTION_RECORD }, VersionId = "1" },
+            Meta = CreateMeta(PROFILE_PRESCRIPTION_RECORD),
             Identifier = new Identifier { System = "https://ABDM_WRAPPER/bundle", Value = Guid.NewGuid().ToString() },
             Status = CompositionStatus.Final,
-            Type = new CodeableConcept(SNOMED_URL, "440545006", "Prescription record") { Text = "Prescription record" },
+            Type = new CodeableConcept
+            {
+                Text = "Prescription record",
+                Coding = new List<Coding>
+                {
+                    new Coding(SNOMED_URL, "440545006", "Prescription record")
+                }
+            },
             Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
-            Encounter = new ResourceReference($"Encounter/{encounter.Id}"),
+            Encounter = new ResourceReference($"Encounter/{encounter.Id}") { Display = "Ambulatory" },
             DateElement = new FhirDateTime(authoredOn),
             Custodian = new ResourceReference($"Organisation/{organization.Id}") { Display = orgName },
             Title = "Prescription record"
@@ -135,7 +178,14 @@ public class FhirMapperService : IFhirMapperService
         var medicationSection = new Composition.SectionComponent
         {
             Title = "Medications",
-            Code = new CodeableConcept(SNOMED_URL, "440545006", "Prescription record") { Text = "Prescription record" }
+            Code = new CodeableConcept
+            {
+                Text = "Prescription record",
+                Coding = new List<Coding>
+                {
+                    new Coding(SNOMED_URL, "440545006", "Prescription record")
+                }
+            }
         };
 
         // 6. Assemble Bundle entries list
@@ -160,10 +210,17 @@ public class FhirMapperService : IFhirMapperService
                 var medReq = new MedicationRequest
                 {
                     Id = $"MedicationRequest-{medIndex}",
-                    Meta = new Meta { Profile = new[] { PROFILE_MEDICATION_REQUEST } },
+                    Meta = CreateMeta(PROFILE_MEDICATION_REQUEST),
                     Status = MedicationRequest.MedicationrequestStatus.Completed,
                     Intent = MedicationRequest.MedicationRequestIntent.Order,
-                    Medication = new CodeableConcept(SNOMED_URL, "0000", medName), // Inlined medicine CodeableConcept
+                    Medication = new CodeableConcept
+                    {
+                        Text = medName,
+                        Coding = new List<Coding>
+                        {
+                            new Coding(SNOMED_URL, "261665006", medName)
+                        }
+                    },
                     Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
                     AuthoredOnElement = new FhirDateTime(authoredOn),
                     Requester = new ResourceReference($"Practitioner/{practitioner.Id}") { Display = practitionerName }
@@ -209,7 +266,7 @@ public class FhirMapperService : IFhirMapperService
                     var binary = new Binary
                     {
                         Id = $"Binary-{binaryIndex}",
-                        Meta = new Meta { Profile = new[] { PROFILE_BINARY } },
+                        Meta = CreateMeta(PROFILE_BINARY),
                         ContentType = contentType,
                         Data = rawData
                     };
@@ -229,7 +286,9 @@ public class FhirMapperService : IFhirMapperService
             Id = Guid.NewGuid().ToString(),
             Meta = new Meta
             {
-                Profile = new[] { PROFILE_DOCUMENT_BUNDLE }
+                Profile = new[] { PROFILE_DOCUMENT_BUNDLE },
+                VersionId = "1",
+                LastUpdated = DateTimeOffset.UtcNow
             },
             Identifier = new Identifier { System = "https://ABDM_WRAPPER/bundle", Value = careContextReference },
             Type = Bundle.BundleType.Document,
@@ -264,21 +323,23 @@ public class FhirMapperService : IFhirMapperService
         var patient = new Patient
         {
             Id = patientRef,
-            Meta = new Meta { Profile = new[] { PROFILE_PATIENT } },
-            Name = new List<HumanName> { new HumanName { Text = patientName } }
+            Meta = CreateMeta(PROFILE_PATIENT),
+            Name = new List<HumanName> { new HumanName { Text = patientName } },
+            Gender = ParseGender(GetString(patientElement, "gender"))
         };
         patient.Identifier.Add(new Identifier
         {
             System = "https://healthid.abdm.gov.in",
             Value = patientRef,
-            Type = new CodeableConcept(IDENTIFIER_TYPE_SYSTEM, "MR", "Medical record number")
+            Type = new CodeableConcept
+            {
+                Text = "Medical record number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "MR", "Medical record number")
+                }
+            }
         });
-
-        var genderStr = GetString(patientElement, "gender");
-        if (Enum.TryParse<AdministrativeGender>(genderStr, true, out var gender))
-        {
-            patient.Gender = gender;
-        }
 
         var birthDateStr = GetString(patientElement, "birthDate");
         if (!string.IsNullOrEmpty(birthDateStr))
@@ -298,14 +359,21 @@ public class FhirMapperService : IFhirMapperService
         var practitioner = new Practitioner
         {
             Id = practitionerId,
-            Meta = new Meta { Profile = new[] { PROFILE_PRACTITIONER } },
+            Meta = CreateMeta(PROFILE_PRACTITIONER),
             Name = new List<HumanName> { new HumanName { Text = practitionerName } }
         };
         practitioner.Identifier.Add(new Identifier
         {
             System = "https://doctor.abdm.gov.in",
             Value = practitionerId,
-            Type = new CodeableConcept(IDENTIFIER_TYPE_SYSTEM, "MD", "Medical record number")
+            Type = new CodeableConcept
+            {
+                Text = "Medical record number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "MD", "Medical record number")
+                }
+            }
         });
 
         // 3. Create Organization
@@ -314,23 +382,30 @@ public class FhirMapperService : IFhirMapperService
         var organization = new Organization
         {
             Id = orgId,
-            Meta = new Meta { Profile = new[] { PROFILE_ORGANIZATION } },
+            Meta = CreateMeta(PROFILE_ORGANIZATION),
             Name = orgName
         };
         organization.Identifier.Add(new Identifier
         {
             System = "https://facility.abdm.gov.in",
             Value = orgId,
-            Type = new CodeableConcept(IDENTIFIER_TYPE_SYSTEM, "PRN", "Provider number")
+            Type = new CodeableConcept
+            {
+                Text = "Provider number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "PRN", "Provider number")
+                }
+            }
         });
 
         // 4. Create Encounter
         var encounter = new Encounter
         {
             Id = "Encounter-1",
-            Meta = new Meta { Profile = new[] { PROFILE_ENCOUNTER } },
+            Meta = CreateMeta(PROFILE_ENCOUNTER),
             Status = Encounter.EncounterStatus.InProgress,
-            Class = new Coding("http://terminology.hl7.org/CodeSystem/v3-Confidentiality", "AMB", "ambulatory"),
+            Class = new Coding("http://terminology.hl7.org/CodeSystem/v3-Confidentiality", "AMB", "Ambulatory"),
             Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
             Period = new Period { Start = authoredOn }
         };
@@ -339,12 +414,19 @@ public class FhirMapperService : IFhirMapperService
         var composition = new Composition
         {
             Id = "Composition-1",
-            Meta = new Meta { Profile = new[] { PROFILE_OP_CONSULTATION_RECORD }, VersionId = "1" },
+            Meta = CreateMeta(PROFILE_OP_CONSULTATION_RECORD),
             Identifier = new Identifier { System = "https://ABDM_WRAPPER/bundle", Value = Guid.NewGuid().ToString() },
             Status = CompositionStatus.Final,
-            Type = new CodeableConcept(SNOMED_URL, "371530004", "Clinical consultation report") { Text = "Clinical consultation report" },
+            Type = new CodeableConcept
+            {
+                Text = "Clinical consultation report",
+                Coding = new List<Coding>
+                {
+                    new Coding(SNOMED_URL, "371530004", "Clinical consultation report")
+                }
+            },
             Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
-            Encounter = new ResourceReference($"Encounter/{encounter.Id}"),
+            Encounter = new ResourceReference($"Encounter/{encounter.Id}") { Display = "Ambulatory" },
             DateElement = new FhirDateTime(authoredOn),
             Custodian = new ResourceReference($"Organisation/{organization.Id}") { Display = orgName },
             Title = "Clinical consultation report"
@@ -370,9 +452,16 @@ public class FhirMapperService : IFhirMapperService
         var observation = new Observation
         {
             Id = "Observation-1",
-            Meta = new Meta { Profile = new[] { PROFILE_OBSERVATION } },
+            Meta = CreateMeta(PROFILE_OBSERVATION),
             Status = ObservationStatus.Final,
-            Code = new CodeableConcept(SNOMED_URL, "11429006", "Consultation"),
+            Code = new CodeableConcept
+            {
+                Text = "Consultation",
+                Coding = new List<Coding>
+                {
+                    new Coding(SNOMED_URL, "11429006", "Consultation")
+                }
+            },
             Subject = new ResourceReference($"Patient/{patient.Id}"),
             Value = new FhirString(notes)
         };
@@ -380,7 +469,14 @@ public class FhirMapperService : IFhirMapperService
         var notesSection = new Composition.SectionComponent
         {
             Title = "Clinical finding",
-            Code = new CodeableConcept(SNOMED_URL, "404684003", "Clinical finding") { Text = "Clinical finding" }
+            Code = new CodeableConcept
+            {
+                Text = "Clinical finding",
+                Coding = new List<Coding>
+                {
+                    new Coding(SNOMED_URL, "404684003", "Clinical finding")
+                }
+            }
         };
         notesSection.Entry.Add(new ResourceReference($"Observation/{observation.Id}"));
         composition.Section.Add(notesSection);
@@ -393,7 +489,14 @@ public class FhirMapperService : IFhirMapperService
             var medSection = new Composition.SectionComponent
             {
                 Title = "Medication summary document",
-                Code = new CodeableConcept(SNOMED_URL, "721912009", "Medication summary document") { Text = "Medication summary document" }
+                Code = new CodeableConcept
+                {
+                    Text = "Medication summary document",
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "721912009", "Medication summary document")
+                    }
+                }
             };
 
             int medIndex = 1;
@@ -405,10 +508,17 @@ public class FhirMapperService : IFhirMapperService
                 var medReq = new MedicationRequest
                 {
                     Id = $"MedicationRequest-{medIndex}",
-                    Meta = new Meta { Profile = new[] { PROFILE_MEDICATION_REQUEST } },
+                    Meta = CreateMeta(PROFILE_MEDICATION_REQUEST),
                     Status = MedicationRequest.MedicationrequestStatus.Completed,
                     Intent = MedicationRequest.MedicationRequestIntent.Order,
-                    Medication = new CodeableConcept(SNOMED_URL, "0000", medName),
+                    Medication = new CodeableConcept
+                    {
+                        Text = medName,
+                        Coding = new List<Coding>
+                        {
+                            new Coding(SNOMED_URL, "261665006", medName)
+                        }
+                    },
                     Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
                     AuthoredOnElement = new FhirDateTime(authoredOn),
                     Requester = new ResourceReference($"Practitioner/{practitioner.Id}") { Display = practitionerName }
@@ -438,7 +548,14 @@ public class FhirMapperService : IFhirMapperService
             var docSection = new Composition.SectionComponent
             {
                 Title = "Clinical consultation report",
-                Code = new CodeableConcept(SNOMED_URL, "371530004", "Clinical consultation report") { Text = "Clinical consultation report" }
+                Code = new CodeableConcept
+                {
+                    Text = "Clinical consultation report",
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "371530004", "Clinical consultation report")
+                    }
+                }
             };
 
             int docIndex = 1;
@@ -471,7 +588,7 @@ public class FhirMapperService : IFhirMapperService
                     var docRef = new DocumentReference
                     {
                         Id = $"DocumentReference-{docIndex}",
-                        Meta = new Meta { Profile = new[] { PROFILE_DOCUMENT_REFERENCE } },
+                        Meta = CreateMeta(PROFILE_DOCUMENT_REFERENCE),
                         Status = DocumentReferenceStatus.Current,
                         DocStatus = CompositionStatus.Final,
                         Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
@@ -485,7 +602,14 @@ public class FhirMapperService : IFhirMapperService
                     {
                         System = "https://facility.abdm.gov.in",
                         Value = organization.Id,
-                        Type = new CodeableConcept(SNOMED_URL, "371530004", "Clinical consultation report") { Text = typeStr }
+                        Type = new CodeableConcept
+                        {
+                            Text = typeStr,
+                            Coding = new List<Coding>
+                            {
+                                new Coding(SNOMED_URL, "371530004", "Clinical consultation report")
+                            }
+                        }
                     });
 
                     docSection.Entry.Add(new ResourceReference($"DocumentReference/{docRef.Id}"));
@@ -502,7 +626,9 @@ public class FhirMapperService : IFhirMapperService
             Id = Guid.NewGuid().ToString(),
             Meta = new Meta
             {
-                Profile = new[] { PROFILE_DOCUMENT_BUNDLE }
+                Profile = new[] { PROFILE_DOCUMENT_BUNDLE },
+                VersionId = "1",
+                LastUpdated = DateTimeOffset.UtcNow
             },
             Identifier = new Identifier { System = "https://ABDM_WRAPPER/bundle", Value = careContextReference },
             Type = Bundle.BundleType.Document,
@@ -537,21 +663,23 @@ public class FhirMapperService : IFhirMapperService
         var patient = new Patient
         {
             Id = patientRef,
-            Meta = new Meta { Profile = new[] { PROFILE_PATIENT } },
-            Name = new List<HumanName> { new HumanName { Text = patientName } }
+            Meta = CreateMeta(PROFILE_PATIENT),
+            Name = new List<HumanName> { new HumanName { Text = patientName } },
+            Gender = ParseGender(GetString(patientElement, "gender"))
         };
         patient.Identifier.Add(new Identifier
         {
             System = "https://healthid.abdm.gov.in",
             Value = patientRef,
-            Type = new CodeableConcept(IDENTIFIER_TYPE_SYSTEM, "MR", "Medical record number")
+            Type = new CodeableConcept
+            {
+                Text = "Medical record number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "MR", "Medical record number")
+                }
+            }
         });
-
-        var genderStr = GetString(patientElement, "gender");
-        if (Enum.TryParse<AdministrativeGender>(genderStr, true, out var gender))
-        {
-            patient.Gender = gender;
-        }
 
         var birthDateStr = GetString(patientElement, "birthDate");
         if (!string.IsNullOrEmpty(birthDateStr))
@@ -571,14 +699,21 @@ public class FhirMapperService : IFhirMapperService
         var practitioner = new Practitioner
         {
             Id = practitionerId,
-            Meta = new Meta { Profile = new[] { PROFILE_PRACTITIONER } },
+            Meta = CreateMeta(PROFILE_PRACTITIONER),
             Name = new List<HumanName> { new HumanName { Text = practitionerName } }
         };
         practitioner.Identifier.Add(new Identifier
         {
             System = "https://doctor.abdm.gov.in",
             Value = practitionerId,
-            Type = new CodeableConcept(IDENTIFIER_TYPE_SYSTEM, "MD", "Medical record number")
+            Type = new CodeableConcept
+            {
+                Text = "Medical record number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "MD", "Medical record number")
+                }
+            }
         });
 
         // 3. Create Organization
@@ -587,23 +722,30 @@ public class FhirMapperService : IFhirMapperService
         var organization = new Organization
         {
             Id = orgId,
-            Meta = new Meta { Profile = new[] { PROFILE_ORGANIZATION } },
+            Meta = CreateMeta(PROFILE_ORGANIZATION),
             Name = orgName
         };
         organization.Identifier.Add(new Identifier
         {
             System = "https://facility.abdm.gov.in",
             Value = orgId,
-            Type = new CodeableConcept(IDENTIFIER_TYPE_SYSTEM, "PRN", "Provider number")
+            Type = new CodeableConcept
+            {
+                Text = "Provider number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "PRN", "Provider number")
+                }
+            }
         });
 
         // 4. Create Encounter
         var encounter = new Encounter
         {
             Id = "Encounter-1",
-            Meta = new Meta { Profile = new[] { PROFILE_ENCOUNTER } },
+            Meta = CreateMeta(PROFILE_ENCOUNTER),
             Status = Encounter.EncounterStatus.InProgress,
-            Class = new Coding("http://terminology.hl7.org/CodeSystem/v3-Confidentiality", "AMB", "ambulatory"),
+            Class = new Coding("http://terminology.hl7.org/CodeSystem/v3-Confidentiality", "AMB", "Ambulatory"),
             Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
             Period = new Period { Start = authoredOn }
         };
@@ -612,12 +754,19 @@ public class FhirMapperService : IFhirMapperService
         var composition = new Composition
         {
             Id = "Composition-1",
-            Meta = new Meta { Profile = new[] { PROFILE_HEALTH_DOCUMENT_RECORD }, VersionId = "1" },
+            Meta = CreateMeta(PROFILE_HEALTH_DOCUMENT_RECORD),
             Identifier = new Identifier { System = "https://ABDM_WRAPPER/bundle", Value = Guid.NewGuid().ToString() },
             Status = CompositionStatus.Final,
-            Type = new CodeableConcept(SNOMED_URL, "419891008", "Record artifact") { Text = "Record artifact" },
+            Type = new CodeableConcept
+            {
+                Text = "Record artifact",
+                Coding = new List<Coding>
+                {
+                    new Coding(SNOMED_URL, "419891008", "Record artifact")
+                }
+            },
             Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
-            Encounter = new ResourceReference($"Encounter/{encounter.Id}"),
+            Encounter = new ResourceReference($"Encounter/{encounter.Id}") { Display = "Ambulatory" },
             DateElement = new FhirDateTime(authoredOn),
             Custodian = new ResourceReference($"Organisation/{organization.Id}") { Display = orgName },
             Title = "Health Document"
@@ -627,7 +776,14 @@ public class FhirMapperService : IFhirMapperService
         var docSection = new Composition.SectionComponent
         {
             Title = "Record artifact",
-            Code = new CodeableConcept(SNOMED_URL, "419891008", "Record artifact") { Text = "Record artifact" }
+            Code = new CodeableConcept
+            {
+                Text = "Record artifact",
+                Coding = new List<Coding>
+                {
+                    new Coding(SNOMED_URL, "419891008", "Record artifact")
+                }
+            }
         };
 
         var entries = new List<Bundle.EntryComponent>
@@ -673,7 +829,7 @@ public class FhirMapperService : IFhirMapperService
                     var docRef = new DocumentReference
                     {
                         Id = $"DocumentReference-{docIndex}",
-                        Meta = new Meta { Profile = new[] { PROFILE_DOCUMENT_REFERENCE } },
+                        Meta = CreateMeta(PROFILE_DOCUMENT_REFERENCE),
                         Status = DocumentReferenceStatus.Current,
                         DocStatus = CompositionStatus.Final,
                         Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
@@ -687,7 +843,14 @@ public class FhirMapperService : IFhirMapperService
                     {
                         System = "https://facility.abdm.gov.in",
                         Value = organization.Id,
-                        Type = new CodeableConcept(SNOMED_URL, "423876004", "Health Document") { Text = typeStr }
+                        Type = new CodeableConcept
+                        {
+                            Text = typeStr,
+                            Coding = new List<Coding>
+                            {
+                                new Coding(SNOMED_URL, "423876004", "Health Document")
+                            }
+                        }
                     });
 
                     docSection.Entry.Add(new ResourceReference($"DocumentReference/{docRef.Id}"));
@@ -705,7 +868,9 @@ public class FhirMapperService : IFhirMapperService
             Id = Guid.NewGuid().ToString(),
             Meta = new Meta
             {
-                Profile = new[] { PROFILE_DOCUMENT_BUNDLE }
+                Profile = new[] { PROFILE_DOCUMENT_BUNDLE },
+                VersionId = "1",
+                LastUpdated = DateTimeOffset.UtcNow
             },
             Identifier = new Identifier { System = "https://ABDM_WRAPPER/bundle", Value = careContextReference },
             Type = Bundle.BundleType.Document,
