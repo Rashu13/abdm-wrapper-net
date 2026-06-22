@@ -64,7 +64,7 @@ public class FhirMapperService : IFhirMapperService
         var birthDateStr = GetString(patientElement, "birthDate");
         if (!string.IsNullOrEmpty(birthDateStr))
         {
-            patient.BirthDate = birthDateStr;
+            patient.BirthDate = NormalizeBirthDate(birthDateStr);
         }
 
         // 2. Create Practitioner
@@ -283,7 +283,7 @@ public class FhirMapperService : IFhirMapperService
         var birthDateStr = GetString(patientElement, "birthDate");
         if (!string.IsNullOrEmpty(birthDateStr))
         {
-            patient.BirthDate = birthDateStr;
+            patient.BirthDate = NormalizeBirthDate(birthDateStr);
         }
 
         // 2. Create Practitioner
@@ -543,7 +543,7 @@ public class FhirMapperService : IFhirMapperService
         var birthDateStr = GetString(patientElement, "birthDate");
         if (!string.IsNullOrEmpty(birthDateStr))
         {
-            patient.BirthDate = birthDateStr;
+            patient.BirthDate = NormalizeBirthDate(birthDateStr);
         }
 
         // 2. Create Practitioner
@@ -724,5 +724,34 @@ public class FhirMapperService : IFhirMapperService
             return prop;
         }
         return default;
+    }
+
+    private string? NormalizeBirthDate(string? dateStr)
+    {
+        if (string.IsNullOrEmpty(dateStr)) return null;
+
+        string[] formats = {
+            "yyyy-MM-dd",
+            "yyyy-dd-MM",
+            "dd-MM-yyyy",
+            "yyyy/MM/dd",
+            "yyyy/dd/MM",
+            "dd/MM/yyyy",
+            "yyyy.MM.dd",
+            "yyyy.dd.MM",
+            "dd.MM.yyyy"
+        };
+
+        if (DateTime.TryParseExact(dateStr, formats, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var dt))
+        {
+            return dt.ToString("yyyy-MM-dd");
+        }
+
+        if (DateTime.TryParse(dateStr, out var parsedDt))
+        {
+            return parsedDt.ToString("yyyy-MM-dd");
+        }
+
+        return dateStr;
     }
 }
