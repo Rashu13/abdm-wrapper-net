@@ -107,7 +107,7 @@ namespace HMS.abdm
                         lblPdfStatus.ForeColor = Color.DarkGreen;
                         
                         // Switch record type to HealthDocumentRecord automatically as PDF is attached
-                        cmbRecordType.SelectedIndex = 2; // HealthDocumentRecord
+                        // cmbRecordType.SelectedIndex = 2; // HealthDocumentRecord
                     }
                     catch (Exception ex)
                     {
@@ -153,7 +153,7 @@ namespace HMS.abdm
                 lblPdfStatus.ForeColor = Color.DarkGreen;
                 
                 // Automatically switch record type to HealthDocumentRecord to include the PDF attachment
-                cmbRecordType.SelectedIndex = 2; // HealthDocumentRecord
+                // cmbRecordType.SelectedIndex = 2; // HealthDocumentRecord
             }
 
             try
