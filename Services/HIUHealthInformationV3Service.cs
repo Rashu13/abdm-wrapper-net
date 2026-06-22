@@ -63,9 +63,11 @@ public class HIUHealthInformationV3Service
                 };
             }
 
-            // Generate real ECDH key pair for encryption
+            // Generate real EC curve25519 key pair for encryption
             var cryptoService = new CryptographyService(Microsoft.Extensions.Logging.Abstractions.NullLogger<CryptographyService>.Instance);
             var hiuKeys = cryptoService.GenerateKeys();
+            // Must send SubjectPublicKeyInfo DER (id-ecPublicKey OID) — Java HIP parser requires this
+            string hiuPublicKeySpki = cryptoService.GetSubjectPublicKeyInfo(hiuKeys.PublicKey);
 
             var gatewayRequest = new
             {
@@ -88,7 +90,7 @@ public class HIUHealthInformationV3Service
                         {
                             expiry = DateTime.UtcNow.AddHours(24).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
                             parameters = "Curve25519/32byte random key",
-                            keyValue = hiuKeys.PublicKey
+                            keyValue = hiuPublicKeySpki
                         },
                         nonce = hiuKeys.Nonce
                     }

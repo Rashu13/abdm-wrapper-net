@@ -3,55 +3,105 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.Asn1.X9;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Agreement;
 using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
+using Org.BouncyCastle.X509;
+using Org.BouncyCastle.Crypto.EC;
 using AbdmWrapperNet.Models;
 
 namespace AbdmWrapperNet.Services;
 
 /// <summary>
-/// Cross-platform ECDH encryption service using BouncyCastle X25519.
-/// Uses X25519KeyPairGenerator which works on both Windows and Linux Docker.
-/// Matches the NHA Java wrapper EncryptionService.java behavior.
+/// EC curve25519 encryption service that works on Windows and Linux Docker.
+/// Uses hardcoded Weierstrass parameters to avoid BouncyCastle name-lookup
+/// failures on Linux (CustomNamedCurves.GetByName returns null there).
+/// Generates SubjectPublicKeyInfo with id-ecPublicKey OID (1.2.840.10045.2.1)
+/// which is required by the NHA Java HIU parser.
 /// </summary>
 public class CryptographyService : ICryptographyService
 {
     private readonly ILogger<CryptographyService> _logger;
+
+    // curve25519 Weierstrass-form parameters (from BouncyCastle source, platform-independent)
+    private static readonly Org.BouncyCastle.Math.BigInteger _q =
+        new("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFED", 16);
+    private static readonly Org.BouncyCastle.Math.BigInteger _a =
+        new("2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA984914A144", 16);
+    private static readonly Org.BouncyCastle.Math.BigInteger _b =
+        new("7B425ED097B425ED097B425ED097B425ED097B425ED097B425ED097B4260B5E", 16);
+    private static readonly Org.BouncyCastle.Math.BigInteger _n =
+        new("1000000000000000000000000000000014DEF9DEA2F79CD65812631A5CF5D3ED", 16);
+    private static readonly Org.BouncyCastle.Math.BigInteger _h =
+        Org.BouncyCastle.Math.BigInteger.ValueOf(8);
+    private static readonly Org.BouncyCastle.Math.BigInteger _Gx =
+        new("2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD245A", 16);
+    private static readonly Org.BouncyCastle.Math.BigInteger _Gy =
+        new("20AE19A1B8A086B4E01EDD2C7748D14C923D4D7E6D7C61B229E9C5A27ECED3D9", 16);
+
+    private static ECDomainParameters? _ecSpec;
+    private static readonly object _specLock = new();
 
     public CryptographyService(ILogger<CryptographyService> logger)
     {
         _logger = logger;
     }
 
-    /// <summary>
-    /// Generates an X25519 key pair and a random nonce.
-    /// </summary>
+    // ─── Get curve25519 domain params (cached, hardcoded) ────────────────────
+
+    private static ECDomainParameters GetEcSpec()
+    {
+        if (_ecSpec != null) return _ecSpec;
+        lock (_specLock)
+        {
+            if (_ecSpec != null) return _ecSpec;
+
+            // Try BouncyCastle name lookup first (works on Windows)
+            X9ECParameters? named = CustomNamedCurves.GetByName("curve25519")
+                                 ?? CustomNamedCurves.GetByName("Curve25519");
+
+            if (named != null)
+            {
+                _ecSpec = new ECDomainParameters(named.Curve, named.G, named.N, named.H, named.GetSeed());
+                return _ecSpec;
+            }
+
+            // Fallback: hardcode Weierstrass params (works on Linux Docker)
+            var curve = new Org.BouncyCastle.Math.EC.FpCurve(_q, _a, _b, _n, _h);
+            var G = curve.CreatePoint(_Gx, _Gy);
+            _ecSpec = new ECDomainParameters(curve, G, _n, _h);
+            return _ecSpec;
+        }
+    }
+
+    // ─── Public API ───────────────────────────────────────────────────────────
+
     public EncryptionKeys GenerateKeys()
     {
         try
         {
-            var random = new SecureRandom();
+            var ecSpec = GetEcSpec();
+            var generator = new ECKeyPairGenerator();
+            generator.Init(new ECKeyGenerationParameters(ecSpec, new SecureRandom()));
 
-            // X25519KeyPairGenerator works on all platforms (Windows + Linux Docker)
-            var generator = new X25519KeyPairGenerator();
-            generator.Init(new X25519KeyGenerationParameters(random));
-            var keyPair = generator.GenerateKeyPair();
-
-            var privateKey = (X25519PrivateKeyParameters)keyPair.Private;
-            var publicKey = (X25519PublicKeyParameters)keyPair.Public;
+            AsymmetricCipherKeyPair keyPair = generator.GenerateKeyPair();
+            var privateKey = (ECPrivateKeyParameters)keyPair.Private;
+            var publicKey  = (ECPublicKeyParameters)keyPair.Public;
 
             byte[] nonceBytes = new byte[32];
-            random.NextBytes(nonceBytes);
+            new SecureRandom().NextBytes(nonceBytes);
 
             return new EncryptionKeys
             {
-                PrivateKey = Convert.ToBase64String(privateKey.GetEncoded()),
-                PublicKey = Convert.ToBase64String(publicKey.GetEncoded()),
-                Nonce = Convert.ToBase64String(nonceBytes)
+                PrivateKey = Convert.ToBase64String(privateKey.D.ToByteArray()),
+                PublicKey  = Convert.ToBase64String(publicKey.Q.GetEncoded(false)), // uncompressed
+                Nonce      = Convert.ToBase64String(nonceBytes)
             };
         }
         catch (Exception ex)
@@ -62,38 +112,36 @@ public class CryptographyService : ICryptographyService
     }
 
     /// <summary>
-    /// Encrypts FHIR bundles using the HIU's public key material from the request.
+    /// Returns the SubjectPublicKeyInfo DER (base64) for the given raw public key.
+    /// This is the format sent in keyMaterial.dhPublicKey.keyValue (HIU side).
     /// </summary>
+    public string GetSubjectPublicKeyInfo(string rawPublicKeyBase64)
+    {
+        return GetEncodedEcPublicKey(rawPublicKeyBase64);
+    }
+
     public EncryptionResponse Encrypt(HIPHealthInformationRequest request, List<HealthInformationBundle> bundles)
     {
         if (request?.HiRequest?.KeyMaterial?.DhPublicKey == null)
-        {
             throw new ArgumentException("Invalid health information request: receiver public key is missing");
-        }
 
         var senderKeys = GenerateKeys();
 
         string receiverPublicKeyB64 = request.HiRequest.KeyMaterial.DhPublicKey.KeyValue;
-        string receiverNonce = request.HiRequest.KeyMaterial.Nonce;
+        string receiverNonce        = request.HiRequest.KeyMaterial.Nonce;
 
         byte[] xorOfRandom = XorOfRandom(senderKeys.Nonce, receiverNonce);
-        List<HealthInformationBundle> encryptedBundles = new();
+        var encryptedBundles = new List<HealthInformationBundle>();
 
         foreach (var bundle in bundles)
         {
             try
             {
-                string encryptedContent = EncryptContent(
-                    xorOfRandom,
-                    senderKeys.PrivateKey,
-                    receiverPublicKeyB64,
-                    bundle.BundleContent
-                );
-
+                string enc = EncryptContent(xorOfRandom, senderKeys.PrivateKey, receiverPublicKeyB64, bundle.BundleContent);
                 encryptedBundles.Add(new HealthInformationBundle
                 {
                     CareContextReference = bundle.CareContextReference,
-                    BundleContent = encryptedContent
+                    BundleContent = enc
                 });
             }
             catch (Exception ex)
@@ -102,172 +150,141 @@ public class CryptographyService : ICryptographyService
             }
         }
 
-        // Encode HIP's public key as SubjectPublicKeyInfo DER for the HIU to use
-        string keyToShare = GetEncodedX25519PublicKey(senderKeys.PublicKey);
+        // KeyToShare: SubjectPublicKeyInfo DER of HIP's ephemeral EC key (id-ecPublicKey OID)
+        string keyToShare = GetEncodedEcPublicKey(senderKeys.PublicKey);
 
         return new EncryptionResponse
         {
             HealthInformationBundles = encryptedBundles,
-            KeyToShare = keyToShare,
+            KeyToShare  = keyToShare,
             SenderNonce = senderKeys.Nonce
         };
     }
 
-    /// <summary>
-    /// Decrypts received encrypted health data using HIU's private key.
-    /// </summary>
     public string Decrypt(string hipNonce, string hiuNonce, string hiuPrivateKey, string hipPublicKey, string encryptedData)
     {
         byte[] xorOfRandom = XorOfRandom(hipNonce, hiuNonce);
         return DecryptContent(xorOfRandom, hiuPrivateKey, hipPublicKey, encryptedData);
     }
 
-    // ─── Private Helpers ──────────────────────────────────────────────────────
+    // ─── Private helpers ──────────────────────────────────────────────────────
 
-    private byte[] XorOfRandom(string senderNonce, string receiverNonce)
+    private static byte[] XorOfRandom(string senderNonce, string receiverNonce)
     {
-        byte[] randomSender   = Convert.FromBase64String(senderNonce);
-        byte[] randomReceiver = Convert.FromBase64String(receiverNonce);
-
-        byte[] combined = new byte[randomSender.Length];
-        for (int i = 0; i < randomSender.Length; i++)
-        {
-            combined[i] = (byte)(randomSender[i] ^ randomReceiver[i % randomReceiver.Length]);
-        }
-        return combined;
+        byte[] s = Convert.FromBase64String(senderNonce);
+        byte[] r = Convert.FromBase64String(receiverNonce);
+        byte[] result = new byte[s.Length];
+        for (int i = 0; i < s.Length; i++)
+            result[i] = (byte)(s[i] ^ r[i % r.Length]);
+        return result;
     }
 
-    private string EncryptContent(byte[] xorOfRandom, string senderPrivateKeyB64, string receiverPublicKeyB64, string plaintext)
+    private string EncryptContent(byte[] xorOfRandom, string senderPrivateB64, string receiverPublicB64, string plaintext)
     {
-        byte[] sharedSecret = DoX25519(senderPrivateKeyB64, receiverPublicKeyB64);
+        byte[] sharedSecret = DoEcdh(senderPrivateB64, receiverPublicB64, useX509ForPublic: true);
 
         byte[] iv = new byte[12];
         Array.Copy(xorOfRandom, xorOfRandom.Length - 12, iv, 0, 12);
 
         byte[] aesKey = DeriveAesKey(xorOfRandom, sharedSecret);
-        byte[] inputBytes = Encoding.UTF8.GetBytes(plaintext);
+        byte[] input  = Encoding.UTF8.GetBytes(plaintext);
 
-        GcmBlockCipher cipher = new GcmBlockCipher(new AesEngine());
+        var cipher = new GcmBlockCipher(new AesEngine());
         cipher.Init(true, new AeadParameters(new KeyParameter(aesKey), 128, iv, null));
-
-        byte[] outBytes = new byte[cipher.GetOutputSize(inputBytes.Length)];
-        int len = cipher.ProcessBytes(inputBytes, 0, inputBytes.Length, outBytes, 0);
-        int finalLen = len + cipher.DoFinal(outBytes, len);
-
-        byte[] encrypted = new byte[finalLen];
-        Array.Copy(outBytes, 0, encrypted, 0, finalLen);
-        return Convert.ToBase64String(encrypted);
+        byte[] output = new byte[cipher.GetOutputSize(input.Length)];
+        int len = cipher.ProcessBytes(input, 0, input.Length, output, 0);
+        len += cipher.DoFinal(output, len);
+        byte[] result = new byte[len];
+        Array.Copy(output, result, len);
+        return Convert.ToBase64String(result);
     }
 
-    private string DecryptContent(byte[] xorOfRandom, string receiverPrivateKeyB64, string senderPublicKeyB64, string ciphertext)
+    private string DecryptContent(byte[] xorOfRandom, string receiverPrivateB64, string senderPublicB64, string ciphertext)
     {
-        byte[] sharedSecret = DoX25519(receiverPrivateKeyB64, senderPublicKeyB64);
+        byte[] sharedSecret = DoEcdh(receiverPrivateB64, senderPublicB64, useX509ForPublic: true);
 
         byte[] iv = new byte[12];
         Array.Copy(xorOfRandom, xorOfRandom.Length - 12, iv, 0, 12);
 
-        byte[] aesKey        = DeriveAesKey(xorOfRandom, sharedSecret);
-        byte[] encryptedBytes = Convert.FromBase64String(ciphertext);
+        byte[] aesKey = DeriveAesKey(xorOfRandom, sharedSecret);
+        byte[] enc    = Convert.FromBase64String(ciphertext);
 
-        GcmBlockCipher cipher = new GcmBlockCipher(new AesEngine());
+        var cipher = new GcmBlockCipher(new AesEngine());
         cipher.Init(false, new AeadParameters(new KeyParameter(aesKey), 128, iv, null));
+        byte[] output = new byte[cipher.GetOutputSize(enc.Length)];
+        int len = cipher.ProcessBytes(enc, 0, enc.Length, output, 0);
+        len += cipher.DoFinal(output, len);
+        byte[] result = new byte[len];
+        Array.Copy(output, result, len);
 
-        byte[] outBytes = new byte[cipher.GetOutputSize(encryptedBytes.Length)];
-        int len = cipher.ProcessBytes(encryptedBytes, 0, encryptedBytes.Length, outBytes, 0);
-        int finalLen = len + cipher.DoFinal(outBytes, len);
-
-        byte[] decrypted = new byte[finalLen];
-        Array.Copy(outBytes, 0, decrypted, 0, finalLen);
-
-        string raw = Encoding.UTF8.GetString(decrypted);
-        try
-        {
-            using var doc = JsonDocument.Parse(raw);
-            return JsonSerializer.Serialize(doc.RootElement);
-        }
-        catch
-        {
-            return raw;
-        }
+        string raw = Encoding.UTF8.GetString(result);
+        try { using var doc = JsonDocument.Parse(raw); return JsonSerializer.Serialize(doc.RootElement); }
+        catch { return raw; }
     }
 
     /// <summary>
-    /// Performs X25519 ECDH agreement. Both keys are raw 32-byte X25519 keys (base64 encoded).
-    /// If publicKey is a SubjectPublicKeyInfo DER (>32 bytes), extracts the raw key from it.
+    /// EC Diffie-Hellman on curve25519.
+    /// privateKeyB64: BigInteger bytes (base64).
+    /// publicKeyB64:  SubjectPublicKeyInfo DER bytes (base64) when useX509ForPublic=true,
+    ///                or raw uncompressed EC point when false.
     /// </summary>
-    private byte[] DoX25519(string privateKeyB64, string publicKeyB64)
+    private byte[] DoEcdh(string privateKeyB64, string publicKeyB64, bool useX509ForPublic)
     {
-        byte[] privateKeyBytes = Convert.FromBase64String(privateKeyB64);
-        byte[] publicKeyBytes  = Convert.FromBase64String(publicKeyB64);
+        var ecSpec = GetEcSpec();
 
-        // Strip SubjectPublicKeyInfo header if present (DER encoded, >32 bytes)
-        // X25519 raw key is always exactly 32 bytes
-        if (publicKeyBytes.Length > 32)
+        byte[] privBytes = Convert.FromBase64String(privateKeyB64);
+        var privateKeyParams = new ECPrivateKeyParameters(
+            new Org.BouncyCastle.Math.BigInteger(privBytes), ecSpec);
+
+        byte[] pubBytes = Convert.FromBase64String(publicKeyB64);
+        ECPublicKeyParameters publicKeyParams;
+        if (useX509ForPublic)
         {
-            // Last 32 bytes of SubjectPublicKeyInfo are the raw key
-            byte[] raw = new byte[32];
-            Array.Copy(publicKeyBytes, publicKeyBytes.Length - 32, raw, 0, 32);
-            publicKeyBytes = raw;
+            publicKeyParams = (ECPublicKeyParameters)PublicKeyFactory.CreateKey(pubBytes);
+        }
+        else
+        {
+            var point = ecSpec.Curve.DecodePoint(pubBytes);
+            publicKeyParams = new ECPublicKeyParameters(point, ecSpec);
         }
 
-        // Strip leading sign byte from private key if BigInteger-encoded (33 bytes)
-        if (privateKeyBytes.Length == 33 && privateKeyBytes[0] == 0x00)
+        var agreement = new ECDHBasicAgreement();
+        agreement.Init(privateKeyParams);
+        var secret = agreement.CalculateAgreement(publicKeyParams);
+
+        byte[] secretBytes = secret.ToByteArrayUnsigned();
+        int fieldSize = (ecSpec.Curve.FieldSize + 7) / 8;
+        if (secretBytes.Length < fieldSize)
         {
-            byte[] raw = new byte[32];
-            Array.Copy(privateKeyBytes, 1, raw, 0, 32);
-            privateKeyBytes = raw;
+            byte[] padded = new byte[fieldSize];
+            Array.Copy(secretBytes, 0, padded, fieldSize - secretBytes.Length, secretBytes.Length);
+            return padded;
         }
-
-        var privKey = new X25519PrivateKeyParameters(privateKeyBytes, 0);
-        var pubKey  = new X25519PublicKeyParameters(publicKeyBytes, 0);
-
-        var agreement = new Org.BouncyCastle.Crypto.Agreement.X25519Agreement();
-        agreement.Init(privKey);
-
-        byte[] secret = new byte[agreement.AgreementSize];
-        agreement.CalculateAgreement(pubKey, secret, 0);
-        return secret;
+        return secretBytes;
     }
 
-    /// <summary>
-    /// Derives 32-byte AES key via HKDF-SHA256 (matches Java wrapper).
-    /// </summary>
-    private byte[] DeriveAesKey(byte[] xorOfRandoms, byte[] sharedSecret)
+    private static byte[] DeriveAesKey(byte[] xorOfRandoms, byte[] sharedSecret)
     {
         byte[] salt = new byte[20];
         Array.Copy(xorOfRandoms, 0, salt, 0, Math.Min(20, xorOfRandoms.Length));
-
         var hkdf = new HkdfBytesGenerator(new Sha256Digest());
         hkdf.Init(new HkdfParameters(sharedSecret, salt, null));
-
-        byte[] aesKey = new byte[32];
-        hkdf.GenerateBytes(aesKey, 0, 32);
-        return aesKey;
+        byte[] key = new byte[32];
+        hkdf.GenerateBytes(key, 0, 32);
+        return key;
     }
 
     /// <summary>
-    /// Encodes the 32-byte X25519 public key as a SubjectPublicKeyInfo DER, then base64.
-    /// This is the format the Java HIU parser expects for "keyToShare".
+    /// Encodes a raw uncompressed EC public key (base64) as SubjectPublicKeyInfo DER (base64).
+    /// Uses id-ecPublicKey OID (1.2.840.10045.2.1) — required by Java HIU parser.
     /// </summary>
-    private string GetEncodedX25519PublicKey(string base64RawPublicKey)
+    private string GetEncodedEcPublicKey(string rawPublicKeyBase64)
     {
-        byte[] rawKey = Convert.FromBase64String(base64RawPublicKey);
-
-        // X25519 SubjectPublicKeyInfo DER header (OID 1.3.101.110)
-        // 30 2a 30 05 06 03 2b 65 6e 03 21 00 <32 bytes key>
-        byte[] header = new byte[]
-        {
-            0x30, 0x2a,             // SEQUENCE (42 bytes)
-            0x30, 0x05,             // SEQUENCE (5 bytes)
-            0x06, 0x03, 0x2b, 0x65, 0x6e, // OID 1.3.101.110 (X25519)
-            0x03, 0x21,             // BIT STRING (33 bytes)
-            0x00                    // no unused bits
-        };
-
-        byte[] spki = new byte[header.Length + rawKey.Length];
-        Array.Copy(header, 0, spki, 0, header.Length);
-        Array.Copy(rawKey, 0, spki, header.Length, rawKey.Length);
-
+        var ecSpec = GetEcSpec();
+        byte[] publicKeyBytes = Convert.FromBase64String(rawPublicKeyBase64);
+        var point = ecSpec.Curve.DecodePoint(publicKeyBytes);
+        var publicKeyParams = new ECPublicKeyParameters(point, ecSpec);
+        byte[] spki = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(publicKeyParams).GetEncoded();
         return Convert.ToBase64String(spki);
     }
 }
