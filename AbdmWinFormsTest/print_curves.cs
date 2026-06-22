@@ -4,7 +4,7 @@ using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto.EC;
 
 class print_curves {
-    static void Main() {
+    static void MainCurves() {
         foreach (string name in CustomNamedCurves.Names) {
             if (name.ToLower().Contains("255"))
                 Console.WriteLine("Custom: " + name);

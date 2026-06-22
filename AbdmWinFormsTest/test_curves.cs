@@ -4,7 +4,7 @@ using Org.BouncyCastle.Crypto.EC;
 
 class Program
 {
-    static void Main()
+    static void MainTestCurves()
     {
         var names = new string[] { "curve25519", "Curve25519", "X25519" };
         foreach (var name in names) {
