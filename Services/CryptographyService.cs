@@ -35,7 +35,7 @@ public class CryptographyService : ICryptographyService
     private static readonly Org.BouncyCastle.Math.BigInteger _a =
         new("2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA984914A144", 16);
     private static readonly Org.BouncyCastle.Math.BigInteger _b =
-        new("7B425ED097B425ED097B425ED097B425ED097B425ED097B425ED097B4260B5E", 16);
+        new("7B425ED097B425ED097B425ED097B425ED097B425ED097B4260B5E9C7710C864", 16);
     private static readonly Org.BouncyCastle.Math.BigInteger _n =
         new("1000000000000000000000000000000014DEF9DEA2F79CD65812631A5CF5D3ED", 16);
     private static readonly Org.BouncyCastle.Math.BigInteger _h =
