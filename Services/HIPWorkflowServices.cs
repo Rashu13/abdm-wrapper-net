@@ -247,17 +247,17 @@ public class HIPHealthInformationV3Service : IHIPHealthInformationV3Service
                 {
                     content = b.BundleContent,
                     media = "application/fhir+json",
-                    checksum = "MD5",
+                    checksum = "string",
                     careContextReference = b.CareContextReference
                 }).ToList(),
                 keyMaterial = new
                 {
-                    cryptoAlg = "ECDH",
-                    curve = "Curve25519",
+                    cryptoAlg = request.HiRequest?.KeyMaterial?.CryptoAlg ?? "ECDH",
+                    curve = request.HiRequest?.KeyMaterial?.Curve ?? "Curve25519",
                     dhPublicKey = new
                     {
                         expiry = request.HiRequest?.KeyMaterial?.DhPublicKey?.Expiry,
-                        parameters = "Curve25519",
+                        parameters = request.HiRequest?.KeyMaterial?.DhPublicKey?.Parameters ?? "Curve25519",
                         keyValue = encryptionResponse.KeyToShare
                     },
                     nonce = encryptionResponse.SenderNonce
@@ -268,12 +268,18 @@ public class HIPHealthInformationV3Service : IHIPHealthInformationV3Service
             if (!string.IsNullOrEmpty(dataPushUrl))
             {
                 _logger.LogInformation($"Pushing encrypted data to HIU at {dataPushUrl}");
+                var jsonOptions = new System.Text.Json.JsonSerializerOptions 
+                { 
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                };
                 var pushContent = new System.Net.Http.StringContent(
-                    System.Text.Json.JsonSerializer.Serialize(dataPushPayload), 
+                    System.Text.Json.JsonSerializer.Serialize(dataPushPayload, jsonOptions), 
                     System.Text.Encoding.UTF8, "application/json");
                     
                 var pushResponse = await httpClient.PostAsync(dataPushUrl, pushContent);
-                _logger.LogInformation($"Data push response: {pushResponse.StatusCode}");
+                var responseContent = await pushResponse.Content.ReadAsStringAsync();
+                _logger.LogInformation($"Data push response: {pushResponse.StatusCode}, Content: {responseContent}");
             }
         }
         catch (Exception ex)
