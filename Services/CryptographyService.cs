@@ -32,7 +32,15 @@ public class CryptographyService : ICryptographyService
     {
         try
         {
-            X9ECParameters ecP = CustomNamedCurves.GetByName(CurveName);
+            // Try multiple lookup methods - CustomNamedCurves may return null on Linux
+            X9ECParameters? ecP = CustomNamedCurves.GetByName(CurveName)
+                                  ?? CustomNamedCurves.GetByName("X25519")
+                                  ?? Org.BouncyCastle.Asn1.X9.ECNamedCurveTable.GetByName(CurveName)
+                                  ?? Org.BouncyCastle.Asn1.X9.ECNamedCurveTable.GetByName("curve25519");
+
+            if (ecP == null)
+                throw new InvalidOperationException("Could not find curve25519 parameters in BouncyCastle. Ensure BouncyCastle.Cryptography package is correctly loaded.");
+
             ECDomainParameters ecSpec = new ECDomainParameters(ecP.Curve, ecP.G, ecP.N, ecP.H, ecP.GetSeed());
 
             ECKeyPairGenerator generator = new ECKeyPairGenerator();

@@ -153,21 +153,26 @@ public class OnFetchConsentManager
 
 public class ConsentRequester
 {
+    [JsonPropertyName("name")]
     [BsonElement("name")]
     public string Name { get; set; } = string.Empty;
 
+    [JsonPropertyName("identifier")]
     [BsonElement("identifier")]
     public ConsentRequesterIdentifier? Identifier { get; set; }
 }
 
 public class ConsentRequesterIdentifier
 {
+    [JsonPropertyName("type")]
     [BsonElement("type")]
     public string Type { get; set; } = string.Empty;
 
+    [JsonPropertyName("value")]
     [BsonElement("value")]
     public string Value { get; set; } = string.Empty;
 
+    [JsonPropertyName("system")]
     [BsonElement("system")]
     public string System { get; set; } = string.Empty;
 }
@@ -189,9 +194,11 @@ public class Permission
 
 public class DateRange
 {
+    [JsonPropertyName("from")]
     [BsonElement("from")]
     public string From { get; set; } = string.Empty;
 
+    [JsonPropertyName("to")]
     [BsonElement("to")]
     public string To { get; set; } = string.Empty;
 }
