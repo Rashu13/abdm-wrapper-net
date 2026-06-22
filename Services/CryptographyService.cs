@@ -11,7 +11,6 @@ using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Math.EC;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using Org.BouncyCastle.Crypto.EC;
@@ -33,16 +32,19 @@ public class CryptographyService : ICryptographyService
     {
         try
         {
-            X25519KeyPairGenerator generator = new X25519KeyPairGenerator();
-            generator.Init(new X25519KeyGenerationParameters(new SecureRandom()));
+            X9ECParameters ecP = CustomNamedCurves.GetByName(CurveName);
+            ECDomainParameters ecSpec = new ECDomainParameters(ecP.Curve, ecP.G, ecP.N, ecP.H, ecP.GetSeed());
+
+            ECKeyPairGenerator generator = new ECKeyPairGenerator();
+            generator.Init(new ECKeyGenerationParameters(ecSpec, new SecureRandom()));
 
             AsymmetricCipherKeyPair keyPair = generator.GenerateKeyPair();
             
-            X25519PrivateKeyParameters privateKey = (X25519PrivateKeyParameters)keyPair.Private;
-            X25519PublicKeyParameters publicKey = (X25519PublicKeyParameters)keyPair.Public;
+            ECPrivateKeyParameters privateKey = (ECPrivateKeyParameters)keyPair.Private;
+            ECPublicKeyParameters publicKey = (ECPublicKeyParameters)keyPair.Public;
 
-            byte[] privateKeyBytes = privateKey.GetEncoded();
-            byte[] publicKeyBytes = publicKey.GetEncoded(); 
+            byte[] privateKeyBytes = privateKey.D.ToByteArray(); // Matches Java BigInteger.toByteArray()
+            byte[] publicKeyBytes = publicKey.Q.GetEncoded(false); // Uncompressed point
 
             byte[] nonceBytes = new byte[32];
             new SecureRandom().NextBytes(nonceBytes);
@@ -184,7 +186,6 @@ public class CryptographyService : ICryptographyService
 
         string rawDecrypted = Encoding.UTF8.GetString(decryptedBytes);
 
-        // Normalize format by parsing and formatting as JSON to clean up any formatting/whitespaces, matching Java HIU's JsonParser behavior
         try
         {
             using var doc = JsonDocument.Parse(rawDecrypted);
@@ -198,57 +199,39 @@ public class CryptographyService : ICryptographyService
 
     private byte[] DoEcdh(byte[] privateKeyBytes, byte[] publicKeyBytes, bool useX509ForPublic)
     {
-        X25519PrivateKeyParameters privateKeyParams = LoadPrivateKey(privateKeyBytes);
-        X25519PublicKeyParameters publicKeyParams = useX509ForPublic 
-            ? LoadPublicKeyFromX509(publicKeyBytes) 
-            : LoadPublicKeyFromUncompressedPoint(publicKeyBytes);
+        X9ECParameters ecP = CustomNamedCurves.GetByName(CurveName);
+        ECDomainParameters ecSpec = new ECDomainParameters(ecP.Curve, ecP.G, ecP.N, ecP.H, ecP.GetSeed());
 
-        X25519Agreement agreement = new X25519Agreement();
+        ECPrivateKeyParameters privateKeyParams = new ECPrivateKeyParameters(
+            new Org.BouncyCastle.Math.BigInteger(privateKeyBytes), ecSpec);
+
+        ECPublicKeyParameters publicKeyParams;
+        if (useX509ForPublic)
+        {
+            publicKeyParams = (ECPublicKeyParameters)PublicKeyFactory.CreateKey(publicKeyBytes);
+        }
+        else
+        {
+            Org.BouncyCastle.Math.EC.ECPoint q = ecSpec.Curve.DecodePoint(publicKeyBytes);
+            publicKeyParams = new ECPublicKeyParameters(q, ecSpec);
+        }
+
+        ECDHBasicAgreement agreement = new ECDHBasicAgreement();
         agreement.Init(privateKeyParams);
         
-        byte[] secret = new byte[agreement.AgreementSize];
-        agreement.CalculateAgreement(publicKeyParams, secret, 0);
-
-        return secret;
-    }
-
-    private X25519PrivateKeyParameters LoadPrivateKey(byte[] data)
-    {
-        return new X25519PrivateKeyParameters(data, 0);
-    }
-
-    private X25519PublicKeyParameters LoadPublicKeyFromUncompressedPoint(byte[] data)
-    {
-        if (data.Length == 32)
+        Org.BouncyCastle.Math.BigInteger secret = agreement.CalculateAgreement(publicKeyParams);
+        
+        // Match Java's ka.generateSecret() length padding
+        byte[] secretBytes = secret.ToByteArrayUnsigned();
+        int fieldSize = (ecSpec.Curve.FieldSize + 7) / 8;
+        if (secretBytes.Length < fieldSize)
         {
-            return new X25519PublicKeyParameters(data, 0);
+            byte[] padded = new byte[fieldSize];
+            Array.Copy(secretBytes, 0, padded, fieldSize - secretBytes.Length, secretBytes.Length);
+            return padded;
         }
-        else if (data.Length == 65 && data[0] == 0x04)
-        {
-            // Uncompressed point: 0x04 || X (32 bytes) || Y (32 bytes)
-            // For X25519, the public key is just the X coordinate
-            byte[] x = new byte[32];
-            Array.Copy(data, 1, x, 0, 32);
-            return new X25519PublicKeyParameters(x, 0);
-        }
-        else if (data.Length > 32)
-        {
-            // Fallback: try parsing as X509 SubjectPublicKeyInfo
-            try
-            {
-                var pubKey = PublicKeyFactory.CreateKey(data);
-                if (pubKey is X25519PublicKeyParameters x25519Key)
-                    return x25519Key;
-            }
-            catch {}
-        }
-        throw new ArgumentException("Invalid public key format for X25519");
-    }
 
-    private X25519PublicKeyParameters LoadPublicKeyFromX509(byte[] data)
-    {
-        AsymmetricKeyParameter pubKey = PublicKeyFactory.CreateKey(data);
-        return (X25519PublicKeyParameters)pubKey;
+        return secretBytes;
     }
 
     private byte[] GenerateAesKey(byte[] xorOfRandoms, byte[] sharedSecret)
@@ -268,7 +251,12 @@ public class CryptographyService : ICryptographyService
     private string GetEncodedHipPublicKey(string base64PublicKey)
     {
         byte[] publicKeyBytes = Convert.FromBase64String(base64PublicKey);
-        X25519PublicKeyParameters publicKeyParams = LoadPublicKeyFromUncompressedPoint(publicKeyBytes);
+        
+        X9ECParameters ecP = CustomNamedCurves.GetByName(CurveName);
+        ECDomainParameters ecSpec = new ECDomainParameters(ecP.Curve, ecP.G, ecP.N, ecP.H, ecP.GetSeed());
+        
+        Org.BouncyCastle.Math.EC.ECPoint q = ecSpec.Curve.DecodePoint(publicKeyBytes);
+        ECPublicKeyParameters publicKeyParams = new ECPublicKeyParameters(q, ecSpec);
         
         byte[] subjectPublicKeyInfoBytes = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(publicKeyParams).GetEncoded();
         return Convert.ToBase64String(subjectPublicKeyInfoBytes);
