@@ -181,7 +181,8 @@ public class CryptographyService : ICryptographyService
 
     private string EncryptContent(byte[] xorOfRandom, string senderPrivateB64, string receiverPublicB64, string plaintext)
     {
-        byte[] sharedSecret = DoEcdh(senderPrivateB64, receiverPublicB64, useX509ForPublic: true);
+        // Java's loadPublicKey uses decodePoint(data) — raw EC point, NOT SubjectPublicKeyInfo
+        byte[] sharedSecret = DoEcdh(senderPrivateB64, receiverPublicB64, useX509ForPublic: false);
 
         byte[] iv = new byte[12];
         Array.Copy(xorOfRandom, xorOfRandom.Length - 12, iv, 0, 12);
