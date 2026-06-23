@@ -228,9 +228,100 @@ public class FhirMapperService : IFhirMapperService
 
                 if (!string.IsNullOrEmpty(dosage))
                 {
-                    medReq.DosageInstruction = new List<Dosage>
+                    var dosageInst = new Dosage { Text = dosage };
+
+                    var additionalInstructions = GetString(p, "additionalInstructions");
+                    if (!string.IsNullOrEmpty(additionalInstructions))
                     {
-                        new Dosage { Text = dosage }
+                        dosageInst.AdditionalInstruction = new List<CodeableConcept>
+                        {
+                            new CodeableConcept
+                            {
+                                Text = additionalInstructions,
+                                Coding = new List<Coding>
+                                {
+                                    new Coding(SNOMED_URL, "1000000570007", additionalInstructions)
+                                }
+                            }
+                        };
+                    }
+
+                    var route = GetString(p, "route");
+                    if (!string.IsNullOrEmpty(route))
+                    {
+                        dosageInst.Route = new CodeableConcept
+                        {
+                            Text = route,
+                            Coding = new List<Coding>
+                            {
+                                new Coding(SNOMED_URL, "26643006", route)
+                            }
+                        };
+                    }
+
+                    var method = GetString(p, "method");
+                    if (!string.IsNullOrEmpty(method))
+                    {
+                        dosageInst.Method = new CodeableConcept
+                        {
+                            Text = method,
+                            Coding = new List<Coding>
+                            {
+                                new Coding(SNOMED_URL, "421521004", method)
+                            }
+                        };
+                    }
+
+                    var timing = GetString(p, "timing");
+                    if (!string.IsNullOrEmpty(timing))
+                    {
+                        try
+                        {
+                            var parts = timing.Split('-');
+                            if (parts.Length == 3 && int.TryParse(parts[0], out int freq) && int.TryParse(parts[1], out int period))
+                            {
+                                var unitStr = parts[2].ToUpperInvariant();
+                                Timing.UnitsOfTime? unit = null;
+                                if (unitStr == "S") unit = Timing.UnitsOfTime.S;
+                                else if (unitStr == "MIN") unit = Timing.UnitsOfTime.Min;
+                                else if (unitStr == "H") unit = Timing.UnitsOfTime.H;
+                                else if (unitStr == "D") unit = Timing.UnitsOfTime.D;
+                                else if (unitStr == "WK") unit = Timing.UnitsOfTime.Wk;
+                                else if (unitStr == "MO") unit = Timing.UnitsOfTime.Mo;
+
+                                if (unit.HasValue)
+                                {
+                                    dosageInst.Timing = new Timing
+                                    {
+                                        Repeat = new Timing.RepeatComponent
+                                        {
+                                            Frequency = freq,
+                                            Period = (decimal)period,
+                                            PeriodUnit = unit.Value
+                                        }
+                                    };
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+
+                    medReq.DosageInstruction = new List<Dosage> { dosageInst };
+                }
+
+                var reason = GetString(p, "reason");
+                if (!string.IsNullOrEmpty(reason))
+                {
+                    medReq.ReasonCode = new List<CodeableConcept>
+                    {
+                        new CodeableConcept
+                        {
+                            Text = reason,
+                            Coding = new List<Coding>
+                            {
+                                new Coding(SNOMED_URL, "55607006", reason)
+                            }
+                        }
                     };
                 }
 

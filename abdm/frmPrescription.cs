@@ -48,6 +48,13 @@ namespace HMS.abdm
             txtCareContextDisplay.Text = "Prescription on " + DateTime.Now.ToString("dd-MMM-yyyy");
             cmbGender.SelectedIndex = 0;
             cmbRecordType.SelectedIndex = 0; // PrescriptionRecord
+            
+            // Reset medicines and PDF status/attachment variables
+            lvMedicines.Items.Clear();
+            _pdfBytes = null;
+            _pdfFileName = string.Empty;
+            lblPdfStatus.Text = "No PDF attached";
+            lblPdfStatus.ForeColor = Color.Red;
         }
 
         private void btnClose_Click(object sender, EventArgs e)
