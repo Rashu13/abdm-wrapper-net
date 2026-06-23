@@ -315,6 +315,38 @@ public class ProfileShareV3Service : IProfileShareV3Service
         _logger = logger;
     }
 
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, (string Token, DateTime Expiry)> _tokenCache = new();
+    private static int _tokenCounter = 0;
+    private static DateTime _lastResetDate = DateTime.Today;
+
+    private string GetOrGenerateToken(string abhaAddress, string hipId, string context, out string expiryStr)
+    {
+        lock (_tokenCache)
+        {
+            if (DateTime.Today > _lastResetDate)
+            {
+                _tokenCounter = 0;
+                _tokenCache.Clear();
+                _lastResetDate = DateTime.Today;
+            }
+
+            string cacheKey = $"{hipId}:{abhaAddress}:{context}";
+            if (_tokenCache.TryGetValue(cacheKey, out var cached) && DateTime.UtcNow < cached.Expiry)
+            {
+                expiryStr = cached.Expiry.ToString("o");
+                return cached.Token;
+            }
+
+            _tokenCounter++;
+            string tokenNum = _tokenCounter.ToString("D4"); // "0001", "0002" etc.
+            DateTime expiry = DateTime.UtcNow.AddMinutes(60);
+            _tokenCache[cacheKey] = (tokenNum, expiry);
+
+            expiryStr = expiry.ToString("o");
+            return tokenNum;
+        }
+    }
+
     public async Task ShareProfileAsync(ProfileShareV3Request request, IHeaderDictionary headers)
     {
         headers.TryGetValue("REQUEST-ID", out var incomingRequestId);
@@ -339,24 +371,29 @@ public class ProfileShareV3Service : IProfileShareV3Service
                 await _patientService.UpsertPatientsAsync(new List<Patient> { patient });
             }
 
-            // Persist the scan & share request
-            var acknowledgement = new
-            {
-                requestId = Guid.NewGuid().ToString(),
-                timestamp = Utils.GetCurrentTimeStamp(),
-                status = "SUCCESS",
-                healthId = request.Profile?.Patient?.AbhaAddress
-            };
-            await _requestLogService.SaveScanAndShareDetailsAsync(request, acknowledgement);
+            string context = request.MetaData?.Context ?? "1";
+            string abhaAddress = request.Profile?.Patient?.AbhaAddress ?? string.Empty;
+            string tokenNum = GetOrGenerateToken(abhaAddress, hipId.ToString(), context, out string expiryStr);
 
-            // Send on-share acknowledgement to gateway
+            // Send on-share acknowledgement to gateway conforming to V3 Schema
             var onShare = new
             {
-                requestId = Guid.NewGuid().ToString(),
-                timestamp = Utils.GetCurrentTimeStamp(),
-                acknowledgement = new { status = "SUCCESS", healthId = request.Profile?.Patient?.AbhaAddress },
-                response = new { requestId = incomingRequestId.ToString() }
+                response = new { requestId = incomingRequestId.ToString() },
+                acknowledgement = new
+                {
+                    status = "SUCCESS",
+                    abhaAddress = abhaAddress,
+                    profile = new
+                    {
+                        context = context,
+                        tokenNumber = tokenNum,
+                        expiry = expiryStr
+                    }
+                }
             };
+
+            // Persist the scan & share request
+            await _requestLogService.SaveScanAndShareDetailsAsync(request, onShare);
 
             await _gateway.PostToGatewayAsync(
                 _config.Gateway.ProfileOnSharePath ?? "api/v3/hip/patient/on-share",

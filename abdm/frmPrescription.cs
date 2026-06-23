@@ -18,9 +18,16 @@ namespace HMS.abdm
         private byte[] _pdfBytes = null;
         private string _pdfFileName = string.Empty;
 
+        private TextBox txtTiming;
+        private TextBox txtRoute;
+        private TextBox txtMethod;
+        private TextBox txtAdditionalInstructions;
+        private TextBox txtReason;
+
         public frmPrescription()
         {
             InitializeComponent();
+            SetupExtraMedicationFields();
             _client = GetAbdmClient();
             InitializeDefaultValues();
         }
@@ -55,6 +62,76 @@ namespace HMS.abdm
             _pdfFileName = string.Empty;
             lblPdfStatus.Text = "No PDF attached";
             lblPdfStatus.ForeColor = Color.Red;
+
+            if (txtTiming != null) txtTiming.Text = "1-1-D";
+            if (txtRoute != null) txtRoute.Text = "Oral";
+            if (txtMethod != null) txtMethod.Text = "swallow";
+            if (txtAdditionalInstructions != null) txtAdditionalInstructions.Text = "after food";
+            if (txtReason != null) txtReason.Text = "Fever";
+        }
+
+        private void SetupExtraMedicationFields()
+        {
+            // Row 1: Medicine Name & Dosage
+            lblMedicine.Location = new Point(10, 25);
+            lblMedicine.Size = new Size(100, 21);
+            txtMedicineName.Location = new Point(115, 22);
+            txtMedicineName.Size = new Size(110, 25);
+            
+            lblDosage.Location = new Point(230, 25);
+            lblDosage.Size = new Size(50, 21);
+            txtDosage.Location = new Point(285, 22);
+            txtDosage.Size = new Size(70, 25);
+            
+            btnAddMedicine.Location = new Point(365, 20);
+            btnAddMedicine.Size = new Size(100, 28);
+            
+            // Row 2: Timing & Route
+            var lblTiming = new Label { Text = "Timing", Location = new Point(10, 55), Size = new Size(100, 21), Font = lblMedicine.Font };
+            txtTiming = new TextBox { Location = new Point(115, 52), Size = new Size(110, 25), Text = "1-1-D", Font = txtMedicineName.Font };
+            
+            var lblRoute = new Label { Text = "Route", Location = new Point(230, 55), Size = new Size(50, 21), Font = lblMedicine.Font };
+            txtRoute = new TextBox { Location = new Point(285, 52), Size = new Size(70, 25), Text = "Oral", Font = txtMedicineName.Font };
+            
+            btnRemoveMedicine.Location = new Point(365, 50);
+            btnRemoveMedicine.Size = new Size(100, 28);
+            
+            // Row 3: Method & Instructions
+            var lblMethod = new Label { Text = "Method", Location = new Point(10, 85), Size = new Size(100, 21), Font = lblMedicine.Font };
+            txtMethod = new TextBox { Location = new Point(115, 82), Size = new Size(110, 25), Text = "swallow", Font = txtMedicineName.Font };
+            
+            var lblInstructions = new Label { Text = "Instructions", Location = new Point(230, 85), Size = new Size(80, 21), Font = lblMedicine.Font };
+            txtAdditionalInstructions = new TextBox { Location = new Point(315, 82), Size = new Size(150, 25), Text = "after food", Font = txtMedicineName.Font };
+            
+            // Row 4: Reason
+            var lblReason = new Label { Text = "Reason", Location = new Point(10, 115), Size = new Size(100, 21), Font = lblMedicine.Font };
+            txtReason = new TextBox { Location = new Point(115, 112), Size = new Size(350, 25), Text = "Fever", Font = txtMedicineName.Font };
+            
+            // Add new controls to gbPrescribe
+            gbPrescribe.Controls.Add(lblTiming);
+            gbPrescribe.Controls.Add(txtTiming);
+            gbPrescribe.Controls.Add(lblRoute);
+            gbPrescribe.Controls.Add(txtRoute);
+            gbPrescribe.Controls.Add(lblMethod);
+            gbPrescribe.Controls.Add(txtMethod);
+            gbPrescribe.Controls.Add(lblInstructions);
+            gbPrescribe.Controls.Add(txtAdditionalInstructions);
+            gbPrescribe.Controls.Add(lblReason);
+            gbPrescribe.Controls.Add(txtReason);
+            
+            // Adjust lvMedicines location and height
+            lvMedicines.Location = new Point(10, 145);
+            lvMedicines.Size = new Size(455, 135);
+            
+            // Configure ListView Columns to show everything
+            lvMedicines.Columns.Clear();
+            lvMedicines.Columns.Add("Medicine", 100);
+            lvMedicines.Columns.Add("Dosage", 50);
+            lvMedicines.Columns.Add("Timing", 60);
+            lvMedicines.Columns.Add("Route", 60);
+            lvMedicines.Columns.Add("Method", 60);
+            lvMedicines.Columns.Add("Instructions", 80);
+            lvMedicines.Columns.Add("Reason", 80);
         }
 
         private void btnClose_Click(object sender, EventArgs e)
@@ -66,6 +143,11 @@ namespace HMS.abdm
         {
             string medName = txtMedicineName.Text.Trim();
             string dosage = txtDosage.Text.Trim();
+            string timing = txtTiming.Text.Trim();
+            string route = txtRoute.Text.Trim();
+            string method = txtMethod.Text.Trim();
+            string instructions = txtAdditionalInstructions.Text.Trim();
+            string reason = txtReason.Text.Trim();
 
             if (string.IsNullOrEmpty(medName))
             {
@@ -75,10 +157,20 @@ namespace HMS.abdm
 
             var item = new ListViewItem(medName);
             item.SubItems.Add(dosage);
+            item.SubItems.Add(timing);
+            item.SubItems.Add(route);
+            item.SubItems.Add(method);
+            item.SubItems.Add(instructions);
+            item.SubItems.Add(reason);
             lvMedicines.Items.Add(item);
 
             txtMedicineName.Clear();
-            txtDosage.Clear();
+            txtDosage.Text = "1-0-1";
+            txtTiming.Text = "1-1-D";
+            txtRoute.Text = "Oral";
+            txtMethod.Text = "swallow";
+            txtAdditionalInstructions.Text = "after food";
+            txtReason.Text = "Fever";
             txtMedicineName.Focus();
         }
 
@@ -215,7 +307,12 @@ namespace HMS.abdm
                     medicinesList.Add(new
                     {
                         medicine = item.Text,
-                        dosage = item.SubItems[1].Text
+                        dosage = item.SubItems.Count > 1 ? item.SubItems[1].Text : "",
+                        timing = item.SubItems.Count > 2 ? item.SubItems[2].Text : "",
+                        route = item.SubItems.Count > 3 ? item.SubItems[3].Text : "",
+                        method = item.SubItems.Count > 4 ? item.SubItems[4].Text : "",
+                        additionalInstructions = item.SubItems.Count > 5 ? item.SubItems[5].Text : "",
+                        reason = item.SubItems.Count > 6 ? item.SubItems[6].Text : ""
                     });
                 }
 
