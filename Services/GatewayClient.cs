@@ -186,6 +186,12 @@ public class GatewayClient : IGatewayClient
                 return JsonSerializer.Deserialize<GenericV3Response>(responseString);
             }
 
+            // Log full error details for debugging
+            var fullUrl2 = client.BaseAddress != null ? new Uri(client.BaseAddress, cleanPath).ToString() : cleanPath;
+            _logger.LogError($"Gateway [{response.StatusCode}] URL={fullUrl2}");
+            _logger.LogError($"Gateway [{response.StatusCode}] RequestPayload={json}");
+            _logger.LogError($"Gateway [{response.StatusCode}] ResponseBody={responseString}");
+
             return new GenericV3Response
             {
                 HttpStatus = response.StatusCode.ToString(),
