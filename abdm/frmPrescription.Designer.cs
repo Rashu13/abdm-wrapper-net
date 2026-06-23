@@ -282,7 +282,9 @@ namespace HMS.abdm
             this.cmbRecordType.Items.AddRange(new object[] {
             "PrescriptionRecord",
             "OPConsultationRecord",
-            "HealthDocumentRecord"});
+            "HealthDocumentRecord",
+            "DiagnosticReport",
+            "DischargeSummary"});
             this.cmbRecordType.Location = new System.Drawing.Point(170, 347);
             this.cmbRecordType.Name = "cmbRecordType";
             this.cmbRecordType.Size = new System.Drawing.Size(240, 29);

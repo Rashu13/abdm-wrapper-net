@@ -17,6 +17,8 @@ public class FhirMapperService : IFhirMapperService
     private const string PROFILE_PRESCRIPTION_RECORD = "https://nrces.in/ndhm/fhir/r4/StructureDefinition/PrescriptionRecord";
     private const string PROFILE_OP_CONSULTATION_RECORD = "https://nrces.in/ndhm/fhir/r4/StructureDefinition/OPConsultationRecord";
     private const string PROFILE_HEALTH_DOCUMENT_RECORD = "https://nrces.in/ndhm/fhir/r4/StructureDefinition/HealthDocumentRecord";
+    private const string PROFILE_DIAGNOSTIC_REPORT_RECORD = "https://nrces.in/ndhm/fhir/r4/StructureDefinition/DiagnosticReportRecord";
+    private const string PROFILE_DISCHARGE_SUMMARY_RECORD = "https://nrces.in/ndhm/fhir/r4/StructureDefinition/DischargeSummaryRecord";
     private const string PROFILE_MEDICATION_REQUEST = "https://nrces.in/ndhm/fhir/r4/StructureDefinition/MedicationRequest";
     private const string PROFILE_OBSERVATION = "https://nrces.in/ndhm/fhir/r4/StructureDefinition/Observation";
     private const string PROFILE_DOCUMENT_REFERENCE = "https://nrces.in/ndhm/fhir/r4/StructureDefinition/DocumentReference";
@@ -1022,5 +1024,489 @@ public class FhirMapperService : IFhirMapperService
         }
 
         return dateStr;
+    }
+
+    public System.Threading.Tasks.Task<string> GenerateDiagnosticReportBundleAsync(string fhirJsonPayload)
+    {
+        using var document = JsonDocument.Parse(fhirJsonPayload);
+        var root = document.RootElement;
+
+        var careContextReference = GetString(root, "careContextReference") ?? Guid.NewGuid().ToString();
+        var authoredOn = GetString(root, "authoredOn") ?? DateTime.UtcNow.ToString("o");
+        
+        var patientElement = GetProperty(root, "patient");
+        var patientName = GetString(patientElement, "name") ?? "Unknown";
+        var patientRef = GetString(patientElement, "patientReference") ?? "Patient-1";
+        
+        var practitionersElement = GetProperty(root, "practitioners");
+        var orgElement = GetProperty(root, "organisation");
+
+        // 1. Create Patient
+        var patient = new Patient
+        {
+            Id = patientRef,
+            Meta = CreateMeta(PROFILE_PATIENT),
+            Name = new List<HumanName> { new HumanName { Text = patientName } },
+            Gender = ParseGender(GetString(patientElement, "gender"))
+        };
+        patient.Identifier.Add(new Identifier
+        {
+            System = "https://healthid.abdm.gov.in",
+            Value = patientRef,
+            Type = new CodeableConcept
+            {
+                Text = "Medical record number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "MR", "Medical record number")
+                }
+            }
+        });
+
+        var birthDateStr = GetString(patientElement, "birthDate");
+        if (!string.IsNullOrEmpty(birthDateStr))
+        {
+            patient.BirthDate = NormalizeBirthDate(birthDateStr);
+        }
+
+        // 2. Create Practitioner
+        var practitionerId = "PR-1";
+        var practitionerName = "Doctor";
+        if (practitionersElement.ValueKind == JsonValueKind.Array && practitionersElement.GetArrayLength() > 0)
+        {
+            var p = practitionersElement[0];
+            practitionerName = GetString(p, "name") ?? "Doctor";
+            practitionerId = GetString(p, "practitionerId") ?? "PR-1";
+        }
+        var practitioner = new Practitioner
+        {
+            Id = practitionerId,
+            Meta = CreateMeta(PROFILE_PRACTITIONER),
+            Name = new List<HumanName> { new HumanName { Text = practitionerName } }
+        };
+        practitioner.Identifier.Add(new Identifier
+        {
+            System = "https://doctor.abdm.gov.in",
+            Value = practitionerId,
+            Type = new CodeableConcept
+            {
+                Text = "Medical record number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "MD", "Medical record number")
+                }
+            }
+        });
+
+        // 3. Create Organization
+        var orgName = GetString(orgElement, "facilityName") ?? "Hospital";
+        var orgId = GetString(orgElement, "facilityId") ?? "IN-1";
+        var organization = new Organization
+        {
+            Id = orgId,
+            Meta = CreateMeta(PROFILE_ORGANIZATION),
+            Name = orgName
+        };
+        organization.Identifier.Add(new Identifier
+        {
+            System = "https://facility.abdm.gov.in",
+            Value = orgId,
+            Type = new CodeableConcept
+            {
+                Text = "Provider number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "PRN", "Provider number")
+                }
+            }
+        });
+
+        // 4. Create Encounter
+        var encounter = new Encounter
+        {
+            Id = "Encounter-1",
+            Meta = CreateMeta(PROFILE_ENCOUNTER),
+            Status = Encounter.EncounterStatus.InProgress,
+            Class = new Coding("http://terminology.hl7.org/CodeSystem/v3-Confidentiality", "AMB", "Ambulatory"),
+            Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
+            Period = new Period { Start = authoredOn }
+        };
+
+        // 5. Create Composition for Diagnostic Report Record
+        var composition = new Composition
+        {
+            Id = "Composition-1",
+            Meta = CreateMeta(PROFILE_DIAGNOSTIC_REPORT_RECORD),
+            Identifier = new Identifier { System = "https://ABDM_WRAPPER/bundle", Value = Guid.NewGuid().ToString() },
+            Status = CompositionStatus.Final,
+            Type = new CodeableConcept
+            {
+                Text = "Diagnostic Report Note",
+                Coding = new List<Coding>
+                {
+                    new Coding(SNOMED_URL, "721981007", "Diagnostic Report Note")
+                }
+            },
+            Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
+            Encounter = new ResourceReference($"Encounter/{encounter.Id}") { Display = "Ambulatory" },
+            DateElement = new FhirDateTime(authoredOn),
+            Custodian = new ResourceReference($"Organisation/{organization.Id}") { Display = orgName },
+            Title = "Diagnostic Report"
+        };
+        composition.Author.Add(new ResourceReference($"Practitioner/{practitioner.Id}") { Display = practitionerName });
+
+        var docSection = new Composition.SectionComponent
+        {
+            Title = "Diagnostic Report Note",
+            Code = new CodeableConcept
+            {
+                Text = "Diagnostic Report Note",
+                Coding = new List<Coding>
+                {
+                    new Coding(SNOMED_URL, "721981007", "Diagnostic Report Note")
+                }
+            }
+        };
+
+        var entries = new List<Bundle.EntryComponent>
+        {
+            new Bundle.EntryComponent { FullUrl = $"Composition/{composition.Id}", Resource = composition },
+            new Bundle.EntryComponent { FullUrl = $"Patient/{patient.Id}", Resource = patient },
+            new Bundle.EntryComponent { FullUrl = $"Practitioner/{practitioner.Id}", Resource = practitioner },
+            new Bundle.EntryComponent { FullUrl = $"Organisation/{organization.Id}", Resource = organization },
+            new Bundle.EntryComponent { FullUrl = $"Encounter/{encounter.Id}", Resource = encounter }
+        };
+
+        // 6. Create DocumentReference entries if present
+        var documentsElement = GetProperty(root, "documents");
+        int docIndex = 1;
+        if (documentsElement.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var d in documentsElement.EnumerateArray())
+            {
+                var contentType = GetString(d, "contentType") ?? "application/pdf";
+                var typeStr = GetString(d, "type") ?? "DiagnosticReport";
+                var dataBase64 = GetString(d, "data") ?? "";
+
+                byte[]? rawData = null;
+                if (!string.IsNullOrEmpty(dataBase64))
+                {
+                    try
+                    {
+                        rawData = Convert.FromBase64String(dataBase64);
+                    }
+                    catch { }
+                }
+
+                if (rawData != null)
+                {
+                    var attachment = new Attachment
+                    {
+                        ContentType = contentType,
+                        Data = rawData,
+                        Title = typeStr,
+                        CreationElement = new FhirDateTime(DateTimeOffset.UtcNow)
+                    };
+
+                    var docRef = new DocumentReference
+                    {
+                        Id = $"DocumentReference-{docIndex}",
+                        Meta = CreateMeta(PROFILE_DOCUMENT_REFERENCE),
+                        Status = DocumentReferenceStatus.Current,
+                        DocStatus = CompositionStatus.Final,
+                        Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
+                        Content = new List<DocumentReference.ContentComponent>
+                        {
+                            new DocumentReference.ContentComponent { Attachment = attachment }
+                        }
+                    };
+
+                    docRef.Identifier.Add(new Identifier
+                    {
+                        System = "https://facility.abdm.gov.in",
+                        Value = organization.Id,
+                        Type = new CodeableConcept
+                        {
+                            Text = typeStr,
+                            Coding = new List<Coding>
+                            {
+                                new Coding(SNOMED_URL, "423876004", "Health Document")
+                            }
+                        }
+                    });
+
+                    docSection.Entry.Add(new ResourceReference($"DocumentReference/{docRef.Id}"));
+                    entries.Add(new Bundle.EntryComponent { FullUrl = $"DocumentReference/{docRef.Id}", Resource = docRef });
+                    docIndex++;
+                }
+            }
+        }
+
+        composition.Section.Add(docSection);
+
+        // 7. Assemble Bundle with Meta/Security
+        var bundle = new Bundle
+        {
+            Id = Guid.NewGuid().ToString(),
+            Meta = new Meta
+            {
+                Profile = new[] { PROFILE_DOCUMENT_BUNDLE },
+                VersionId = "1",
+                LastUpdated = DateTimeOffset.UtcNow
+            },
+            Identifier = new Identifier { System = "https://ABDM_WRAPPER/bundle", Value = careContextReference },
+            Type = Bundle.BundleType.Document,
+            Timestamp = DateTimeOffset.UtcNow,
+            Entry = entries
+        };
+        bundle.Meta.Security.Add(new Coding(PROFILE_CONFIDENTIALITY, "V", "very restricted"));
+
+        // 8. Serialize
+        var serializer = new FhirJsonSerializer();
+        var fhirJson = serializer.SerializeToString(bundle);
+
+        return System.Threading.Tasks.Task.FromResult(fhirJson);
+    }
+
+    public System.Threading.Tasks.Task<string> GenerateDischargeSummaryBundleAsync(string fhirJsonPayload)
+    {
+        using var document = JsonDocument.Parse(fhirJsonPayload);
+        var root = document.RootElement;
+
+        var careContextReference = GetString(root, "careContextReference") ?? Guid.NewGuid().ToString();
+        var authoredOn = GetString(root, "authoredOn") ?? DateTime.UtcNow.ToString("o");
+        
+        var patientElement = GetProperty(root, "patient");
+        var patientName = GetString(patientElement, "name") ?? "Unknown";
+        var patientRef = GetString(patientElement, "patientReference") ?? "Patient-1";
+        
+        var practitionersElement = GetProperty(root, "practitioners");
+        var orgElement = GetProperty(root, "organisation");
+
+        // 1. Create Patient
+        var patient = new Patient
+        {
+            Id = patientRef,
+            Meta = CreateMeta(PROFILE_PATIENT),
+            Name = new List<HumanName> { new HumanName { Text = patientName } },
+            Gender = ParseGender(GetString(patientElement, "gender"))
+        };
+        patient.Identifier.Add(new Identifier
+        {
+            System = "https://healthid.abdm.gov.in",
+            Value = patientRef,
+            Type = new CodeableConcept
+            {
+                Text = "Medical record number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "MR", "Medical record number")
+                }
+            }
+        });
+
+        var birthDateStr = GetString(patientElement, "birthDate");
+        if (!string.IsNullOrEmpty(birthDateStr))
+        {
+            patient.BirthDate = NormalizeBirthDate(birthDateStr);
+        }
+
+        // 2. Create Practitioner
+        var practitionerId = "PR-1";
+        var practitionerName = "Doctor";
+        if (practitionersElement.ValueKind == JsonValueKind.Array && practitionersElement.GetArrayLength() > 0)
+        {
+            var p = practitionersElement[0];
+            practitionerName = GetString(p, "name") ?? "Doctor";
+            practitionerId = GetString(p, "practitionerId") ?? "PR-1";
+        }
+        var practitioner = new Practitioner
+        {
+            Id = practitionerId,
+            Meta = CreateMeta(PROFILE_PRACTITIONER),
+            Name = new List<HumanName> { new HumanName { Text = practitionerName } }
+        };
+        practitioner.Identifier.Add(new Identifier
+        {
+            System = "https://doctor.abdm.gov.in",
+            Value = practitionerId,
+            Type = new CodeableConcept
+            {
+                Text = "Medical record number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "MD", "Medical record number")
+                }
+            }
+        });
+
+        // 3. Create Organization
+        var orgName = GetString(orgElement, "facilityName") ?? "Hospital";
+        var orgId = GetString(orgElement, "facilityId") ?? "IN-1";
+        var organization = new Organization
+        {
+            Id = orgId,
+            Meta = CreateMeta(PROFILE_ORGANIZATION),
+            Name = orgName
+        };
+        organization.Identifier.Add(new Identifier
+        {
+            System = "https://facility.abdm.gov.in",
+            Value = orgId,
+            Type = new CodeableConcept
+            {
+                Text = "Provider number",
+                Coding = new List<Coding>
+                {
+                    new Coding(IDENTIFIER_TYPE_SYSTEM, "PRN", "Provider number")
+                }
+            }
+        });
+
+        // 4. Create Encounter
+        var encounter = new Encounter
+        {
+            Id = "Encounter-1",
+            Meta = CreateMeta(PROFILE_ENCOUNTER),
+            Status = Encounter.EncounterStatus.InProgress,
+            Class = new Coding("http://terminology.hl7.org/CodeSystem/v3-Confidentiality", "AMB", "Ambulatory"),
+            Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
+            Period = new Period { Start = authoredOn }
+        };
+
+        // 5. Create Composition for Discharge Summary Record
+        var composition = new Composition
+        {
+            Id = "Composition-1",
+            Meta = CreateMeta(PROFILE_DISCHARGE_SUMMARY_RECORD),
+            Identifier = new Identifier { System = "https://ABDM_WRAPPER/bundle", Value = Guid.NewGuid().ToString() },
+            Status = CompositionStatus.Final,
+            Type = new CodeableConcept
+            {
+                Text = "Discharge summary",
+                Coding = new List<Coding>
+                {
+                    new Coding(SNOMED_URL, "373942005", "Discharge summary")
+                }
+            },
+            Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
+            Encounter = new ResourceReference($"Encounter/{encounter.Id}") { Display = "Ambulatory" },
+            DateElement = new FhirDateTime(authoredOn),
+            Custodian = new ResourceReference($"Organisation/{organization.Id}") { Display = orgName },
+            Title = "Discharge Summary"
+        };
+        composition.Author.Add(new ResourceReference($"Practitioner/{practitioner.Id}") { Display = practitionerName });
+
+        var docSection = new Composition.SectionComponent
+        {
+            Title = "Discharge summary",
+            Code = new CodeableConcept
+            {
+                Text = "Discharge summary",
+                Coding = new List<Coding>
+                {
+                    new Coding(SNOMED_URL, "373942005", "Discharge summary")
+                }
+            }
+        };
+
+        var entries = new List<Bundle.EntryComponent>
+        {
+            new Bundle.EntryComponent { FullUrl = $"Composition/{composition.Id}", Resource = composition },
+            new Bundle.EntryComponent { FullUrl = $"Patient/{patient.Id}", Resource = patient },
+            new Bundle.EntryComponent { FullUrl = $"Practitioner/{practitioner.Id}", Resource = practitioner },
+            new Bundle.EntryComponent { FullUrl = $"Organisation/{organization.Id}", Resource = organization },
+            new Bundle.EntryComponent { FullUrl = $"Encounter/{encounter.Id}", Resource = encounter }
+        };
+
+        // 6. Create DocumentReference entries if present
+        var documentsElement = GetProperty(root, "documents");
+        int docIndex = 1;
+        if (documentsElement.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var d in documentsElement.EnumerateArray())
+            {
+                var contentType = GetString(d, "contentType") ?? "application/pdf";
+                var typeStr = GetString(d, "type") ?? "DischargeSummary";
+                var dataBase64 = GetString(d, "data") ?? "";
+
+                byte[]? rawData = null;
+                if (!string.IsNullOrEmpty(dataBase64))
+                {
+                    try
+                    {
+                        rawData = Convert.FromBase64String(dataBase64);
+                    }
+                    catch { }
+                }
+
+                if (rawData != null)
+                {
+                    var attachment = new Attachment
+                    {
+                        ContentType = contentType,
+                        Data = rawData,
+                        Title = typeStr,
+                        CreationElement = new FhirDateTime(DateTimeOffset.UtcNow)
+                    };
+
+                    var docRef = new DocumentReference
+                    {
+                        Id = $"DocumentReference-{docIndex}",
+                        Meta = CreateMeta(PROFILE_DOCUMENT_REFERENCE),
+                        Status = DocumentReferenceStatus.Current,
+                        DocStatus = CompositionStatus.Final,
+                        Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
+                        Content = new List<DocumentReference.ContentComponent>
+                        {
+                            new DocumentReference.ContentComponent { Attachment = attachment }
+                        }
+                    };
+
+                    docRef.Identifier.Add(new Identifier
+                    {
+                        System = "https://facility.abdm.gov.in",
+                        Value = organization.Id,
+                        Type = new CodeableConcept
+                        {
+                            Text = typeStr,
+                            Coding = new List<Coding>
+                            {
+                                new Coding(SNOMED_URL, "423876004", "Health Document")
+                            }
+                        }
+                    });
+
+                    docSection.Entry.Add(new ResourceReference($"DocumentReference/{docRef.Id}"));
+                    entries.Add(new Bundle.EntryComponent { FullUrl = $"DocumentReference/{docRef.Id}", Resource = docRef });
+                    docIndex++;
+                }
+            }
+        }
+
+        composition.Section.Add(docSection);
+
+        // 7. Assemble Bundle with Meta/Security
+        var bundle = new Bundle
+        {
+            Id = Guid.NewGuid().ToString(),
+            Meta = new Meta
+            {
+                Profile = new[] { PROFILE_DOCUMENT_BUNDLE },
+                VersionId = "1",
+                LastUpdated = DateTimeOffset.UtcNow
+            },
+            Identifier = new Identifier { System = "https://ABDM_WRAPPER/bundle", Value = careContextReference },
+            Type = Bundle.BundleType.Document,
+            Timestamp = DateTimeOffset.UtcNow,
+            Entry = entries
+        };
+        bundle.Meta.Security.Add(new Coding(PROFILE_CONFIDENTIALITY, "V", "very restricted"));
+
+        // 8. Serialize
+        var serializer = new FhirJsonSerializer();
+        var fhirJson = serializer.SerializeToString(bundle);
+
+        return System.Threading.Tasks.Task.FromResult(fhirJson);
     }
 }

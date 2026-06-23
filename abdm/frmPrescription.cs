@@ -269,6 +269,14 @@ namespace HMS.abdm
                 {
                     hiType = "HealthDocumentRecord";
                 }
+                else if (recordType == "DiagnosticReport")
+                {
+                    hiType = "DiagnosticReport";
+                }
+                else if (recordType == "DischargeSummary")
+                {
+                    hiType = "DischargeSummary";
+                }
 
                 var careContexts = new List<Dictionary<string, object>>
                 {
@@ -411,6 +419,14 @@ namespace HMS.abdm
                 else if (recordType == "HealthDocumentRecord")
                 {
                     hiType = "HealthDocumentRecord";
+                }
+                else if (recordType == "DiagnosticReport")
+                {
+                    hiType = "DiagnosticReport";
+                }
+                else if (recordType == "DischargeSummary")
+                {
+                    hiType = "DischargeSummary";
                 }
 
                 var careContexts = new List<Dictionary<string, object>>

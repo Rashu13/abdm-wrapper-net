@@ -205,6 +205,14 @@ public class HIPHealthInformationV3Service : IHIPHealthInformationV3Service
                         {
                             fhirBundleStr = await _fhirMapperService.GenerateHealthDocumentBundleAsync(record.FhirJsonPayload);
                         }
+                        else if (record.RecordType != null && (record.RecordType.Equals("DiagnosticReport", StringComparison.OrdinalIgnoreCase) || record.RecordType.Equals("DiagnosticReportRecord", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            fhirBundleStr = await _fhirMapperService.GenerateDiagnosticReportBundleAsync(record.FhirJsonPayload);
+                        }
+                        else if (record.RecordType != null && (record.RecordType.Equals("DischargeSummary", StringComparison.OrdinalIgnoreCase) || record.RecordType.Equals("DischargeSummaryRecord", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            fhirBundleStr = await _fhirMapperService.GenerateDischargeSummaryBundleAsync(record.FhirJsonPayload);
+                        }
                         else
                         {
                             fhirBundleStr = await _fhirMapperService.GeneratePrescriptionBundleAsync(record.FhirJsonPayload);
