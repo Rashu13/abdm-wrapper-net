@@ -73,7 +73,7 @@ namespace HMS.abdm
             this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlHeader.Location = new System.Drawing.Point(0, 0);
             this.pnlHeader.Name = "pnlHeader";
-            this.pnlHeader.Size = new System.Drawing.Size(950, 50);
+            this.pnlHeader.Size = new System.Drawing.Size(1200, 50);
             this.pnlHeader.TabIndex = 0;
             // 
             // btnClose
@@ -302,7 +302,7 @@ namespace HMS.abdm
             this.gbPrescribe.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
             this.gbPrescribe.Location = new System.Drawing.Point(460, 65);
             this.gbPrescribe.Name = "gbPrescribe";
-            this.gbPrescribe.Size = new System.Drawing.Size(475, 290);
+            this.gbPrescribe.Size = new System.Drawing.Size(725, 290);
             this.gbPrescribe.TabIndex = 2;
             this.gbPrescribe.TabStop = false;
             this.gbPrescribe.Text = "Write Medicine (Dwai)";
@@ -351,7 +351,7 @@ namespace HMS.abdm
             this.btnAddMedicine.TabIndex = 4;
             this.btnAddMedicine.Text = "Add Medicine";
             this.btnAddMedicine.UseVisualStyleBackColor = false;
-            this.btnAddMedicine.Click += new System.EventHandler(this.btnAddMedicine_Click);
+
             // 
             // btnRemoveMedicine
             // 
@@ -364,7 +364,7 @@ namespace HMS.abdm
             this.btnRemoveMedicine.TabIndex = 5;
             this.btnRemoveMedicine.Text = "Remove";
             this.btnRemoveMedicine.UseVisualStyleBackColor = false;
-            this.btnRemoveMedicine.Click += new System.EventHandler(this.btnRemoveMedicine_Click);
+
             // 
             // lvMedicines
             // 
@@ -398,7 +398,7 @@ namespace HMS.abdm
             this.gbPdf.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
             this.gbPdf.Location = new System.Drawing.Point(460, 360);
             this.gbPdf.Name = "gbPdf";
-            this.gbPdf.Size = new System.Drawing.Size(475, 100);
+            this.gbPdf.Size = new System.Drawing.Size(725, 100);
             this.gbPdf.TabIndex = 3;
             this.gbPdf.TabStop = false;
             this.gbPdf.Text = "Attach Prescription PDF File";
@@ -495,7 +495,7 @@ namespace HMS.abdm
             this.txtLogs.Name = "txtLogs";
             this.txtLogs.ReadOnly = true;
             this.txtLogs.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtLogs.Size = new System.Drawing.Size(475, 180);
+            this.txtLogs.Size = new System.Drawing.Size(725, 180);
             this.txtLogs.TabIndex = 5;
             // 
             // lblLogs
@@ -513,7 +513,7 @@ namespace HMS.abdm
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(950, 700);
+            this.ClientSize = new System.Drawing.Size(1200, 700);
             this.Controls.Add(this.lblLogs);
             this.Controls.Add(this.txtLogs);
             this.Controls.Add(this.gbActions);

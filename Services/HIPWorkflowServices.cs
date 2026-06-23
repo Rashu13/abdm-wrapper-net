@@ -128,6 +128,8 @@ public class ConsentV3Service : IConsentV3Service
 /// </summary>
 public class HIPHealthInformationV3Service : IHIPHealthInformationV3Service
 {
+    private readonly IGatewayClient _gateway;
+    private readonly AbdmConfig _config;
     private readonly IRequestLogV3Service _requestLogService;
     private readonly IPatientV3Service _patientService;
     private readonly ICryptographyService _cryptographyService;
@@ -135,12 +137,16 @@ public class HIPHealthInformationV3Service : IHIPHealthInformationV3Service
     private readonly ILogger<HIPHealthInformationV3Service> _logger;
 
     public HIPHealthInformationV3Service(
+        IGatewayClient gateway,
+        IOptions<AbdmConfig> config,
         IRequestLogV3Service requestLogService,
         IPatientV3Service patientService,
         ICryptographyService cryptographyService,
         IFhirMapperService fhirMapperService,
         ILogger<HIPHealthInformationV3Service> logger)
     {
+        _gateway = gateway;
+        _config = config.Value;
         _requestLogService = requestLogService;
         _patientService = patientService;
         _cryptographyService = cryptographyService;
@@ -276,6 +282,35 @@ public class HIPHealthInformationV3Service : IHIPHealthInformationV3Service
             if (!string.IsNullOrEmpty(dataPushUrl))
             {
                 _logger.LogInformation($"Pushing encrypted data to HIU at {dataPushUrl}");
+                
+                // Add Gateway Access Token & metadata headers required for ABDM V3 Data Transfer
+                try
+                {
+                    var gatewayToken = await _gateway.GetAccessTokenAsync();
+                    httpClient.DefaultRequestHeaders.Add("Authorization", gatewayToken);
+                    
+                    string cmId = _config.Environment.Equals("prod", StringComparison.OrdinalIgnoreCase) || 
+                                  _config.Environment.Equals("production", StringComparison.OrdinalIgnoreCase) 
+                                  ? "abdm" : "sbx";
+                    httpClient.DefaultRequestHeaders.Add("X-CM-ID", cmId);
+                    httpClient.DefaultRequestHeaders.Add("REQUEST-ID", Guid.NewGuid().ToString());
+                    httpClient.DefaultRequestHeaders.Add("TIMESTAMP", Utils.GetCurrentTimeStamp());
+                    
+                    var hipId = _config.HipId;
+                    if (string.IsNullOrEmpty(hipId))
+                    {
+                        hipId = _config.HipSetup?.BaseUrl ?? "";
+                    }
+                    if (!string.IsNullOrEmpty(hipId))
+                    {
+                        httpClient.DefaultRequestHeaders.Add("X-HIP-ID", hipId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning($"Could not attach gateway auth headers to data push: {ex.Message}");
+                }
+
                 var jsonOptions = new System.Text.Json.JsonSerializerOptions 
                 { 
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,

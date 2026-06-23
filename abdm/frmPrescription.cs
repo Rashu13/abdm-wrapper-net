@@ -18,17 +18,61 @@ namespace HMS.abdm
         private byte[] _pdfBytes = null;
         private string _pdfFileName = string.Empty;
 
-        private TextBox txtTiming;
-        private TextBox txtRoute;
-        private TextBox txtMethod;
-        private TextBox txtAdditionalInstructions;
-        private TextBox txtReason;
+        private TabControl tcRecordDetails;
+        private TabPage tpPrescription;
+        private TabPage tpOPConsultation;
+        private TabPage tpDiagnosticReport;
+        private TabPage tpDischargeSummary;
+        private TabPage tpHealthDocument;
+
+        // Prescription Controls
+        private TextBox txtMedicineName_Presc;
+        private TextBox txtDosage_Presc;
+        private TextBox txtTiming_Presc;
+        private TextBox txtRoute_Presc;
+        private TextBox txtMethod_Presc;
+        private TextBox txtInstructions_Presc;
+        private TextBox txtReason_Presc;
+        private ListView lvMedicines_Presc;
+
+        // OP Consultation Controls
+        private TextBox txtMedicineName_OP;
+        private TextBox txtDosage_OP;
+        private TextBox txtTiming_OP;
+        private TextBox txtRoute_OP;
+        private TextBox txtMethod_OP;
+        private TextBox txtInstructions_OP;
+        private TextBox txtReason_OP;
+        private ListView lvMedicines_OP;
+
+        // Diagnostic Report Controls
+        private TextBox txtTestName_Diag;
+        private TextBox txtSpecimen_Diag;
+        private TextBox txtResult_Diag;
+        private TextBox txtUnit_Diag;
+        private TextBox txtRefRange_Diag;
+        private TextBox txtRemarks_Diag;
+        private TextBox txtInterpretation_Diag;
+        private ListView lvMedicines_Diag;
+
+        // Discharge Summary Controls
+        private TextBox txtMedicineName_Disch;
+        private TextBox txtDosage_Disch;
+        private TextBox txtAdmDate_Disch;
+        private TextBox txtDischDate_Disch;
+        private TextBox txtCourse_Disch;
+        private TextBox txtAdvice_Disch;
+        private TextBox txtCondition_Disch;
+        private ListView lvMedicines_Disch;
+
+        private bool _isSyncing = false;
 
         public frmPrescription()
         {
             InitializeComponent();
             SetupExtraMedicationFields();
             _client = GetAbdmClient();
+            cmbRecordType.SelectedIndexChanged += cmbRecordType_SelectedIndexChanged;
             InitializeDefaultValues();
         }
 
@@ -54,84 +98,305 @@ namespace HMS.abdm
             txtCareContextRef.Text = "CC-" + DateTime.Now.ToString("yyMMddHHmmss");
             txtCareContextDisplay.Text = "Prescription on " + DateTime.Now.ToString("dd-MMM-yyyy");
             cmbGender.SelectedIndex = 0;
-            cmbRecordType.SelectedIndex = 0; // PrescriptionRecord
-            
+
             // Reset medicines and PDF status/attachment variables
-            lvMedicines.Items.Clear();
+            if (lvMedicines_Presc != null) lvMedicines_Presc.Items.Clear();
+            if (lvMedicines_OP != null) lvMedicines_OP.Items.Clear();
+            if (lvMedicines_Diag != null) lvMedicines_Diag.Items.Clear();
+            if (lvMedicines_Disch != null) lvMedicines_Disch.Items.Clear();
+
             _pdfBytes = null;
             _pdfFileName = string.Empty;
             lblPdfStatus.Text = "No PDF attached";
             lblPdfStatus.ForeColor = Color.Red;
 
-            if (txtTiming != null) txtTiming.Text = "1-1-D";
-            if (txtRoute != null) txtRoute.Text = "Oral";
-            if (txtMethod != null) txtMethod.Text = "swallow";
-            if (txtAdditionalInstructions != null) txtAdditionalInstructions.Text = "after food";
-            if (txtReason != null) txtReason.Text = "Fever";
+            // Reset textboxes
+            if (txtMedicineName_Presc != null) txtMedicineName_Presc.Text = "";
+            if (txtMedicineName_OP != null) txtMedicineName_OP.Text = "";
+            if (txtTestName_Diag != null) txtTestName_Diag.Text = "";
+            if (txtMedicineName_Disch != null) txtMedicineName_Disch.Text = "";
+
+            cmbRecordType.SelectedIndex = 0; // PrescriptionRecord
+        }
+
+        private TextBox CreateInputRow(TabPage tp, string labelText, int xLabel, int yLabel, int xText, int yText, int wText, string defaultText = "")
+        {
+            var lbl = new Label { Text = labelText, Location = new Point(xLabel, yLabel), Size = new Size(xText - xLabel - 5, 21), Font = gbPrescribe.Font };
+            var txt = new TextBox { Location = new Point(xText, yText), Size = new Size(wText, 25), Text = defaultText, Font = gbPrescribe.Font };
+            tp.Controls.Add(lbl);
+            tp.Controls.Add(txt);
+            return txt;
+        }
+
+        private void CreateButtons(TabPage tp, EventHandler onAdd, EventHandler onRemove)
+        {
+            var btnAdd = new Button
+            {
+                Text = "Add Item",
+                Location = new Point(580, 5),
+                Size = new Size(110, 28),
+                BackColor = Color.FromArgb(55, 115, 200),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = gbPrescribe.Font
+            };
+            btnAdd.Click += onAdd;
+
+            var btnRemove = new Button
+            {
+                Text = "Remove Selected",
+                Location = new Point(580, 35),
+                Size = new Size(110, 28),
+                BackColor = Color.DarkRed,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = gbPrescribe.Font
+            };
+            btnRemove.Click += onRemove;
+
+            tp.Controls.Add(btnAdd);
+            tp.Controls.Add(btnRemove);
+        }
+
+        private ListView CreateListView(TabPage tp, string[] columns, int[] widths)
+        {
+            var lv = new ListView
+            {
+                Location = new Point(10, 125),
+                Size = new Size(680, 95),
+                FullRowSelect = true,
+                GridLines = true,
+                View = View.Details,
+                HideSelection = false,
+                Font = gbPrescribe.Font
+            };
+            for (int i = 0; i < columns.Length; i++)
+            {
+                lv.Columns.Add(columns[i], widths[i]);
+            }
+            tp.Controls.Add(lv);
+            return lv;
+        }
+
+        private ListView GetActiveListView()
+        {
+            string recordType = cmbRecordType.Text;
+            if (recordType == "PrescriptionRecord") return lvMedicines_Presc;
+            if (recordType == "OPConsultationRecord") return lvMedicines_OP;
+            if (recordType == "DiagnosticReport") return lvMedicines_Diag;
+            if (recordType == "DischargeSummary") return lvMedicines_Disch;
+            return null;
         }
 
         private void SetupExtraMedicationFields()
         {
-            // Row 1: Medicine Name & Dosage
-            lblMedicine.Location = new Point(10, 25);
-            lblMedicine.Size = new Size(100, 21);
-            txtMedicineName.Location = new Point(115, 22);
-            txtMedicineName.Size = new Size(110, 25);
-            
-            lblDosage.Location = new Point(230, 25);
-            lblDosage.Size = new Size(50, 21);
-            txtDosage.Location = new Point(285, 22);
-            txtDosage.Size = new Size(70, 25);
-            
-            btnAddMedicine.Location = new Point(365, 20);
-            btnAddMedicine.Size = new Size(100, 28);
-            
-            // Row 2: Timing & Route
-            var lblTiming = new Label { Text = "Timing", Location = new Point(10, 55), Size = new Size(100, 21), Font = lblMedicine.Font };
-            txtTiming = new TextBox { Location = new Point(115, 52), Size = new Size(110, 25), Text = "1-1-D", Font = txtMedicineName.Font };
-            
-            var lblRoute = new Label { Text = "Route", Location = new Point(230, 55), Size = new Size(50, 21), Font = lblMedicine.Font };
-            txtRoute = new TextBox { Location = new Point(285, 52), Size = new Size(70, 25), Text = "Oral", Font = txtMedicineName.Font };
-            
-            btnRemoveMedicine.Location = new Point(365, 50);
-            btnRemoveMedicine.Size = new Size(100, 28);
-            
-            // Row 3: Method & Instructions
-            var lblMethod = new Label { Text = "Method", Location = new Point(10, 85), Size = new Size(100, 21), Font = lblMedicine.Font };
-            txtMethod = new TextBox { Location = new Point(115, 82), Size = new Size(110, 25), Text = "swallow", Font = txtMedicineName.Font };
-            
-            var lblInstructions = new Label { Text = "Instructions", Location = new Point(230, 85), Size = new Size(80, 21), Font = lblMedicine.Font };
-            txtAdditionalInstructions = new TextBox { Location = new Point(315, 82), Size = new Size(150, 25), Text = "after food", Font = txtMedicineName.Font };
-            
-            // Row 4: Reason
-            var lblReason = new Label { Text = "Reason", Location = new Point(10, 115), Size = new Size(100, 21), Font = lblMedicine.Font };
-            txtReason = new TextBox { Location = new Point(115, 112), Size = new Size(350, 25), Text = "Fever", Font = txtMedicineName.Font };
-            
-            // Add new controls to gbPrescribe
-            gbPrescribe.Controls.Add(lblTiming);
-            gbPrescribe.Controls.Add(txtTiming);
-            gbPrescribe.Controls.Add(lblRoute);
-            gbPrescribe.Controls.Add(txtRoute);
-            gbPrescribe.Controls.Add(lblMethod);
-            gbPrescribe.Controls.Add(txtMethod);
-            gbPrescribe.Controls.Add(lblInstructions);
-            gbPrescribe.Controls.Add(txtAdditionalInstructions);
-            gbPrescribe.Controls.Add(lblReason);
-            gbPrescribe.Controls.Add(txtReason);
-            
-            // Adjust lvMedicines location and height
-            lvMedicines.Location = new Point(10, 145);
-            lvMedicines.Size = new Size(455, 135);
-            
-            // Configure ListView Columns to show everything
-            lvMedicines.Columns.Clear();
-            lvMedicines.Columns.Add("Medicine", 100);
-            lvMedicines.Columns.Add("Dosage", 50);
-            lvMedicines.Columns.Add("Timing", 60);
-            lvMedicines.Columns.Add("Route", 60);
-            lvMedicines.Columns.Add("Method", 60);
-            lvMedicines.Columns.Add("Instructions", 80);
-            lvMedicines.Columns.Add("Reason", 80);
+            // Remove the designer created medication controls from gbPrescribe
+            gbPrescribe.Controls.Clear();
+
+            // Create TabControl
+            tcRecordDetails = new TabControl
+            {
+                Location = new Point(10, 20),
+                Size = new Size(705, 260),
+                Font = gbPrescribe.Font
+            };
+            tcRecordDetails.SelectedIndexChanged += tcRecordDetails_SelectedIndexChanged;
+            gbPrescribe.Controls.Add(tcRecordDetails);
+
+            // Tab 1: Prescription
+            tpPrescription = new TabPage("Prescription");
+            tcRecordDetails.TabPages.Add(tpPrescription);
+
+            txtMedicineName_Presc = CreateInputRow(tpPrescription, "Medicine Name", 10, 8, 115, 5, 200);
+            txtDosage_Presc = CreateInputRow(tpPrescription, "Dosage", 330, 8, 415, 5, 150, "1-0-1");
+            txtTiming_Presc = CreateInputRow(tpPrescription, "Timing", 10, 38, 115, 35, 200, "1-1-D");
+            txtRoute_Presc = CreateInputRow(tpPrescription, "Route", 330, 38, 415, 35, 150, "Oral");
+            txtMethod_Presc = CreateInputRow(tpPrescription, "Method", 10, 68, 115, 65, 200, "swallow");
+            txtInstructions_Presc = CreateInputRow(tpPrescription, "Instructions", 330, 68, 415, 65, 150, "after food");
+            txtReason_Presc = CreateInputRow(tpPrescription, "Reason", 10, 98, 115, 95, 450, "Fever");
+
+            CreateButtons(tpPrescription, btnAddMedicine_Presc_Click, btnRemoveMedicine_Presc_Click);
+            lvMedicines_Presc = CreateListView(tpPrescription,
+                new[] { "Medicine", "Dosage", "Timing", "Route", "Method", "Instructions", "Reason" },
+                new[] { 170, 70, 80, 70, 70, 110, 110 });
+
+            // Tab 2: OP Consultation
+            tpOPConsultation = new TabPage("OP Consultation");
+            tcRecordDetails.TabPages.Add(tpOPConsultation);
+
+            txtMedicineName_OP = CreateInputRow(tpOPConsultation, "Prescribed Med", 10, 8, 115, 5, 200);
+            txtDosage_OP = CreateInputRow(tpOPConsultation, "Dosage", 330, 8, 415, 5, 150, "1-0-1");
+            txtTiming_OP = CreateInputRow(tpOPConsultation, "Timing", 10, 38, 115, 35, 200, "1-1-D");
+            txtRoute_OP = CreateInputRow(tpOPConsultation, "Route", 330, 38, 415, 35, 150, "Oral");
+            txtMethod_OP = CreateInputRow(tpOPConsultation, "Method", 10, 68, 115, 65, 200, "swallow");
+            txtInstructions_OP = CreateInputRow(tpOPConsultation, "Instructions", 330, 68, 415, 65, 150, "after food");
+            txtReason_OP = CreateInputRow(tpOPConsultation, "Chief Complaints", 10, 98, 115, 95, 450, "Fever");
+
+            CreateButtons(tpOPConsultation, btnAddMedicine_OP_Click, btnRemoveMedicine_OP_Click);
+            lvMedicines_OP = CreateListView(tpOPConsultation,
+                new[] { "Medicine", "Dosage", "Timing", "Route", "Method", "Instructions", "Complaints" },
+                new[] { 170, 70, 80, 70, 70, 110, 110 });
+
+            // Tab 3: Diagnostic Report
+            tpDiagnosticReport = new TabPage("Diagnostic Report");
+            tcRecordDetails.TabPages.Add(tpDiagnosticReport);
+
+            txtTestName_Diag = CreateInputRow(tpDiagnosticReport, "Test Name", 10, 8, 115, 5, 200);
+            txtSpecimen_Diag = CreateInputRow(tpDiagnosticReport, "Specimen", 330, 8, 415, 5, 150, "Blood");
+            txtResult_Diag = CreateInputRow(tpDiagnosticReport, "Result Value", 10, 38, 115, 35, 200);
+            txtUnit_Diag = CreateInputRow(tpDiagnosticReport, "Unit", 330, 38, 415, 35, 150, "mg/dL");
+            txtRefRange_Diag = CreateInputRow(tpDiagnosticReport, "Ref Range", 10, 68, 115, 65, 200, "70-100");
+            txtRemarks_Diag = CreateInputRow(tpDiagnosticReport, "Remarks", 330, 68, 415, 65, 150, "Normal");
+            txtInterpretation_Diag = CreateInputRow(tpDiagnosticReport, "Interpretation", 10, 98, 115, 95, 450, "Clinically stable");
+
+            CreateButtons(tpDiagnosticReport, btnAddMedicine_Diag_Click, btnRemoveMedicine_Diag_Click);
+            lvMedicines_Diag = CreateListView(tpDiagnosticReport,
+                new[] { "Test Name", "Specimen", "Result", "Unit", "Ref Range", "Remarks", "Interpretation" },
+                new[] { 170, 80, 80, 60, 90, 100, 100 });
+
+            // Tab 4: Discharge Summary
+            tpDischargeSummary = new TabPage("Discharge Summary");
+            tcRecordDetails.TabPages.Add(tpDischargeSummary);
+
+            txtMedicineName_Disch = CreateInputRow(tpDischargeSummary, "Discharge Med", 10, 8, 115, 5, 200);
+            txtDosage_Disch = CreateInputRow(tpDischargeSummary, "Dosage", 330, 8, 415, 5, 150, "1-0-1");
+            txtAdmDate_Disch = CreateInputRow(tpDischargeSummary, "Admission Date", 10, 38, 115, 35, 200, DateTime.Now.AddDays(-3).ToString("yyyy-MM-dd"));
+            txtDischDate_Disch = CreateInputRow(tpDischargeSummary, "Discharge Date", 330, 38, 415, 35, 150, DateTime.Now.ToString("yyyy-MM-dd"));
+            txtCourse_Disch = CreateInputRow(tpDischargeSummary, "Treatment Course", 10, 68, 115, 65, 200, "IV Fluids & Antibiotics");
+            txtAdvice_Disch = CreateInputRow(tpDischargeSummary, "Discharge Advice", 330, 68, 415, 65, 150, "Take rest");
+            txtCondition_Disch = CreateInputRow(tpDischargeSummary, "Condition on Disch", 10, 98, 115, 95, 450, "Stable");
+
+            CreateButtons(tpDischargeSummary, btnAddMedicine_Disch_Click, btnRemoveMedicine_Disch_Click);
+            lvMedicines_Disch = CreateListView(tpDischargeSummary,
+                new[] { "Discharge Med", "Dosage", "Adm Date", "Disch Date", "Course", "Advice", "Condition" },
+                new[] { 170, 70, 80, 80, 95, 95, 90 });
+
+            // Tab 5: Health Document (PDF Only)
+            tpHealthDocument = new TabPage("Health Document");
+            tcRecordDetails.TabPages.Add(tpHealthDocument);
+
+            var lblInfo = new Label
+            {
+                Text = "Attach the clinical document (PDF) in the panel below.\nNo structured medication/test entry is needed for this type.",
+                Location = new Point(20, 50),
+                Size = new Size(500, 100),
+                Font = gbPrescribe.Font,
+                ForeColor = Color.DarkBlue
+            };
+            tpHealthDocument.Controls.Add(lblInfo);
+        }
+
+        private void tcRecordDetails_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_isSyncing) return;
+            _isSyncing = true;
+            try
+            {
+                if (tcRecordDetails.SelectedTab == tpPrescription)
+                    cmbRecordType.Text = "PrescriptionRecord";
+                else if (tcRecordDetails.SelectedTab == tpOPConsultation)
+                    cmbRecordType.Text = "OPConsultationRecord";
+                else if (tcRecordDetails.SelectedTab == tpDiagnosticReport)
+                    cmbRecordType.Text = "DiagnosticReport";
+                else if (tcRecordDetails.SelectedTab == tpDischargeSummary)
+                    cmbRecordType.Text = "DischargeSummary";
+                else if (tcRecordDetails.SelectedTab == tpHealthDocument)
+                    cmbRecordType.Text = "HealthDocumentRecord";
+
+                UpdateUiForRecordType();
+            }
+            finally
+            {
+                _isSyncing = false;
+            }
+        }
+
+        private void btnAddMedicine_Presc_Click(object sender, EventArgs e)
+        {
+            string name = txtMedicineName_Presc.Text.Trim();
+            if (string.IsNullOrEmpty(name)) return;
+            var item = new ListViewItem(name);
+            item.SubItems.Add(txtDosage_Presc.Text.Trim());
+            item.SubItems.Add(txtTiming_Presc.Text.Trim());
+            item.SubItems.Add(txtRoute_Presc.Text.Trim());
+            item.SubItems.Add(txtMethod_Presc.Text.Trim());
+            item.SubItems.Add(txtInstructions_Presc.Text.Trim());
+            item.SubItems.Add(txtReason_Presc.Text.Trim());
+            lvMedicines_Presc.Items.Add(item);
+            txtMedicineName_Presc.Clear();
+            txtMedicineName_Presc.Focus();
+        }
+
+        private void btnRemoveMedicine_Presc_Click(object sender, EventArgs e)
+        {
+            if (lvMedicines_Presc.SelectedItems.Count > 0)
+                lvMedicines_Presc.Items.Remove(lvMedicines_Presc.SelectedItems[0]);
+        }
+
+        private void btnAddMedicine_OP_Click(object sender, EventArgs e)
+        {
+            string name = txtMedicineName_OP.Text.Trim();
+            if (string.IsNullOrEmpty(name)) return;
+            var item = new ListViewItem(name);
+            item.SubItems.Add(txtDosage_OP.Text.Trim());
+            item.SubItems.Add(txtTiming_OP.Text.Trim());
+            item.SubItems.Add(txtRoute_OP.Text.Trim());
+            item.SubItems.Add(txtMethod_OP.Text.Trim());
+            item.SubItems.Add(txtInstructions_OP.Text.Trim());
+            item.SubItems.Add(txtReason_OP.Text.Trim());
+            lvMedicines_OP.Items.Add(item);
+            txtMedicineName_OP.Clear();
+            txtMedicineName_OP.Focus();
+        }
+
+        private void btnRemoveMedicine_OP_Click(object sender, EventArgs e)
+        {
+            if (lvMedicines_OP.SelectedItems.Count > 0)
+                lvMedicines_OP.Items.Remove(lvMedicines_OP.SelectedItems[0]);
+        }
+
+        private void btnAddMedicine_Diag_Click(object sender, EventArgs e)
+        {
+            string name = txtTestName_Diag.Text.Trim();
+            if (string.IsNullOrEmpty(name)) return;
+            var item = new ListViewItem(name);
+            item.SubItems.Add(txtSpecimen_Diag.Text.Trim());
+            item.SubItems.Add(txtResult_Diag.Text.Trim());
+            item.SubItems.Add(txtUnit_Diag.Text.Trim());
+            item.SubItems.Add(txtRefRange_Diag.Text.Trim());
+            item.SubItems.Add(txtRemarks_Diag.Text.Trim());
+            item.SubItems.Add(txtInterpretation_Diag.Text.Trim());
+            lvMedicines_Diag.Items.Add(item);
+            txtTestName_Diag.Clear();
+            txtTestName_Diag.Focus();
+        }
+
+        private void btnRemoveMedicine_Diag_Click(object sender, EventArgs e)
+        {
+            if (lvMedicines_Diag.SelectedItems.Count > 0)
+                lvMedicines_Diag.Items.Remove(lvMedicines_Diag.SelectedItems[0]);
+        }
+
+        private void btnAddMedicine_Disch_Click(object sender, EventArgs e)
+        {
+            string name = txtMedicineName_Disch.Text.Trim();
+            if (string.IsNullOrEmpty(name)) return;
+            var item = new ListViewItem(name);
+            item.SubItems.Add(txtDosage_Disch.Text.Trim());
+            item.SubItems.Add(txtAdmDate_Disch.Text.Trim());
+            item.SubItems.Add(txtDischDate_Disch.Text.Trim());
+            item.SubItems.Add(txtCourse_Disch.Text.Trim());
+            item.SubItems.Add(txtAdvice_Disch.Text.Trim());
+            item.SubItems.Add(txtCondition_Disch.Text.Trim());
+            lvMedicines_Disch.Items.Add(item);
+            txtMedicineName_Disch.Clear();
+            txtMedicineName_Disch.Focus();
+        }
+
+        private void btnRemoveMedicine_Disch_Click(object sender, EventArgs e)
+        {
+            if (lvMedicines_Disch.SelectedItems.Count > 0)
+                lvMedicines_Disch.Items.Remove(lvMedicines_Disch.SelectedItems[0]);
         }
 
         private void btnClose_Click(object sender, EventArgs e)
@@ -139,55 +404,7 @@ namespace HMS.abdm
             this.Close();
         }
 
-        private void btnAddMedicine_Click(object sender, EventArgs e)
-        {
-            string medName = txtMedicineName.Text.Trim();
-            string dosage = txtDosage.Text.Trim();
-            string timing = txtTiming.Text.Trim();
-            string route = txtRoute.Text.Trim();
-            string method = txtMethod.Text.Trim();
-            string instructions = txtAdditionalInstructions.Text.Trim();
-            string reason = txtReason.Text.Trim();
 
-            if (string.IsNullOrEmpty(medName))
-            {
-                MessageBox.Show("Please enter a medicine name.", "Input Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            var item = new ListViewItem(medName);
-            item.SubItems.Add(dosage);
-            item.SubItems.Add(timing);
-            item.SubItems.Add(route);
-            item.SubItems.Add(method);
-            item.SubItems.Add(instructions);
-            item.SubItems.Add(reason);
-            lvMedicines.Items.Add(item);
-
-            txtMedicineName.Clear();
-            txtDosage.Text = "1-0-1";
-            txtTiming.Text = "1-1-D";
-            txtRoute.Text = "Oral";
-            txtMethod.Text = "swallow";
-            txtAdditionalInstructions.Text = "after food";
-            txtReason.Text = "Fever";
-            txtMedicineName.Focus();
-        }
-
-        private void btnRemoveMedicine_Click(object sender, EventArgs e)
-        {
-            if (lvMedicines.SelectedItems.Count > 0)
-            {
-                foreach (ListViewItem item in lvMedicines.SelectedItems)
-                {
-                    lvMedicines.Items.Remove(item);
-                }
-            }
-            else
-            {
-                MessageBox.Show("Please select a medicine from the list to remove.", "Selection Required", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-        }
 
         private void btnUploadPdf_Click(object sender, EventArgs e)
         {
@@ -204,7 +421,7 @@ namespace HMS.abdm
                         _pdfFileName = Path.GetFileName(ofd.FileName);
                         lblPdfStatus.Text = $"Attached: {_pdfFileName} ({(_pdfBytes.Length / 1024.0):F1} KB)";
                         lblPdfStatus.ForeColor = Color.DarkGreen;
-                        
+
                         // Switch record type to HealthDocumentRecord automatically as PDF is attached
                         // cmbRecordType.SelectedIndex = 2; // HealthDocumentRecord
                     }
@@ -229,30 +446,43 @@ namespace HMS.abdm
                 return false;
             }
 
-            // Auto-generate PDF prescription report if not manually attached
+            string recordType = cmbRecordType.Text;
+
+            // Auto-generate PDF clinical report if not manually attached
             if (_pdfBytes == null)
             {
-                AppendLog("No manual PDF uploaded. Auto-generating prescription PDF report...");
-                var medListForPdf = new List<string[]>();
-                foreach (ListViewItem item in lvMedicines.Items)
+                AppendLog($"No manual PDF uploaded. Auto-generating {recordType} PDF report...");
+                var itemsForPdf = new List<string[]>();
+                var activeLv = GetActiveListView();
+                if (activeLv != null)
                 {
-                    medListForPdf.Add(new string[] { item.Text, item.SubItems[1].Text });
+                    foreach (ListViewItem item in activeLv.Items)
+                    {
+                        itemsForPdf.Add(new string[] {
+                            item.Text,
+                            item.SubItems.Count > 1 ? item.SubItems[1].Text : "",
+                            item.SubItems.Count > 2 ? item.SubItems[2].Text : "",
+                            item.SubItems.Count > 3 ? item.SubItems[3].Text : "",
+                            item.SubItems.Count > 4 ? item.SubItems[4].Text : "",
+                            item.SubItems.Count > 5 ? item.SubItems[5].Text : "",
+                            item.SubItems.Count > 6 ? item.SubItems[6].Text : ""
+                        });
+                    }
                 }
-                
-                _pdfBytes = GeneratePrescriptionPdf(
+
+                _pdfBytes = GenerateClinicalDocumentPdf(
+                    recordType,
                     txtPatientName.Text.Trim(),
                     txtAbhaAddress.Text.Trim(),
                     cmbGender.Text.Trim(),
                     txtDob.Text.Trim(),
                     txtCareContextRef.Text.Trim(),
-                    medListForPdf
+                    itemsForPdf,
+                    "Dr. Sudeep Munjal"
                 );
-                _pdfFileName = $"Prescription_{txtCareContextRef.Text.Trim()}.pdf";
+                _pdfFileName = $"{recordType}_{txtCareContextRef.Text.Trim()}.pdf";
                 lblPdfStatus.Text = $"Auto-Generated: {_pdfFileName} ({(_pdfBytes.Length / 1024.0):F1} KB)";
                 lblPdfStatus.ForeColor = Color.DarkGreen;
-                
-                // Automatically switch record type to HealthDocumentRecord to include the PDF attachment
-                // cmbRecordType.SelectedIndex = 2; // HealthDocumentRecord
             }
 
             try
@@ -260,7 +490,6 @@ namespace HMS.abdm
                 AppendLog("1. Registering Patient and Care Context in Wrapper DB...");
 
                 string hiType = "Prescription";
-                string recordType = cmbRecordType.Text;
                 if (recordType == "OPConsultationRecord")
                 {
                     hiType = "OPConsultation";
@@ -310,18 +539,22 @@ namespace HMS.abdm
 
                 // Step B: Build FHIR-mappable payload
                 var medicinesList = new List<object>();
-                foreach (ListViewItem item in lvMedicines.Items)
+                var activeLv2 = GetActiveListView();
+                if (activeLv2 != null)
                 {
-                    medicinesList.Add(new
+                    foreach (ListViewItem item in activeLv2.Items)
                     {
-                        medicine = item.Text,
-                        dosage = item.SubItems.Count > 1 ? item.SubItems[1].Text : "",
-                        timing = item.SubItems.Count > 2 ? item.SubItems[2].Text : "",
-                        route = item.SubItems.Count > 3 ? item.SubItems[3].Text : "",
-                        method = item.SubItems.Count > 4 ? item.SubItems[4].Text : "",
-                        additionalInstructions = item.SubItems.Count > 5 ? item.SubItems[5].Text : "",
-                        reason = item.SubItems.Count > 6 ? item.SubItems[6].Text : ""
-                    });
+                        medicinesList.Add(new
+                        {
+                            medicine = item.Text,
+                            dosage = item.SubItems.Count > 1 ? item.SubItems[1].Text : "",
+                            timing = item.SubItems.Count > 2 ? item.SubItems[2].Text : "",
+                            route = item.SubItems.Count > 3 ? item.SubItems[3].Text : "",
+                            method = item.SubItems.Count > 4 ? item.SubItems[4].Text : "",
+                            additionalInstructions = item.SubItems.Count > 5 ? item.SubItems[5].Text : "",
+                            reason = item.SubItems.Count > 6 ? item.SubItems[6].Text : ""
+                        });
+                    }
                 }
 
                 var documentsList = new List<object>();
@@ -330,7 +563,7 @@ namespace HMS.abdm
                     documentsList.Add(new
                     {
                         contentType = "application/pdf",
-                        type = "Prescription",
+                        type = recordType,
                         data = Convert.ToBase64String(_pdfBytes)
                     });
                 }
@@ -347,9 +580,9 @@ namespace HMS.abdm
                         gender = cmbGender.Text.Trim().ToLower(),
                         birthDate = txtDob.Text.Trim()
                     },
-                    practitioners = new[] { new { name = "Dr. Midha", practitionerId = "DOC-01" } },
+                    practitioners = new[] { new { name = "Dr. Sudeep Munjal", practitionerId = "DOC-01" } },
                     organisation = new { facilityName = "MIDHA HOSPITAL", facilityId = "IN0610090658" },
-                    clinicalNotes = "Prescription Details",
+                    clinicalNotes = $"{recordType} Details",
                     prescriptions = medicinesList.ToArray(),
                     documents = documentsList.ToArray()
                 };
@@ -367,13 +600,13 @@ namespace HMS.abdm
                 using (var client = new HttpClient())
                 {
                     string wrapperBaseUrl = System.Configuration.ConfigurationManager.AppSettings["AbdmSettings:BaseUrl"] ?? "https://sbx.wati.digital";
-                    string apiUrl = $"{wrapperBaseUrl.TrimEnd('/')}/v3/patient/health-data"; 
+                    string apiUrl = $"{wrapperBaseUrl.TrimEnd('/')}/v3/patient/health-data";
                     var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(recordData), Encoding.UTF8, "application/json");
-                    
+
                     var healthResp = await client.PostAsync(apiUrl, content);
                     if (healthResp.IsSuccessStatusCode)
                     {
-                        AppendLog($"[DATA PUSH SUCCESS] Prescription details & attachments saved to Wrapper DB.");
+                        AppendLog($"[DATA PUSH SUCCESS] {recordType} details & attachments saved to Wrapper DB.");
                         return true;
                     }
                     else
@@ -496,7 +729,55 @@ namespace HMS.abdm
             txtLogs.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}");
         }
 
-        public static byte[] GeneratePrescriptionPdf(string patientName, string abhaAddress, string gender, string dob, string careContextRef, List<string[]> medicines)
+        private void cmbRecordType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tcRecordDetails == null) return;
+            if (_isSyncing) return;
+            _isSyncing = true;
+            try
+            {
+                string recordType = cmbRecordType.Text;
+                if (recordType == "PrescriptionRecord")
+                    tcRecordDetails.SelectedTab = tpPrescription;
+                else if (recordType == "OPConsultationRecord")
+                    tcRecordDetails.SelectedTab = tpOPConsultation;
+                else if (recordType == "DiagnosticReport")
+                    tcRecordDetails.SelectedTab = tpDiagnosticReport;
+                else if (recordType == "DischargeSummary")
+                    tcRecordDetails.SelectedTab = tpDischargeSummary;
+                else if (recordType == "HealthDocumentRecord")
+                    tcRecordDetails.SelectedTab = tpHealthDocument;
+
+                UpdateUiForRecordType();
+            }
+            finally
+            {
+                _isSyncing = false;
+            }
+        }
+
+        private void UpdateUiForRecordType()
+        {
+            string recordType = cmbRecordType.Text;
+
+            // Reset visibility of gbPrescribe by default
+            gbPrescribe.Visible = true;
+
+            // Restore original layout of the PDF and Logs groups
+            gbPdf.Location = new Point(460, 360);
+            txtLogs.Location = new Point(460, 500);
+            txtLogs.Height = 180;
+
+            if (recordType == "HealthDocumentRecord")
+            {
+                gbPrescribe.Visible = false;
+                gbPdf.Location = new Point(460, 65);
+                txtLogs.Location = new Point(460, 180);
+                txtLogs.Height = 500;
+            }
+        }
+
+        public static byte[] GenerateClinicalDocumentPdf(string recordType, string patientName, string abhaAddress, string gender, string dob, string careContextRef, List<string[]> items, string doctorName)
         {
             using (var ms = new MemoryStream())
             {
@@ -504,52 +785,126 @@ namespace HMS.abdm
                 {
                     writer.Write("%PDF-1.4\n");
                     var objectOffsets = new List<long>();
-                    
+
                     // Object 1: Catalog
                     objectOffsets.Add(ms.Position);
                     writer.Write("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
-                    
+
                     // Object 2: Pages
                     objectOffsets.Add(ms.Position);
                     writer.Write("2 0 obj\n<< /Type /Pages /Kids [ 3 0 R ] /Count 1 >>\nendobj\n");
-                    
+
                     var sb = new StringBuilder();
-                    sb.Append("BT\n/F1 14 Tf\n50 750 Td\n(MIDHA HOSPITAL - PRESCRIPTION REPORT) Tj\nET\n");
+
+                    // Title based on Record Type
+                    string title = "MIDHA HOSPITAL - CLINICAL RECORD";
+                    if (recordType == "PrescriptionRecord") title = "MIDHA HOSPITAL - PRESCRIPTION REPORT";
+                    else if (recordType == "OPConsultationRecord") title = "MIDHA HOSPITAL - OP CONSULTATION REPORT";
+                    else if (recordType == "DiagnosticReport") title = "MIDHA HOSPITAL - DIAGNOSTIC REPORT";
+                    else if (recordType == "DischargeSummary") title = "MIDHA HOSPITAL - DISCHARGE SUMMARY";
+
+                    sb.Append($"BT\n/F1 14 Tf\n50 750 Td\n({title}) Tj\nET\n");
                     sb.Append($"BT\n/F1 10 Tf\n50 710 Td\n(Patient Name: {patientName}) Tj\nET\n");
                     sb.Append($"BT\n/F1 10 Tf\n50 690 Td\n(ABHA Address: {abhaAddress}) Tj\nET\n");
                     sb.Append($"BT\n/F1 10 Tf\n50 670 Td\n(Gender: {gender}  |  DOB: {dob}) Tj\nET\n");
                     sb.Append($"BT\n/F1 10 Tf\n50 650 Td\n(Care Context Ref: {careContextRef}) Tj\nET\n");
                     sb.Append($"BT\n/F1 10 Tf\n50 630 Td\n(Date: {DateTime.Now:dd-MMM-yyyy HH:mm}) Tj\nET\n");
-                    
-                    sb.Append("BT\n/F1 12 Tf\n50 590 Td\n(Prescribed Medicines:) Tj\nET\n");
-                    
-                    int y = 570;
-                    foreach (var med in medicines)
+
+                    int y = 590;
+                    if (recordType == "DiagnosticReport")
                     {
-                        sb.Append($"BT\n/F1 10 Tf\n50 {y} Td\n(- {med[0]}  -  Dosage: {med[1]}) Tj\nET\n");
-                        y -= 20;
+                        sb.Append("BT\n/F1 12 Tf\n50 590 Td\n(Test Results & Observations:) Tj\nET\n");
+                        y = 560;
+                        foreach (var item in items)
+                        {
+                            string testName = item[0];
+                            string specimen = item.Length > 1 ? item[1] : "";
+                            string result = item.Length > 2 ? item[2] : "";
+                            string unit = item.Length > 3 ? item[3] : "";
+                            string range = item.Length > 4 ? item[4] : "";
+                            string remarks = item.Length > 5 ? item[5] : "";
+
+                            sb.Append($"BT\n/F1 9 Tf\n50 {y} Td\n(- {testName} ({specimen}): {result} {unit}  [Ref: {range}]  {remarks}) Tj\nET\n");
+                            y -= 20;
+                        }
                     }
-                    
-                    sb.Append($"BT\n/F1 10 Tf\n50 {y - 40} Td\n(Signed: Dr. Midha) Tj\nET\n");
-                    
+                    else if (recordType == "DischargeSummary")
+                    {
+                        if (items.Count > 0)
+                        {
+                            var first = items[0];
+                            string adm = first.Length > 2 ? first[2] : "";
+                            string dis = first.Length > 3 ? first[3] : "";
+                            string course = first.Length > 4 ? first[4] : "";
+                            string advice = first.Length > 5 ? first[5] : "";
+                            string condition = first.Length > 6 ? first[6] : "";
+
+                            sb.Append($"BT\n/F1 10 Tf\n50 590 Td\n(Admission Date: {adm}   |   Discharge Date: {dis}) Tj\nET\n");
+                            sb.Append($"BT\n/F1 10 Tf\n50 570 Td\n(Treatment Course: {course}) Tj\nET\n");
+                            sb.Append($"BT\n/F1 10 Tf\n50 550 Td\n(Discharge Advice: {advice}) Tj\nET\n");
+                            sb.Append($"BT\n/F1 10 Tf\n50 530 Td\n(Condition on Discharge: {condition}) Tj\nET\n");
+                            y = 500;
+                        }
+
+                        sb.Append($"BT\n/F1 12 Tf\n50 {y} Td\n(Discharge Medications Prescribed:) Tj\nET\n");
+                        y -= 25;
+                        foreach (var item in items)
+                        {
+                            string medName = item[0];
+                            string dosage = item.Length > 1 ? item[1] : "";
+                            sb.Append($"BT\n/F1 10 Tf\n50 {y} Td\n(- {medName}  -  Dosage: {dosage}) Tj\nET\n");
+                            y -= 20;
+                        }
+                    }
+                    else if (recordType == "OPConsultationRecord")
+                    {
+                        sb.Append("BT\n/F1 12 Tf\n50 590 Td\n(Clinical Consultation & Prescriptions:) Tj\nET\n");
+                        y = 560;
+                        foreach (var item in items)
+                        {
+                            string medName = item[0];
+                            string dosage = item.Length > 1 ? item[1] : "";
+                            string timing = item.Length > 2 ? item[2] : "";
+                            string complaints = item.Length > 6 ? item[6] : "";
+                            sb.Append($"BT\n/F1 10 Tf\n50 {y} Td\n(- {medName} [Dosage: {dosage}, Timing: {timing}]  Complaints: {complaints}) Tj\nET\n");
+                            y -= 20;
+                        }
+                    }
+                    else // PrescriptionRecord
+                    {
+                        sb.Append("BT\n/F1 12 Tf\n50 590 Td\n(Prescribed Medicines:) Tj\nET\n");
+                        y = 560;
+                        foreach (var item in items)
+                        {
+                            string medName = item[0];
+                            string dosage = item.Length > 1 ? item[1] : "";
+                            string timing = item.Length > 2 ? item[2] : "";
+                            string route = item.Length > 3 ? item[3] : "";
+                            sb.Append($"BT\n/F1 10 Tf\n50 {y} Td\n(- {medName}  -  Dosage: {dosage} | Timing: {timing} | Route: {route}) Tj\nET\n");
+                            y -= 20;
+                        }
+                    }
+
+                    sb.Append($"BT\n/F1 10 Tf\n50 {y - 40} Td\n(Signed: {doctorName}) Tj\nET\n");
+
                     string contentStream = sb.ToString();
                     byte[] contentBytes = Encoding.ASCII.GetBytes(contentStream);
-                    
+
                     // Object 3: Page
                     objectOffsets.Add(ms.Position);
                     writer.Write("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [ 0 0 595 842 ] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n");
-                    
+
                     // Object 4: Content
                     objectOffsets.Add(ms.Position);
                     writer.Write($"4 0 obj\n<< /Length {contentBytes.Length} >>\nstream\n");
                     writer.Flush();
                     ms.Write(contentBytes, 0, contentBytes.Length);
                     writer.Write("\nendstream\nendobj\n");
-                    
+
                     // Object 5: Font
                     objectOffsets.Add(ms.Position);
                     writer.Write("5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n");
-                    
+
                     // Xref
                     long xrefOffset = ms.Position;
                     writer.Write($"xref\n0 {objectOffsets.Count + 1}\n0000000000 65535 f \n");
@@ -557,7 +912,7 @@ namespace HMS.abdm
                     {
                         writer.Write($"{offset:D10} 00000 n \n");
                     }
-                    
+
                     // Trailer
                     writer.Write($"trailer\n<< /Size {objectOffsets.Count + 1} /Root 1 0 R >>\nstartxref\n{xrefOffset}\n%%EOF\n");
                     writer.Flush();
