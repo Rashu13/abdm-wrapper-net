@@ -333,18 +333,19 @@ public class ProfileShareV3Service : IProfileShareV3Service
             string cacheKey = $"{hipId}:{abhaAddress}:{context}";
             if (_tokenCache.TryGetValue(cacheKey, out var cached) && DateTime.UtcNow < cached.Expiry)
             {
-                // ABDM requires expiry as Unix epoch milliseconds (digits only, no ISO 8601)
-                expiryStr = new DateTimeOffset(cached.Expiry).ToUnixTimeMilliseconds().ToString();
+                // ABDM requires expiry as duration in seconds (e.g. "1800" for 30 minutes)
+                var remaining = (cached.Expiry - DateTime.UtcNow).TotalSeconds;
+                expiryStr = Math.Max(60, (int)remaining).ToString();
                 return cached.Token;
             }
 
             _tokenCounter++;
             string tokenNum = _tokenCounter.ToString("D4"); // "0001", "0002" etc.
-            DateTime expiry = DateTime.UtcNow.AddMinutes(60);
+            DateTime expiry = DateTime.UtcNow.AddMinutes(30);
             _tokenCache[cacheKey] = (tokenNum, expiry);
 
-            // ABDM requires expiry as Unix epoch milliseconds (digits only, no ISO 8601)
-            expiryStr = new DateTimeOffset(expiry).ToUnixTimeMilliseconds().ToString();
+            // ABDM requires expiry as duration in seconds (e.g. "1800" for 30 minutes)
+            expiryStr = "1800";
             return tokenNum;
         }
     }
