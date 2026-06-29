@@ -146,7 +146,7 @@ namespace HMS.abdm
             this.txtPurposeCode.Name = "txtPurposeCode";
             this.txtPurposeCode.Size = new System.Drawing.Size(305, 27);
             this.txtPurposeCode.TabIndex = 3;
-            this.txtPurposeCode.Text = "CACT";
+            this.txtPurposeCode.Text = "CAREMGT";
             // 
             // lblCategories
             // 

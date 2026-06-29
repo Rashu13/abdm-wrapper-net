@@ -2209,13 +2209,41 @@ namespace ABDM.Api
         {
             try
             {
+                string purposeText = "Care Management";
+                string codeUpper = (purposeCode ?? "").Trim().ToUpper();
+                switch (codeUpper)
+                {
+                    case "CAREMGT":
+                        purposeText = "Care Management";
+                        break;
+                    case "BTG":
+                        purposeText = "Break the Glass";
+                        break;
+                    case "PUBHLTH":
+                        purposeText = "Public Health";
+                        break;
+                    case "HPAYMT":
+                        purposeText = "Healthcare Payment";
+                        break;
+                    case "DSRCH":
+                        purposeText = "Disease Specific Healthcare Research";
+                        break;
+                    case "PATRQT":
+                        purposeText = "Self Requested";
+                        break;
+                    default:
+                        codeUpper = "CAREMGT";
+                        purposeText = "Care Management";
+                        break;
+                }
+
                 var subscription = new Dictionary<string, object>
                 {
                     ["purpose"] = new Dictionary<string, object>
                     {
-                        ["text"] = "Referral",
-                        ["code"] = purposeCode,
-                        ["refUri"] = ""
+                        ["text"] = purposeText,
+                        ["code"] = codeUpper,
+                        ["refUri"] = "https://www.abdm.gov.in"
                     },
                     ["patient"] = new Dictionary<string, object>
                     {
