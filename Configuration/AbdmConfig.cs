@@ -9,6 +9,7 @@ public class AbdmConfig
     public string HipName { get; set; } = string.Empty;
     public string AbhaServiceUrl { get; set; } = string.Empty;
     public bool LogCurl { get; set; }
+    public bool? DisableGatewaySignatureValidation { get; set; }
     public bool UseProxySettings { get; set; }
     public string ProxyHost { get; set; } = string.Empty;
     public int ProxyPort { get; set; } = 8080;

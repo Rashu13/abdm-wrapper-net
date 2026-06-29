@@ -6,6 +6,8 @@ using AbdmWrapperNet.Constants;
 using AbdmWrapperNet.Models;
 using AbdmWrapperNet.Services;
 
+using AbdmWrapperNet.Filters;
+
 namespace AbdmWrapperNet.Controllers;
 
 /// <summary>
@@ -15,6 +17,7 @@ namespace AbdmWrapperNet.Controllers;
 ///  - Health Information: on-request, and encrypted data push from HIP
 /// </summary>
 [ApiController]
+[TypeFilter(typeof(GatewaySignatureValidationFilter))]
 public class HIUGatewayCallbackV3Controller : ControllerBase
 {
     private readonly HIUConsentV3Service _consentService;
@@ -107,6 +110,7 @@ public class HIUGatewayCallbackV3Controller : ControllerBase
     /// POST /v3/hiu/health-information/transfer  (dataPushUrl configured in fetch request)
     /// </summary>
     [HttpPost("v3/hiu/health-information/transfer")]
+    [SkipGatewaySignatureValidation]
     public async Task<IActionResult> HealthInformationTransfer([FromBody] HealthInformationPushRequest request)
     {
         _logger.LogInformation($"Received encrypted health data push for transactionId: {request?.TransactionId}");

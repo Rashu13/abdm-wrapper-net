@@ -693,13 +693,45 @@ namespace ABDM.Api
                     var publicKey = await GetPublicKeyAsync(token);
                     var encrypted = Encrypt(request.LoginId.Trim(), publicKey);
 
+                    string loginIdClean = request.LoginId?.Replace("-", "").Trim() ?? "";
+                    string loginHint = "mobile";
+                    string otpSystem = "abdm";
+                    string[] scope = new[] { "abha-login", "mobile-verify" };
+
+                    if (request.LoginType?.ToUpper() == "AADHAAR" || (loginIdClean.Length == 12 && System.Text.RegularExpressions.Regex.IsMatch(loginIdClean, "^[0-9]+$")))
+                    {
+                        loginHint = "aadhaar";
+                        otpSystem = "aadhaar";
+                        scope = new[] { "abha-login", "aadhaar-verify" };
+                    }
+                    else if (loginIdClean.Length == 14 && System.Text.RegularExpressions.Regex.IsMatch(loginIdClean, "^[0-9]+$"))
+                    {
+                        loginHint = "abha-number";
+                        if (request.LoginType?.ToUpper() == "AADHAAR")
+                        {
+                            otpSystem = "aadhaar";
+                            scope = new[] { "abha-login", "aadhaar-verify" };
+                        }
+                        else
+                        {
+                            otpSystem = "abdm";
+                            scope = new[] { "abha-login", "mobile-verify" };
+                        }
+                    }
+                    else if (loginIdClean.Contains("@"))
+                    {
+                        loginHint = "abha-address";
+                        otpSystem = "abdm";
+                        scope = new[] { "abha-login", "mobile-verify" };
+                    }
+
                     AddCommonHeaders(token);
                     var payload = SimpleJson.Serialize(new Dictionary<string, object>
                     {
-                        ["scope"]     = new[] { "abha-login", "mobile-verify" },
-                        ["loginHint"] = "mobile",
+                        ["scope"]     = scope,
+                        ["loginHint"] = loginHint,
                         ["loginId"]   = encrypted,
-                        ["otpSystem"] = "abdm"
+                        ["otpSystem"] = otpSystem
                     });
 
                     var resp = await _http.PostAsync(
@@ -848,10 +880,16 @@ namespace ABDM.Api
                     var publicKey = await GetPublicKeyAsync(token);
                     var encOtp    = Encrypt(request.Otp, publicKey);
 
+                    string[] scope = new[] { "abha-login", "mobile-verify" };
+                    if (request.LoginType?.ToUpper() == "AADHAAR")
+                    {
+                        scope = new[] { "abha-login", "aadhaar-verify" };
+                    }
+
                     AddCommonHeaders(token);
                     var payload = SimpleJson.Serialize(new Dictionary<string, object>
                     {
-                        ["scope"] = new[] { "abha-login", "mobile-verify" },
+                        ["scope"] = scope,
                         ["authData"] = new Dictionary<string, object>
                         {
                             ["authMethods"] = new[] { "otp" },

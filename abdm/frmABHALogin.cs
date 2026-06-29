@@ -16,6 +16,7 @@ namespace HMS.abdm
     {
         private readonly AbdmApiClient _client;
         private string _txnId;
+        private string _loginType;
         public AbhaProfile LoggedInProfile { get; private set; }
 
         public frmABHALogin()
@@ -60,7 +61,19 @@ namespace HMS.abdm
                 btnSendOtp.Enabled = false;
                 btnSendOtp.Text = "Sending...";
 
-                var request = new AbdmGenerateOtpRequest { LoginId = loginId };
+                string loginType = "MOBILE";
+                string loginIdClean = loginId.Replace("-", "").Trim();
+                if (loginIdClean.Length == 12 && loginIdClean.All(char.IsDigit))
+                {
+                    loginType = "AADHAAR";
+                }
+                _loginType = loginType;
+
+                var request = new AbdmGenerateOtpRequest 
+                { 
+                    LoginId = loginId,
+                    LoginType = loginType
+                };
                 var resp = await _client.LoginRequestOtpAsync(request);
 
                 if (resp.Success && resp.Data != null)
@@ -106,7 +119,8 @@ namespace HMS.abdm
                 var request = new AbdmVerifyOtpRequest
                 {
                     Otp = otp,
-                    TransactionId = _txnId
+                    TransactionId = _txnId,
+                    LoginType = _loginType
                 };
                 var resp = await _client.LoginVerifyOtpAsync(request);
 

@@ -17,525 +17,542 @@ namespace HMS.abdm
 
         private void InitializeComponent()
         {
-            this.pnlHeader = new System.Windows.Forms.Panel();
-            this.btnClose = new System.Windows.Forms.Button();
-            this.lblTitle = new System.Windows.Forms.Label();
-            this.gbPatient = new System.Windows.Forms.GroupBox();
-            this.lblAbha = new System.Windows.Forms.Label();
-            this.txtAbhaAddress = new System.Windows.Forms.TextBox();
-            this.lblName = new System.Windows.Forms.Label();
-            this.txtPatientName = new System.Windows.Forms.TextBox();
-            this.lblGender = new System.Windows.Forms.Label();
-            this.cmbGender = new System.Windows.Forms.ComboBox();
-            this.lblDob = new System.Windows.Forms.Label();
-            this.txtDob = new System.Windows.Forms.TextBox();
-            this.lblMobile = new System.Windows.Forms.Label();
-            this.txtPatientMobile = new System.Windows.Forms.TextBox();
-            this.lblPatRef = new System.Windows.Forms.Label();
-            this.txtPatientRef = new System.Windows.Forms.TextBox();
-            this.lblCareCtxRef = new System.Windows.Forms.Label();
-            this.txtCareContextRef = new System.Windows.Forms.TextBox();
-            this.lblCareCtxDisplay = new System.Windows.Forms.Label();
-            this.txtCareContextDisplay = new System.Windows.Forms.TextBox();
-            this.lblRecordType = new System.Windows.Forms.Label();
-            this.cmbRecordType = new System.Windows.Forms.ComboBox();
-            this.gbPrescribe = new System.Windows.Forms.GroupBox();
-            this.lblMedicine = new System.Windows.Forms.Label();
-            this.txtMedicineName = new System.Windows.Forms.TextBox();
-            this.lblDosage = new System.Windows.Forms.Label();
-            this.txtDosage = new System.Windows.Forms.TextBox();
-            this.btnAddMedicine = new System.Windows.Forms.Button();
-            this.btnRemoveMedicine = new System.Windows.Forms.Button();
-            this.lvMedicines = new System.Windows.Forms.ListView();
-            this.chMedicine = new System.Windows.Forms.ColumnHeader();
-            this.chDosage = new System.Windows.Forms.ColumnHeader();
-            this.gbPdf = new System.Windows.Forms.GroupBox();
-            this.btnUploadPdf = new System.Windows.Forms.Button();
-            this.lblPdfStatus = new System.Windows.Forms.Label();
-            this.gbActions = new System.Windows.Forms.GroupBox();
-            this.btnSaveAndPush = new System.Windows.Forms.Button();
-            this.btnInitiateLink = new System.Windows.Forms.Button();
-            this.btnAutoFlow = new System.Windows.Forms.Button();
-            this.txtLogs = new System.Windows.Forms.TextBox();
-            this.lblLogs = new System.Windows.Forms.Label();
-            this.pnlHeader.SuspendLayout();
-            this.gbPatient.SuspendLayout();
-            this.gbPrescribe.SuspendLayout();
-            this.gbPdf.SuspendLayout();
-            this.gbActions.SuspendLayout();
-            this.SuspendLayout();
+            pnlHeader = new Panel();
+            btnClose = new Button();
+            lblTitle = new Label();
+            gbPatient = new GroupBox();
+            lblRecordType = new Label();
+            cmbRecordType = new ComboBox();
+            lblCareCtxDisplay = new Label();
+            txtCareContextDisplay = new TextBox();
+            lblCareCtxRef = new Label();
+            txtCareContextRef = new TextBox();
+            lblPatRef = new Label();
+            txtPatientRef = new TextBox();
+            lblMobile = new Label();
+            txtPatientMobile = new TextBox();
+            lblDob = new Label();
+            txtDob = new TextBox();
+            lblGender = new Label();
+            cmbGender = new ComboBox();
+            lblName = new Label();
+            txtPatientName = new TextBox();
+            lblAbha = new Label();
+            txtAbhaAddress = new TextBox();
+            gbPrescribe = new GroupBox();
+            lvMedicines = new ListView();
+            chMedicine = new ColumnHeader();
+            chDosage = new ColumnHeader();
+            btnRemoveMedicine = new Button();
+            btnAddMedicine = new Button();
+            lblDosage = new Label();
+            txtDosage = new TextBox();
+            lblMedicine = new Label();
+            txtMedicineName = new TextBox();
+            gbPdf = new GroupBox();
+            lblPdfStatus = new Label();
+            btnUploadPdf = new Button();
+            gbActions = new GroupBox();
+            btnAutoFlow = new Button();
+            btnInitiateLink = new Button();
+            btnSaveAndPush = new Button();
+            txtLogs = new TextBox();
+            lblLogs = new Label();
+            pnlHeader.SuspendLayout();
+            gbPatient.SuspendLayout();
+            gbPrescribe.SuspendLayout();
+            gbPdf.SuspendLayout();
+            gbActions.SuspendLayout();
+            SuspendLayout();
             // 
             // pnlHeader
             // 
-            this.pnlHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.pnlHeader.Controls.Add(this.btnClose);
-            this.pnlHeader.Controls.Add(this.lblTitle);
-            this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlHeader.Location = new System.Drawing.Point(0, 0);
-            this.pnlHeader.Name = "pnlHeader";
-            this.pnlHeader.Size = new System.Drawing.Size(1200, 50);
-            this.pnlHeader.TabIndex = 0;
+            pnlHeader.BackColor = Color.FromArgb(55, 115, 200);
+            pnlHeader.Controls.Add(btnClose);
+            pnlHeader.Controls.Add(lblTitle);
+            pnlHeader.Dock = DockStyle.Top;
+            pnlHeader.Location = new Point(0, 0);
+            pnlHeader.Margin = new Padding(3, 4, 3, 4);
+            pnlHeader.Name = "pnlHeader";
+            pnlHeader.Size = new Size(1200, 62);
+            pnlHeader.TabIndex = 0;
             // 
             // btnClose
             // 
-            this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnClose.FlatAppearance.BorderSize = 0;
-            this.btnClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnClose.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
-            this.btnClose.ForeColor = System.Drawing.Color.White;
-            this.btnClose.Location = new System.Drawing.Point(900, 0);
-            this.btnClose.Name = "btnClose";
-            this.btnClose.Size = new System.Drawing.Size(50, 50);
-            this.btnClose.TabIndex = 1;
-            this.btnClose.Text = "X";
-            this.btnClose.UseVisualStyleBackColor = true;
-            this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
+            btnClose.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnClose.FlatAppearance.BorderSize = 0;
+            btnClose.FlatStyle = FlatStyle.Flat;
+            btnClose.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnClose.ForeColor = Color.White;
+            btnClose.Location = new Point(1149, 1);
+            btnClose.Margin = new Padding(3, 4, 3, 4);
+            btnClose.Name = "btnClose";
+            btnClose.Size = new Size(50, 62);
+            btnClose.TabIndex = 1;
+            btnClose.Text = "X";
+            btnClose.UseVisualStyleBackColor = true;
+            btnClose.Click += btnClose_Click;
             // 
             // lblTitle
             // 
-            this.lblTitle.AutoSize = true;
-            this.lblTitle.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, System.Drawing.FontStyle.Bold);
-            this.lblTitle.ForeColor = System.Drawing.Color.White;
-            this.lblTitle.Location = new System.Drawing.Point(15, 12);
-            this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(374, 28);
-            this.lblTitle.TabIndex = 0;
-            this.lblTitle.Text = "Write Prescription & Upload Document (PDF)";
+            lblTitle.AutoSize = true;
+            lblTitle.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold);
+            lblTitle.ForeColor = Color.White;
+            lblTitle.Location = new Point(15, 15);
+            lblTitle.Name = "lblTitle";
+            lblTitle.Size = new Size(409, 28);
+            lblTitle.TabIndex = 0;
+            lblTitle.Text = "Write Prescription & Upload Document (PDF)";
             // 
             // gbPatient
             // 
-            this.gbPatient.Controls.Add(this.lblRecordType);
-            this.gbPatient.Controls.Add(this.cmbRecordType);
-            this.gbPatient.Controls.Add(this.lblCareCtxDisplay);
-            this.gbPatient.Controls.Add(this.txtCareContextDisplay);
-            this.gbPatient.Controls.Add(this.lblCareCtxRef);
-            this.gbPatient.Controls.Add(this.txtCareContextRef);
-            this.gbPatient.Controls.Add(this.lblPatRef);
-            this.gbPatient.Controls.Add(this.txtPatientRef);
-            this.gbPatient.Controls.Add(this.lblMobile);
-            this.gbPatient.Controls.Add(this.txtPatientMobile);
-            this.gbPatient.Controls.Add(this.lblDob);
-            this.gbPatient.Controls.Add(this.txtDob);
-            this.gbPatient.Controls.Add(this.lblGender);
-            this.gbPatient.Controls.Add(this.cmbGender);
-            this.gbPatient.Controls.Add(this.lblName);
-            this.gbPatient.Controls.Add(this.txtPatientName);
-            this.gbPatient.Controls.Add(this.lblAbha);
-            this.gbPatient.Controls.Add(this.txtAbhaAddress);
-            this.gbPatient.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this.gbPatient.Location = new System.Drawing.Point(15, 65);
-            this.gbPatient.Name = "gbPatient";
-            this.gbPatient.Size = new System.Drawing.Size(430, 395);
-            this.gbPatient.TabIndex = 1;
-            this.gbPatient.TabStop = false;
-            this.gbPatient.Text = "Patient & Care Context Details";
-            // 
-            // lblAbha
-            // 
-            this.lblAbha.AutoSize = true;
-            this.lblAbha.Location = new System.Drawing.Point(15, 30);
-            this.lblAbha.Name = "lblAbha";
-            this.lblAbha.Size = new System.Drawing.Size(126, 21);
-            this.lblAbha.TabIndex = 0;
-            this.lblAbha.Text = "ABHA Address *";
-            // 
-            // txtAbhaAddress
-            // 
-            this.txtAbhaAddress.Location = new System.Drawing.Point(170, 27);
-            this.txtAbhaAddress.Name = "txtAbhaAddress";
-            this.txtAbhaAddress.Size = new System.Drawing.Size(240, 29);
-            this.txtAbhaAddress.TabIndex = 1;
-            // 
-            // lblName
-            // 
-            this.lblName.AutoSize = true;
-            this.lblName.Location = new System.Drawing.Point(15, 70);
-            this.lblName.Name = "lblName";
-            this.lblName.Size = new System.Drawing.Size(117, 21);
-            this.lblName.TabIndex = 2;
-            this.lblName.Text = "Patient Name *";
-            // 
-            // txtPatientName
-            // 
-            this.txtPatientName.Location = new System.Drawing.Point(170, 67);
-            this.txtPatientName.Name = "txtPatientName";
-            this.txtPatientName.Size = new System.Drawing.Size(240, 29);
-            this.txtPatientName.TabIndex = 3;
-            // 
-            // lblGender
-            // 
-            this.lblGender.AutoSize = true;
-            this.lblGender.Location = new System.Drawing.Point(15, 110);
-            this.lblGender.Name = "lblGender";
-            this.lblGender.Size = new System.Drawing.Size(64, 21);
-            this.lblGender.TabIndex = 4;
-            this.lblGender.Text = "Gender";
-            // 
-            // cmbGender
-            // 
-            this.cmbGender.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbGender.FormattingEnabled = true;
-            this.cmbGender.Items.AddRange(new object[] {
-            "M",
-            "F",
-            "O"});
-            this.cmbGender.Location = new System.Drawing.Point(170, 107);
-            this.cmbGender.Name = "cmbGender";
-            this.cmbGender.Size = new System.Drawing.Size(240, 29);
-            this.cmbGender.TabIndex = 5;
-            // 
-            // lblDob
-            // 
-            this.lblDob.AutoSize = true;
-            this.lblDob.Location = new System.Drawing.Point(15, 150);
-            this.lblDob.Name = "lblDob";
-            this.lblDob.Size = new System.Drawing.Size(126, 21);
-            this.lblDob.TabIndex = 6;
-            this.lblDob.Text = "DOB (YYYY-MM-DD)";
-            // 
-            // txtDob
-            // 
-            this.txtDob.Location = new System.Drawing.Point(170, 147);
-            this.txtDob.Name = "txtDob";
-            this.txtDob.Size = new System.Drawing.Size(240, 29);
-            this.txtDob.TabIndex = 7;
-            this.txtDob.Text = "1990-01-01";
-            // 
-            // lblMobile
-            // 
-            this.lblMobile.AutoSize = true;
-            this.lblMobile.Location = new System.Drawing.Point(15, 190);
-            this.lblMobile.Name = "lblMobile";
-            this.lblMobile.Size = new System.Drawing.Size(61, 21);
-            this.lblMobile.TabIndex = 8;
-            this.lblMobile.Text = "Mobile";
-            // 
-            // txtPatientMobile
-            // 
-            this.txtPatientMobile.Location = new System.Drawing.Point(170, 187);
-            this.txtPatientMobile.Name = "txtPatientMobile";
-            this.txtPatientMobile.Size = new System.Drawing.Size(240, 29);
-            this.txtPatientMobile.TabIndex = 9;
-            this.txtPatientMobile.Text = "9876543210";
-            // 
-            // lblPatRef
-            // 
-            this.lblPatRef.AutoSize = true;
-            this.lblPatRef.Location = new System.Drawing.Point(15, 230);
-            this.lblPatRef.Name = "lblPatRef";
-            this.lblPatRef.Size = new System.Drawing.Size(140, 21);
-            this.lblPatRef.TabIndex = 10;
-            this.lblPatRef.Text = "Patient Reference";
-            // 
-            // txtPatientRef
-            // 
-            this.txtPatientRef.Location = new System.Drawing.Point(170, 227);
-            this.txtPatientRef.Name = "txtPatientRef";
-            this.txtPatientRef.Size = new System.Drawing.Size(240, 29);
-            this.txtPatientRef.TabIndex = 11;
-            // 
-            // lblCareCtxRef
-            // 
-            this.lblCareCtxRef.AutoSize = true;
-            this.lblCareCtxRef.Location = new System.Drawing.Point(15, 270);
-            this.lblCareCtxRef.Name = "lblCareCtxRef";
-            this.lblCareCtxRef.Size = new System.Drawing.Size(141, 21);
-            this.lblCareCtxRef.TabIndex = 12;
-            this.lblCareCtxRef.Text = "Care Context Ref *";
-            // 
-            // txtCareContextRef
-            // 
-            this.txtCareContextRef.Location = new System.Drawing.Point(170, 267);
-            this.txtCareContextRef.Name = "txtCareContextRef";
-            this.txtCareContextRef.Size = new System.Drawing.Size(240, 29);
-            this.txtCareContextRef.TabIndex = 13;
-            // 
-            // lblCareCtxDisplay
-            // 
-            this.lblCareCtxDisplay.AutoSize = true;
-            this.lblCareCtxDisplay.Location = new System.Drawing.Point(15, 310);
-            this.lblCareCtxDisplay.Name = "lblCareCtxDisplay";
-            this.lblCareCtxDisplay.Size = new System.Drawing.Size(148, 21);
-            this.lblCareCtxDisplay.TabIndex = 14;
-            this.lblCareCtxDisplay.Text = "Care Context Disp *";
-            // 
-            // txtCareContextDisplay
-            // 
-            this.txtCareContextDisplay.Location = new System.Drawing.Point(170, 307);
-            this.txtCareContextDisplay.Name = "txtCareContextDisplay";
-            this.txtCareContextDisplay.Size = new System.Drawing.Size(240, 29);
-            this.txtCareContextDisplay.TabIndex = 15;
+            gbPatient.Controls.Add(lblRecordType);
+            gbPatient.Controls.Add(cmbRecordType);
+            gbPatient.Controls.Add(lblCareCtxDisplay);
+            gbPatient.Controls.Add(txtCareContextDisplay);
+            gbPatient.Controls.Add(lblCareCtxRef);
+            gbPatient.Controls.Add(txtCareContextRef);
+            gbPatient.Controls.Add(lblPatRef);
+            gbPatient.Controls.Add(txtPatientRef);
+            gbPatient.Controls.Add(lblMobile);
+            gbPatient.Controls.Add(txtPatientMobile);
+            gbPatient.Controls.Add(lblDob);
+            gbPatient.Controls.Add(txtDob);
+            gbPatient.Controls.Add(lblGender);
+            gbPatient.Controls.Add(cmbGender);
+            gbPatient.Controls.Add(lblName);
+            gbPatient.Controls.Add(txtPatientName);
+            gbPatient.Controls.Add(lblAbha);
+            gbPatient.Controls.Add(txtAbhaAddress);
+            gbPatient.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            gbPatient.Location = new Point(15, 81);
+            gbPatient.Margin = new Padding(3, 4, 3, 4);
+            gbPatient.Name = "gbPatient";
+            gbPatient.Padding = new Padding(3, 4, 3, 4);
+            gbPatient.Size = new Size(430, 494);
+            gbPatient.TabIndex = 1;
+            gbPatient.TabStop = false;
+            gbPatient.Text = "Patient & Care Context Details";
             // 
             // lblRecordType
             // 
-            this.lblRecordType.AutoSize = true;
-            this.lblRecordType.Location = new System.Drawing.Point(15, 350);
-            this.lblRecordType.Name = "lblRecordType";
-            this.lblRecordType.Size = new System.Drawing.Size(100, 21);
-            this.lblRecordType.TabIndex = 16;
-            this.lblRecordType.Text = "Record Type";
+            lblRecordType.AutoSize = true;
+            lblRecordType.Location = new Point(15, 438);
+            lblRecordType.Name = "lblRecordType";
+            lblRecordType.Size = new Size(102, 21);
+            lblRecordType.TabIndex = 16;
+            lblRecordType.Text = "Record Type";
             // 
             // cmbRecordType
             // 
-            this.cmbRecordType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbRecordType.FormattingEnabled = true;
-            this.cmbRecordType.Items.AddRange(new object[] {
-            "PrescriptionRecord",
-            "OPConsultationRecord",
-            "HealthDocumentRecord",
-            "DiagnosticReport",
-            "DischargeSummary"});
-            this.cmbRecordType.Location = new System.Drawing.Point(170, 347);
-            this.cmbRecordType.Name = "cmbRecordType";
-            this.cmbRecordType.Size = new System.Drawing.Size(240, 29);
-            this.cmbRecordType.TabIndex = 17;
+            cmbRecordType.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbRecordType.FormattingEnabled = true;
+            cmbRecordType.Items.AddRange(new object[] { "PrescriptionRecord", "OPConsultationRecord", "HealthDocumentRecord", "DiagnosticReport", "DischargeSummary" });
+            cmbRecordType.Location = new Point(170, 434);
+            cmbRecordType.Margin = new Padding(3, 4, 3, 4);
+            cmbRecordType.Name = "cmbRecordType";
+            cmbRecordType.Size = new Size(240, 29);
+            cmbRecordType.TabIndex = 17;
+            // 
+            // lblCareCtxDisplay
+            // 
+            lblCareCtxDisplay.AutoSize = true;
+            lblCareCtxDisplay.Location = new Point(15, 388);
+            lblCareCtxDisplay.Name = "lblCareCtxDisplay";
+            lblCareCtxDisplay.Size = new Size(152, 21);
+            lblCareCtxDisplay.TabIndex = 14;
+            lblCareCtxDisplay.Text = "Care Context Disp *";
+            // 
+            // txtCareContextDisplay
+            // 
+            txtCareContextDisplay.Location = new Point(170, 384);
+            txtCareContextDisplay.Margin = new Padding(3, 4, 3, 4);
+            txtCareContextDisplay.Name = "txtCareContextDisplay";
+            txtCareContextDisplay.Size = new Size(240, 29);
+            txtCareContextDisplay.TabIndex = 15;
+            // 
+            // lblCareCtxRef
+            // 
+            lblCareCtxRef.AutoSize = true;
+            lblCareCtxRef.Location = new Point(15, 338);
+            lblCareCtxRef.Name = "lblCareCtxRef";
+            lblCareCtxRef.Size = new Size(145, 21);
+            lblCareCtxRef.TabIndex = 12;
+            lblCareCtxRef.Text = "Care Context Ref *";
+            // 
+            // txtCareContextRef
+            // 
+            txtCareContextRef.Location = new Point(170, 334);
+            txtCareContextRef.Margin = new Padding(3, 4, 3, 4);
+            txtCareContextRef.Name = "txtCareContextRef";
+            txtCareContextRef.Size = new Size(240, 29);
+            txtCareContextRef.TabIndex = 13;
+            // 
+            // lblPatRef
+            // 
+            lblPatRef.AutoSize = true;
+            lblPatRef.Location = new Point(15, 288);
+            lblPatRef.Name = "lblPatRef";
+            lblPatRef.Size = new Size(140, 21);
+            lblPatRef.TabIndex = 10;
+            lblPatRef.Text = "Patient Reference";
+            // 
+            // txtPatientRef
+            // 
+            txtPatientRef.Location = new Point(170, 284);
+            txtPatientRef.Margin = new Padding(3, 4, 3, 4);
+            txtPatientRef.Name = "txtPatientRef";
+            txtPatientRef.Size = new Size(240, 29);
+            txtPatientRef.TabIndex = 11;
+            // 
+            // lblMobile
+            // 
+            lblMobile.AutoSize = true;
+            lblMobile.Location = new Point(15, 238);
+            lblMobile.Name = "lblMobile";
+            lblMobile.Size = new Size(62, 21);
+            lblMobile.TabIndex = 8;
+            lblMobile.Text = "Mobile";
+            // 
+            // txtPatientMobile
+            // 
+            txtPatientMobile.Location = new Point(170, 234);
+            txtPatientMobile.Margin = new Padding(3, 4, 3, 4);
+            txtPatientMobile.Name = "txtPatientMobile";
+            txtPatientMobile.Size = new Size(240, 29);
+            txtPatientMobile.TabIndex = 9;
+            txtPatientMobile.Text = "9876543210";
+            // 
+            // lblDob
+            // 
+            lblDob.AutoSize = true;
+            lblDob.Location = new Point(15, 188);
+            lblDob.Name = "lblDob";
+            lblDob.Size = new Size(157, 21);
+            lblDob.TabIndex = 6;
+            lblDob.Text = "DOB (YYYY-MM-DD)";
+            // 
+            // txtDob
+            // 
+            txtDob.Location = new Point(170, 184);
+            txtDob.Margin = new Padding(3, 4, 3, 4);
+            txtDob.Name = "txtDob";
+            txtDob.Size = new Size(240, 29);
+            txtDob.TabIndex = 7;
+            txtDob.Text = "1990-01-01";
+            // 
+            // lblGender
+            // 
+            lblGender.AutoSize = true;
+            lblGender.Location = new Point(15, 138);
+            lblGender.Name = "lblGender";
+            lblGender.Size = new Size(64, 21);
+            lblGender.TabIndex = 4;
+            lblGender.Text = "Gender";
+            // 
+            // cmbGender
+            // 
+            cmbGender.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbGender.FormattingEnabled = true;
+            cmbGender.Items.AddRange(new object[] { "M", "F", "O" });
+            cmbGender.Location = new Point(170, 134);
+            cmbGender.Margin = new Padding(3, 4, 3, 4);
+            cmbGender.Name = "cmbGender";
+            cmbGender.Size = new Size(240, 29);
+            cmbGender.TabIndex = 5;
+            // 
+            // lblName
+            // 
+            lblName.AutoSize = true;
+            lblName.Location = new Point(15, 88);
+            lblName.Name = "lblName";
+            lblName.Size = new Size(119, 21);
+            lblName.TabIndex = 2;
+            lblName.Text = "Patient Name *";
+            // 
+            // txtPatientName
+            // 
+            txtPatientName.Location = new Point(170, 84);
+            txtPatientName.Margin = new Padding(3, 4, 3, 4);
+            txtPatientName.Name = "txtPatientName";
+            txtPatientName.Size = new Size(240, 29);
+            txtPatientName.TabIndex = 3;
+            // 
+            // lblAbha
+            // 
+            lblAbha.AutoSize = true;
+            lblAbha.Location = new Point(15, 38);
+            lblAbha.Name = "lblAbha";
+            lblAbha.Size = new Size(129, 21);
+            lblAbha.TabIndex = 0;
+            lblAbha.Text = "ABHA Address *";
+            // 
+            // txtAbhaAddress
+            // 
+            txtAbhaAddress.Location = new Point(170, 34);
+            txtAbhaAddress.Margin = new Padding(3, 4, 3, 4);
+            txtAbhaAddress.Name = "txtAbhaAddress";
+            txtAbhaAddress.Size = new Size(240, 29);
+            txtAbhaAddress.TabIndex = 1;
             // 
             // gbPrescribe
             // 
-            this.gbPrescribe.Controls.Add(this.lvMedicines);
-            this.gbPrescribe.Controls.Add(this.btnRemoveMedicine);
-            this.gbPrescribe.Controls.Add(this.btnAddMedicine);
-            this.gbPrescribe.Controls.Add(this.lblDosage);
-            this.gbPrescribe.Controls.Add(this.txtDosage);
-            this.gbPrescribe.Controls.Add(this.lblMedicine);
-            this.gbPrescribe.Controls.Add(this.txtMedicineName);
-            this.gbPrescribe.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this.gbPrescribe.Location = new System.Drawing.Point(460, 65);
-            this.gbPrescribe.Name = "gbPrescribe";
-            this.gbPrescribe.Size = new System.Drawing.Size(725, 290);
-            this.gbPrescribe.TabIndex = 2;
-            this.gbPrescribe.TabStop = false;
-            this.gbPrescribe.Text = "Write Medicine (Dwai)";
-            // 
-            // lblMedicine
-            // 
-            this.lblMedicine.AutoSize = true;
-            this.lblMedicine.Location = new System.Drawing.Point(15, 30);
-            this.lblMedicine.Name = "lblMedicine";
-            this.lblMedicine.Size = new System.Drawing.Size(122, 21);
-            this.lblMedicine.TabIndex = 0;
-            this.lblMedicine.Text = "Medicine Name";
-            // 
-            // txtMedicineName
-            // 
-            this.txtMedicineName.Location = new System.Drawing.Point(140, 27);
-            this.txtMedicineName.Name = "txtMedicineName";
-            this.txtMedicineName.Size = new System.Drawing.Size(180, 29);
-            this.txtMedicineName.TabIndex = 1;
-            // 
-            // lblDosage
-            // 
-            this.lblDosage.AutoSize = true;
-            this.lblDosage.Location = new System.Drawing.Point(15, 70);
-            this.lblDosage.Name = "lblDosage";
-            this.lblDosage.Size = new System.Drawing.Size(63, 21);
-            this.lblDosage.TabIndex = 2;
-            this.lblDosage.Text = "Dosage";
-            // 
-            // txtDosage
-            // 
-            this.txtDosage.Location = new System.Drawing.Point(140, 67);
-            this.txtDosage.Name = "txtDosage";
-            this.txtDosage.Size = new System.Drawing.Size(180, 29);
-            this.txtDosage.TabIndex = 3;
-            this.txtDosage.Text = "1-0-1";
-            // 
-            // btnAddMedicine
-            // 
-            this.btnAddMedicine.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnAddMedicine.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnAddMedicine.ForeColor = System.Drawing.Color.White;
-            this.btnAddMedicine.Location = new System.Drawing.Point(340, 25);
-            this.btnAddMedicine.Name = "btnAddMedicine";
-            this.btnAddMedicine.Size = new System.Drawing.Size(120, 32);
-            this.btnAddMedicine.TabIndex = 4;
-            this.btnAddMedicine.Text = "Add Medicine";
-            this.btnAddMedicine.UseVisualStyleBackColor = false;
-
-            // 
-            // btnRemoveMedicine
-            // 
-            this.btnRemoveMedicine.BackColor = System.Drawing.Color.DarkRed;
-            this.btnRemoveMedicine.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnRemoveMedicine.ForeColor = System.Drawing.Color.White;
-            this.btnRemoveMedicine.Location = new System.Drawing.Point(340, 65);
-            this.btnRemoveMedicine.Name = "btnRemoveMedicine";
-            this.btnRemoveMedicine.Size = new System.Drawing.Size(120, 32);
-            this.btnRemoveMedicine.TabIndex = 5;
-            this.btnRemoveMedicine.Text = "Remove";
-            this.btnRemoveMedicine.UseVisualStyleBackColor = false;
-
+            gbPrescribe.Controls.Add(lvMedicines);
+            gbPrescribe.Controls.Add(btnRemoveMedicine);
+            gbPrescribe.Controls.Add(btnAddMedicine);
+            gbPrescribe.Controls.Add(lblDosage);
+            gbPrescribe.Controls.Add(txtDosage);
+            gbPrescribe.Controls.Add(lblMedicine);
+            gbPrescribe.Controls.Add(txtMedicineName);
+            gbPrescribe.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            gbPrescribe.Location = new Point(460, 81);
+            gbPrescribe.Margin = new Padding(3, 4, 3, 4);
+            gbPrescribe.Name = "gbPrescribe";
+            gbPrescribe.Padding = new Padding(3, 4, 3, 4);
+            gbPrescribe.Size = new Size(725, 362);
+            gbPrescribe.TabIndex = 2;
+            gbPrescribe.TabStop = false;
+            gbPrescribe.Text = "Write Medicine (Dwai)";
             // 
             // lvMedicines
             // 
-            this.lvMedicines.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.chMedicine,
-            this.chDosage});
-            this.lvMedicines.FullRowSelect = true;
-            this.lvMedicines.GridLines = true;
-            this.lvMedicines.HideSelection = false;
-            this.lvMedicines.Location = new System.Drawing.Point(20, 110);
-            this.lvMedicines.Name = "lvMedicines";
-            this.lvMedicines.Size = new System.Drawing.Size(440, 165);
-            this.lvMedicines.TabIndex = 6;
-            this.lvMedicines.UseCompatibleStateImageBehavior = false;
-            this.lvMedicines.View = System.Windows.Forms.View.Details;
+            lvMedicines.Columns.AddRange(new ColumnHeader[] { chMedicine, chDosage });
+            lvMedicines.FullRowSelect = true;
+            lvMedicines.GridLines = true;
+            lvMedicines.Location = new Point(20, 138);
+            lvMedicines.Margin = new Padding(3, 4, 3, 4);
+            lvMedicines.Name = "lvMedicines";
+            lvMedicines.Size = new Size(474, 205);
+            lvMedicines.TabIndex = 6;
+            lvMedicines.UseCompatibleStateImageBehavior = false;
+            lvMedicines.View = View.Details;
             // 
             // chMedicine
             // 
-            this.chMedicine.Text = "Medicine Name";
-            this.chMedicine.Width = 260;
+            chMedicine.Text = "Medicine Name";
+            chMedicine.Width = 260;
             // 
             // chDosage
             // 
-            this.chDosage.Text = "Dosage";
-            this.chDosage.Width = 150;
+            chDosage.Text = "Dosage";
+            chDosage.Width = 150;
+            // 
+            // btnRemoveMedicine
+            // 
+            btnRemoveMedicine.BackColor = Color.DarkRed;
+            btnRemoveMedicine.FlatStyle = FlatStyle.Flat;
+            btnRemoveMedicine.ForeColor = Color.White;
+            btnRemoveMedicine.Location = new Point(340, 81);
+            btnRemoveMedicine.Margin = new Padding(3, 4, 3, 4);
+            btnRemoveMedicine.Name = "btnRemoveMedicine";
+            btnRemoveMedicine.Size = new Size(154, 40);
+            btnRemoveMedicine.TabIndex = 5;
+            btnRemoveMedicine.Text = "Remove";
+            btnRemoveMedicine.UseVisualStyleBackColor = false;
+            // 
+            // btnAddMedicine
+            // 
+            btnAddMedicine.BackColor = Color.FromArgb(55, 115, 200);
+            btnAddMedicine.FlatStyle = FlatStyle.Flat;
+            btnAddMedicine.ForeColor = Color.White;
+            btnAddMedicine.Location = new Point(340, 31);
+            btnAddMedicine.Margin = new Padding(3, 4, 3, 4);
+            btnAddMedicine.Name = "btnAddMedicine";
+            btnAddMedicine.Size = new Size(154, 40);
+            btnAddMedicine.TabIndex = 4;
+            btnAddMedicine.Text = "Add Medicine";
+            btnAddMedicine.UseVisualStyleBackColor = false;
+            // 
+            // lblDosage
+            // 
+            lblDosage.AutoSize = true;
+            lblDosage.Location = new Point(15, 88);
+            lblDosage.Name = "lblDosage";
+            lblDosage.Size = new Size(65, 21);
+            lblDosage.TabIndex = 2;
+            lblDosage.Text = "Dosage";
+            // 
+            // txtDosage
+            // 
+            txtDosage.Location = new Point(140, 84);
+            txtDosage.Margin = new Padding(3, 4, 3, 4);
+            txtDosage.Name = "txtDosage";
+            txtDosage.Size = new Size(180, 29);
+            txtDosage.TabIndex = 3;
+            txtDosage.Text = "1-0-1";
+            // 
+            // lblMedicine
+            // 
+            lblMedicine.AutoSize = true;
+            lblMedicine.Location = new Point(15, 38);
+            lblMedicine.Name = "lblMedicine";
+            lblMedicine.Size = new Size(125, 21);
+            lblMedicine.TabIndex = 0;
+            lblMedicine.Text = "Medicine Name";
+            // 
+            // txtMedicineName
+            // 
+            txtMedicineName.Location = new Point(140, 34);
+            txtMedicineName.Margin = new Padding(3, 4, 3, 4);
+            txtMedicineName.Name = "txtMedicineName";
+            txtMedicineName.Size = new Size(180, 29);
+            txtMedicineName.TabIndex = 1;
             // 
             // gbPdf
             // 
-            this.gbPdf.Controls.Add(this.lblPdfStatus);
-            this.gbPdf.Controls.Add(this.btnUploadPdf);
-            this.gbPdf.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this.gbPdf.Location = new System.Drawing.Point(460, 360);
-            this.gbPdf.Name = "gbPdf";
-            this.gbPdf.Size = new System.Drawing.Size(725, 100);
-            this.gbPdf.TabIndex = 3;
-            this.gbPdf.TabStop = false;
-            this.gbPdf.Text = "Attach Prescription PDF File";
-            // 
-            // btnUploadPdf
-            // 
-            this.btnUploadPdf.BackColor = System.Drawing.Color.White;
-            this.btnUploadPdf.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
-            this.btnUploadPdf.FlatAppearance.BorderSize = 2;
-            this.btnUploadPdf.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnUploadPdf.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
-            this.btnUploadPdf.Location = new System.Drawing.Point(20, 35);
-            this.btnUploadPdf.Name = "btnUploadPdf";
-            this.btnUploadPdf.Size = new System.Drawing.Size(180, 45);
-            this.btnUploadPdf.TabIndex = 0;
-            this.btnUploadPdf.Text = "Upload PDF";
-            this.btnUploadPdf.UseVisualStyleBackColor = false;
-            this.btnUploadPdf.Click += new System.EventHandler(this.btnUploadPdf_Click);
+            gbPdf.Controls.Add(lblPdfStatus);
+            gbPdf.Controls.Add(btnUploadPdf);
+            gbPdf.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            gbPdf.Location = new Point(460, 450);
+            gbPdf.Margin = new Padding(3, 4, 3, 4);
+            gbPdf.Name = "gbPdf";
+            gbPdf.Padding = new Padding(3, 4, 3, 4);
+            gbPdf.Size = new Size(725, 125);
+            gbPdf.TabIndex = 3;
+            gbPdf.TabStop = false;
+            gbPdf.Text = "Attach Prescription PDF File";
             // 
             // lblPdfStatus
             // 
-            this.lblPdfStatus.AutoSize = true;
-            this.lblPdfStatus.ForeColor = System.Drawing.Color.Gray;
-            this.lblPdfStatus.Location = new System.Drawing.Point(220, 47);
-            this.lblPdfStatus.Name = "lblPdfStatus";
-            this.lblPdfStatus.Size = new System.Drawing.Size(139, 21);
-            this.lblPdfStatus.TabIndex = 1;
-            this.lblPdfStatus.Text = "No PDF Uploaded";
+            lblPdfStatus.AutoSize = true;
+            lblPdfStatus.ForeColor = Color.Gray;
+            lblPdfStatus.Location = new Point(220, 59);
+            lblPdfStatus.Name = "lblPdfStatus";
+            lblPdfStatus.Size = new Size(140, 21);
+            lblPdfStatus.TabIndex = 1;
+            lblPdfStatus.Text = "No PDF Uploaded";
+            // 
+            // btnUploadPdf
+            // 
+            btnUploadPdf.BackColor = Color.White;
+            btnUploadPdf.FlatAppearance.BorderColor = Color.FromArgb(230, 100, 50);
+            btnUploadPdf.FlatAppearance.BorderSize = 2;
+            btnUploadPdf.FlatStyle = FlatStyle.Flat;
+            btnUploadPdf.ForeColor = Color.FromArgb(230, 100, 50);
+            btnUploadPdf.Location = new Point(20, 44);
+            btnUploadPdf.Margin = new Padding(3, 4, 3, 4);
+            btnUploadPdf.Name = "btnUploadPdf";
+            btnUploadPdf.Size = new Size(180, 56);
+            btnUploadPdf.TabIndex = 0;
+            btnUploadPdf.Text = "Upload PDF";
+            btnUploadPdf.UseVisualStyleBackColor = false;
+            btnUploadPdf.Click += btnUploadPdf_Click;
             // 
             // gbActions
             // 
-            this.gbActions.Controls.Add(this.btnAutoFlow);
-            this.gbActions.Controls.Add(this.btnInitiateLink);
-            this.gbActions.Controls.Add(this.btnSaveAndPush);
-            this.gbActions.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this.gbActions.Location = new System.Drawing.Point(15, 470);
-            this.gbActions.Name = "gbActions";
-            this.gbActions.Size = new System.Drawing.Size(430, 210);
-            this.gbActions.TabIndex = 4;
-            this.gbActions.TabStop = false;
-            this.gbActions.Text = "ABDM Integration Actions";
-            // 
-            // btnSaveAndPush
-            // 
-            this.btnSaveAndPush.BackColor = System.Drawing.Color.White;
-            this.btnSaveAndPush.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnSaveAndPush.FlatAppearance.BorderSize = 2;
-            this.btnSaveAndPush.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSaveAndPush.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnSaveAndPush.Location = new System.Drawing.Point(15, 30);
-            this.btnSaveAndPush.Name = "btnSaveAndPush";
-            this.btnSaveAndPush.Size = new System.Drawing.Size(395, 45);
-            this.btnSaveAndPush.TabIndex = 0;
-            this.btnSaveAndPush.Text = "1. Save Patient & Push Health Data";
-            this.btnSaveAndPush.UseVisualStyleBackColor = false;
-            this.btnSaveAndPush.Click += new System.EventHandler(this.btnSaveAndPush_Click);
-            // 
-            // btnInitiateLink
-            // 
-            this.btnInitiateLink.BackColor = System.Drawing.Color.White;
-            this.btnInitiateLink.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnInitiateLink.FlatAppearance.BorderSize = 2;
-            this.btnInitiateLink.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnInitiateLink.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnInitiateLink.Location = new System.Drawing.Point(15, 85);
-            this.btnInitiateLink.Name = "btnInitiateLink";
-            this.btnInitiateLink.Size = new System.Drawing.Size(395, 45);
-            this.btnInitiateLink.TabIndex = 1;
-            this.btnInitiateLink.Text = "2. Link Care Context on Gateway";
-            this.btnInitiateLink.UseVisualStyleBackColor = false;
-            this.btnInitiateLink.Click += new System.EventHandler(this.btnInitiateLink_Click);
+            gbActions.Controls.Add(btnAutoFlow);
+            gbActions.Controls.Add(btnInitiateLink);
+            gbActions.Controls.Add(btnSaveAndPush);
+            gbActions.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            gbActions.Location = new Point(15, 588);
+            gbActions.Margin = new Padding(3, 4, 3, 4);
+            gbActions.Name = "gbActions";
+            gbActions.Padding = new Padding(3, 4, 3, 4);
+            gbActions.Size = new Size(430, 262);
+            gbActions.TabIndex = 4;
+            gbActions.TabStop = false;
+            gbActions.Text = "ABDM Integration Actions";
             // 
             // btnAutoFlow
             // 
-            this.btnAutoFlow.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnAutoFlow.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnAutoFlow.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.btnAutoFlow.ForeColor = System.Drawing.Color.White;
-            this.btnAutoFlow.Location = new System.Drawing.Point(15, 145);
-            this.btnAutoFlow.Name = "btnAutoFlow";
-            this.btnAutoFlow.Size = new System.Drawing.Size(395, 50);
-            this.btnAutoFlow.TabIndex = 2;
-            this.btnAutoFlow.Text = "Auto Link & Push (All in One)";
-            this.btnAutoFlow.UseVisualStyleBackColor = false;
-            this.btnAutoFlow.Click += new System.EventHandler(this.btnAutoFlow_Click);
+            btnAutoFlow.BackColor = Color.FromArgb(55, 115, 200);
+            btnAutoFlow.FlatStyle = FlatStyle.Flat;
+            btnAutoFlow.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnAutoFlow.ForeColor = Color.White;
+            btnAutoFlow.Location = new Point(15, 181);
+            btnAutoFlow.Margin = new Padding(3, 4, 3, 4);
+            btnAutoFlow.Name = "btnAutoFlow";
+            btnAutoFlow.Size = new Size(395, 62);
+            btnAutoFlow.TabIndex = 2;
+            btnAutoFlow.Text = "Auto Link & Push (All in One)";
+            btnAutoFlow.UseVisualStyleBackColor = false;
+            btnAutoFlow.Click += btnAutoFlow_Click;
+            // 
+            // btnInitiateLink
+            // 
+            btnInitiateLink.BackColor = Color.White;
+            btnInitiateLink.FlatAppearance.BorderColor = Color.FromArgb(55, 115, 200);
+            btnInitiateLink.FlatAppearance.BorderSize = 2;
+            btnInitiateLink.FlatStyle = FlatStyle.Flat;
+            btnInitiateLink.ForeColor = Color.FromArgb(55, 115, 200);
+            btnInitiateLink.Location = new Point(15, 106);
+            btnInitiateLink.Margin = new Padding(3, 4, 3, 4);
+            btnInitiateLink.Name = "btnInitiateLink";
+            btnInitiateLink.Size = new Size(395, 56);
+            btnInitiateLink.TabIndex = 1;
+            btnInitiateLink.Text = "2. Link Care Context on Gateway";
+            btnInitiateLink.UseVisualStyleBackColor = false;
+            btnInitiateLink.Click += btnInitiateLink_Click;
+            // 
+            // btnSaveAndPush
+            // 
+            btnSaveAndPush.BackColor = Color.White;
+            btnSaveAndPush.FlatAppearance.BorderColor = Color.FromArgb(55, 115, 200);
+            btnSaveAndPush.FlatAppearance.BorderSize = 2;
+            btnSaveAndPush.FlatStyle = FlatStyle.Flat;
+            btnSaveAndPush.ForeColor = Color.FromArgb(55, 115, 200);
+            btnSaveAndPush.Location = new Point(15, 38);
+            btnSaveAndPush.Margin = new Padding(3, 4, 3, 4);
+            btnSaveAndPush.Name = "btnSaveAndPush";
+            btnSaveAndPush.Size = new Size(395, 56);
+            btnSaveAndPush.TabIndex = 0;
+            btnSaveAndPush.Text = "1. Save Patient & Push Health Data";
+            btnSaveAndPush.UseVisualStyleBackColor = false;
+            btnSaveAndPush.Click += btnSaveAndPush_Click;
             // 
             // txtLogs
             // 
-            this.txtLogs.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(35)))));
-            this.txtLogs.Font = new System.Drawing.Font("Consolas", 9F);
-            this.txtLogs.ForeColor = System.Drawing.Color.LightGray;
-            this.txtLogs.Location = new System.Drawing.Point(460, 500);
-            this.txtLogs.Multiline = true;
-            this.txtLogs.Name = "txtLogs";
-            this.txtLogs.ReadOnly = true;
-            this.txtLogs.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtLogs.Size = new System.Drawing.Size(725, 180);
-            this.txtLogs.TabIndex = 5;
+            txtLogs.BackColor = Color.FromArgb(30, 30, 35);
+            txtLogs.Font = new Font("Consolas", 9F);
+            txtLogs.ForeColor = Color.LightGray;
+            txtLogs.Location = new Point(460, 625);
+            txtLogs.Margin = new Padding(3, 4, 3, 4);
+            txtLogs.Multiline = true;
+            txtLogs.Name = "txtLogs";
+            txtLogs.ReadOnly = true;
+            txtLogs.ScrollBars = ScrollBars.Vertical;
+            txtLogs.Size = new Size(725, 224);
+            txtLogs.TabIndex = 5;
             // 
             // lblLogs
             // 
-            this.lblLogs.AutoSize = true;
-            this.lblLogs.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
-            this.lblLogs.Location = new System.Drawing.Point(460, 475);
-            this.lblLogs.Name = "lblLogs";
-            this.lblLogs.Size = new System.Drawing.Size(147, 21);
-            this.lblLogs.TabIndex = 6;
-            this.lblLogs.Text = "Execution Console:";
+            lblLogs.AutoSize = true;
+            lblLogs.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            lblLogs.Location = new Point(460, 594);
+            lblLogs.Name = "lblLogs";
+            lblLogs.Size = new Size(148, 21);
+            lblLogs.TabIndex = 6;
+            lblLogs.Text = "Execution Console:";
             // 
             // frmPrescription
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(1200, 700);
-            this.Controls.Add(this.lblLogs);
-            this.Controls.Add(this.txtLogs);
-            this.Controls.Add(this.gbActions);
-            this.Controls.Add(this.gbPdf);
-            this.Controls.Add(this.gbPrescribe);
-            this.Controls.Add(this.gbPatient);
-            this.Controls.Add(this.pnlHeader);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Name = "frmPrescription";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Write Prescription & Upload Document";
-            this.pnlHeader.ResumeLayout(false);
-            this.pnlHeader.PerformLayout();
-            this.gbPatient.ResumeLayout(false);
-            this.gbPatient.PerformLayout();
-            this.gbPrescribe.ResumeLayout(false);
-            this.gbPrescribe.PerformLayout();
-            this.gbPdf.ResumeLayout(false);
-            this.gbPdf.PerformLayout();
-            this.gbActions.ResumeLayout(false);
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleMode = AutoScaleMode.Font;
+            BackColor = Color.White;
+            ClientSize = new Size(1200, 875);
+            Controls.Add(lblLogs);
+            Controls.Add(txtLogs);
+            Controls.Add(gbActions);
+            Controls.Add(gbPdf);
+            Controls.Add(gbPrescribe);
+            Controls.Add(gbPatient);
+            Controls.Add(pnlHeader);
+            FormBorderStyle = FormBorderStyle.None;
+            Margin = new Padding(3, 4, 3, 4);
+            Name = "frmPrescription";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "Write Prescription & Upload Document";
+            pnlHeader.ResumeLayout(false);
+            pnlHeader.PerformLayout();
+            gbPatient.ResumeLayout(false);
+            gbPatient.PerformLayout();
+            gbPrescribe.ResumeLayout(false);
+            gbPrescribe.PerformLayout();
+            gbPdf.ResumeLayout(false);
+            gbPdf.PerformLayout();
+            gbActions.ResumeLayout(false);
+            ResumeLayout(false);
+            PerformLayout();
 
         }
 

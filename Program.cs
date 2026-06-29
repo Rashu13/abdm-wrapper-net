@@ -43,7 +43,9 @@ builder.Services.AddSingleton(sp =>
         HipName = !string.IsNullOrEmpty(config.HipName) ? config.HipName : "MIDHA HOSPITAL",
         Environment = config.Environment ?? "Sandbox",
         CmId = "sbx",
-        BaseUrl = config.Gateway?.BaseUrl ?? "https://dev.abdm.gov.in/api/hiecm/gateway",
+        BaseUrl = config.Gateway?.BaseUrl?.Contains("/hiecm/gateway") == true 
+            ? config.Gateway.BaseUrl 
+            : (config.Gateway?.BaseUrl ?? "https://dev.abdm.gov.in/api").TrimEnd('/') + "/hiecm/gateway",
         AbhaServiceUrl = !string.IsNullOrEmpty(config.AbhaServiceUrl) 
             ? config.AbhaServiceUrl 
             : (config.Environment?.ToLower() == "production" 

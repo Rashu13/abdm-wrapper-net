@@ -15,7 +15,7 @@ namespace AbdmWinFormsTest
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmABHAMain());
+            Application.Run(new frmAbdmM1Dashboard());
         }
 
         static void FormResolve_ThreadException(object sender, ThreadExceptionEventArgs e)

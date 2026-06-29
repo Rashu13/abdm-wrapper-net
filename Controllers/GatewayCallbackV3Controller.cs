@@ -7,9 +7,12 @@ using AbdmWrapperNet.Constants;
 using AbdmWrapperNet.Models;
 using AbdmWrapperNet.Services;
 
+using AbdmWrapperNet.Filters;
+
 namespace AbdmWrapperNet.Controllers;
 
 [ApiController]
+[TypeFilter(typeof(GatewaySignatureValidationFilter))]
 public class GatewayCallbackV3Controller : ControllerBase
 {
     private readonly IWorkflowV3Manager _workflowV3Manager;
