@@ -936,6 +936,56 @@ namespace ABDM.Api
                             }
                         }
                     }
+
+                    // Exchanging temporary T-token for final X-token
+                    if (!string.IsNullOrEmpty(loginResp.Token) && loginResp.Accounts.Count > 0)
+                    {
+                        try
+                        {
+                            var firstAccount = loginResp.Accounts[0];
+                            string abhaNum = firstAccount.HealthIdNumber;
+                            string verifyUserTxnId = root.ContainsKey("txnId") ? root["txnId"]?.ToString() : request.TransactionId;
+
+                            // Call /profile/login/verify/user
+                            AddCommonHeaders(token);
+                            _http.DefaultRequestHeaders.Remove("T-token");
+                            _http.DefaultRequestHeaders.TryAddWithoutValidation("T-token", $"Bearer {loginResp.Token}");
+
+                            var verifyUserPayload = SimpleJson.Serialize(new Dictionary<string, object>
+                            {
+                                ["ABHANumber"] = abhaNum,
+                                ["txnId"]      = verifyUserTxnId
+                            });
+
+                            var verifyUserResp = await _http.PostAsync(
+                                $"{_cfg.AbhaServiceUrl}/profile/login/verify/user", JsonContent(verifyUserPayload));
+                            
+                            var verifyUserBody = await verifyUserResp.Content.ReadAsStringAsync();
+                            LogResponse("LoginVerifyUser", verifyUserBody);
+
+                            if (verifyUserResp.IsSuccessStatusCode)
+                            {
+                                var verifyUserDict = SimpleJson.Deserialize(verifyUserBody);
+                                if (verifyUserDict.ContainsKey("token"))
+                                {
+                                    loginResp.Token = verifyUserDict["token"]?.ToString() ?? loginResp.Token;
+                                    if (verifyUserDict.ContainsKey("refreshToken"))
+                                    {
+                                        loginResp.RefreshToken = verifyUserDict["refreshToken"]?.ToString() ?? loginResp.RefreshToken;
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine("Error exchanging T-Token: " + ex.Message);
+                        }
+                        finally
+                        {
+                            _http.DefaultRequestHeaders.Remove("T-token");
+                        }
+                    }
+
                     return AbdmApiClient.Ok(loginResp, "Login Successful.");
                 }
                 catch (Exception ex) { return AbdmApiClient.Fail<AbdmLoginResponse>(ex.Message); }
@@ -1128,6 +1178,8 @@ namespace ABDM.Api
                     string cleanUserToken = (userToken ?? "").Trim();
                     if (cleanUserToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
                         cleanUserToken = cleanUserToken.Substring(7).Trim();
+                    _http.DefaultRequestHeaders.Remove("X-Token");
+                    _http.DefaultRequestHeaders.Remove("X-token");
                     _http.DefaultRequestHeaders.TryAddWithoutValidation(
                         "X-Token", $"Bearer {cleanUserToken}");
                     _http.DefaultRequestHeaders.Accept.Clear();
