@@ -2202,6 +2202,71 @@ namespace ABDM.Api
             }
         }
 
+        /// <summary>
+        /// Initiates a health information subscription request (HIU) - M3.
+        /// </summary>
+        public async Task<AbdmResponse<string>> InitiateSubscriptionRequestAsync(string patientAbhaAddress, string purposeCode, List<string> categories, string dateFrom, string dateTo)
+        {
+            try
+            {
+                var subscription = new Dictionary<string, object>
+                {
+                    ["purpose"] = new Dictionary<string, object>
+                    {
+                        ["text"] = "Referral",
+                        ["code"] = purposeCode,
+                        ["refUri"] = ""
+                    },
+                    ["patient"] = new Dictionary<string, object>
+                    {
+                        ["id"] = patientAbhaAddress
+                    },
+                    ["hiu"] = new Dictionary<string, object>
+                    {
+                        ["id"] = _cfg.HipId ?? "IN0610090658",
+                        ["name"] = _cfg.HipName ?? "MIDHA HOSPITAL"
+                    },
+                    ["categories"] = categories,
+                    ["period"] = new Dictionary<string, object>
+                    {
+                        ["from"] = dateFrom,
+                        ["to"] = dateTo
+                    }
+                };
+
+                var request = new Dictionary<string, object>
+                {
+                    ["requestId"] = Guid.NewGuid().ToString(),
+                    ["timestamp"] = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                    ["subscription"] = subscription
+                };
+
+                var payload = SimpleJson.Serialize(request);
+                string responseBody = await PostToWrapperAsync("/v3/subscription-init", payload);
+                return Ok(responseBody, "Subscription request initiated. Check status using request ID.");
+            }
+            catch (Exception ex)
+            {
+                return Fail<string>(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Gets the status of a subscription request (HIU) - M3.
+        /// </summary>
+        public async Task<AbdmResponse<string>> GetSubscriptionStatusAsync(string requestId)
+        {
+            try
+            {
+                string responseBody = await GetFromWrapperAsync($"/v3/subscription-status/{requestId}");
+                return Ok(responseBody, "Fetch subscription status succeeded.");
+            }
+            catch (Exception ex)
+            {
+                return Fail<string>(ex.Message);
+            }
+        }
+
     }
 
     // ??? Minimal JSON Serializer/Deserializer (no external libs) ?????????????
