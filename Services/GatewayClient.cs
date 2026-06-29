@@ -158,7 +158,11 @@ public class GatewayClient : IGatewayClient
                 }
             }
 
-            var json = JsonSerializer.Serialize(body);
+            var options = new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            };
+            var json = JsonSerializer.Serialize(body, options);
 
             var cleanPath = path?.TrimStart('/') ?? "";
             if (client.BaseAddress != null && client.BaseAddress.AbsolutePath.EndsWith("/gateway/") && cleanPath.StartsWith("gateway/"))
