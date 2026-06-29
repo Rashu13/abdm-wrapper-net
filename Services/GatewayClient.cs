@@ -169,6 +169,12 @@ public class GatewayClient : IGatewayClient
             {
                 cleanPath = cleanPath["gateway/".Length..];
             }
+            if (client.BaseAddress != null && 
+                (client.BaseAddress.AbsolutePath.EndsWith("/api/") || client.BaseAddress.AbsolutePath.EndsWith("/api")) && 
+                cleanPath.StartsWith("api/", StringComparison.OrdinalIgnoreCase))
+            {
+                cleanPath = cleanPath["api/".Length..];
+            }
             if (_config.LogCurl)
             {
                 var fullUrl = client.BaseAddress != null ? new Uri(client.BaseAddress, cleanPath).ToString() : cleanPath;
