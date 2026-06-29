@@ -2243,7 +2243,7 @@ namespace ABDM.Api
                     {
                         ["text"] = purposeText,
                         ["code"] = codeUpper,
-                        ["refUri"] = "https://www.abdm.gov.in"
+                        ["refUri"] = "www.abdm.gov.in"
                     },
                     ["patient"] = new Dictionary<string, object>
                     {
