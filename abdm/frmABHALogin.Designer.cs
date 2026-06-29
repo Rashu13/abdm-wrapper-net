@@ -93,7 +93,7 @@ namespace HMS.abdm
             lblInstructions.Name = "lblInstructions";
             lblInstructions.Size = new Size(443, 20);
             lblInstructions.TabIndex = 1;
-            lblInstructions.Text = "Enter your registered Mobile Number or ABHA Number (14-digit)";
+            lblInstructions.Text = "Enter your registered Mobile Number or Aadhaar Number";
             // 
             // lblLoginId
             // 
@@ -103,7 +103,7 @@ namespace HMS.abdm
             lblLoginId.Name = "lblLoginId";
             lblLoginId.Size = new Size(157, 23);
             lblLoginId.TabIndex = 2;
-            lblLoginId.Text = "Mobile / ABHA No:";
+            lblLoginId.Text = "Mobile / Aadhaar No:";
             // 
             // txtLoginId
             // 

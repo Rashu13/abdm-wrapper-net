@@ -52,7 +52,7 @@ namespace HMS.abdm
             string loginId = txtLoginId.Text.Trim();
             if (string.IsNullOrEmpty(loginId))
             {
-                MessageBox.Show("Please enter Mobile or ABHA Number.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Please enter Mobile or Aadhaar Number.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
