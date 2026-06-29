@@ -22,6 +22,7 @@ namespace HMS.abdm
         private Button btnReKyc;
         private Button btnScanShare;
         private Button btnClearSession;
+        private Button btnM2Dashboard;
         private Button btnDownloadCard;
         private Button btnClose;
 
@@ -172,6 +173,19 @@ namespace HMS.abdm
             this.btnClearSession.FlatStyle = FlatStyle.Flat;
             this.btnClearSession.Click += btnClearSession_Click;
             this.grpActions.Controls.Add(this.btnClearSession);
+
+            // btnM2Dashboard
+            btnY += btnHeight + spacing;
+            this.btnM2Dashboard = new Button();
+            this.btnM2Dashboard.Text = "ABDM M2 Dashboard";
+            this.btnM2Dashboard.Location = new Point(20, btnY);
+            this.btnM2Dashboard.Size = new Size(210, btnHeight);
+            this.btnM2Dashboard.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
+            this.btnM2Dashboard.BackColor = Color.FromArgb(52, 73, 94);
+            this.btnM2Dashboard.ForeColor = Color.White;
+            this.btnM2Dashboard.FlatStyle = FlatStyle.Flat;
+            this.btnM2Dashboard.Click += btnM2Dashboard_Click;
+            this.grpActions.Controls.Add(this.btnM2Dashboard);
 
             // GroupBox Profile
             this.grpProfile.Text = "Active Patient Profile";
@@ -537,6 +551,14 @@ namespace HMS.abdm
             {
                 ABDM.Models.SessionStore.Clear();
                 RefreshSessionDisplay();
+            }
+        }
+
+        private void btnM2Dashboard_Click(object sender, EventArgs e)
+        {
+            using (var frm = new frmABDMM2())
+            {
+                frm.ShowDialog();
             }
         }
 

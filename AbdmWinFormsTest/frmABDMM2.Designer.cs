@@ -89,7 +89,7 @@ namespace HMS.abdm
             // 
             // pnlHeader
             // 
-            this.pnlHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
+            this.pnlHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(43)))), ((int)(((byte)(54)))));
             this.pnlHeader.Controls.Add(this.btnClose);
             this.pnlHeader.Controls.Add(this.lblTitle);
             this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
@@ -149,7 +149,8 @@ namespace HMS.abdm
             this.gbHip.Controls.Add(this.txtHipAbhaAddress);
             this.gbHip.Controls.Add(this.lblHipAbhaAddress);
             this.gbHip.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold);
-            this.gbHip.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
+            this.gbHip.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(43)))), ((int)(((byte)(54)))));
+            this.gbHip.BackColor = System.Drawing.Color.White;
             this.gbHip.Location = new System.Drawing.Point(15, 65);
             this.gbHip.Name = "gbHip";
             this.gbHip.Size = new System.Drawing.Size(460, 460);
@@ -225,9 +226,9 @@ namespace HMS.abdm
             // 
             // btnSendSms
             // 
-            this.btnSendSms.BackColor = System.Drawing.Color.White;
-            this.btnSendSms.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnSendSms.FlatAppearance.BorderSize = 2;
+            this.btnSendSms.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(142)))), ((int)(((byte)(68)))), ((int)(((byte)(173)))));
+            
+            this.btnSendSms.FlatAppearance.BorderSize = 0;
             this.btnSendSms.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSendSms.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.btnSendSms.Location = new System.Drawing.Point(15, 412);
@@ -237,12 +238,13 @@ namespace HMS.abdm
             this.btnSendSms.Text = "Send SMS Notification";
             this.btnSendSms.UseVisualStyleBackColor = false;
             this.btnSendSms.Click += new System.EventHandler(this.btnSendSms_Click);
-            // 
+            
+            this.btnSendSms.ForeColor = System.Drawing.Color.White;// 
             // btnCheckLinkStatus
             // 
-            this.btnCheckLinkStatus.BackColor = System.Drawing.Color.White;
-            this.btnCheckLinkStatus.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnCheckLinkStatus.FlatAppearance.BorderSize = 2;
+            this.btnCheckLinkStatus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
+            
+            this.btnCheckLinkStatus.FlatAppearance.BorderSize = 0;
             this.btnCheckLinkStatus.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCheckLinkStatus.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.btnCheckLinkStatus.Location = new System.Drawing.Point(15, 372);
@@ -252,7 +254,8 @@ namespace HMS.abdm
             this.btnCheckLinkStatus.Text = "3. Check Link Status";
             this.btnCheckLinkStatus.UseVisualStyleBackColor = false;
             this.btnCheckLinkStatus.Click += new System.EventHandler(this.btnCheckLinkStatus_Click);
-            // 
+            
+            this.btnCheckLinkStatus.ForeColor = System.Drawing.Color.White;// 
             // txtHipLinkId
             // 
             this.txtHipLinkId.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -274,9 +277,9 @@ namespace HMS.abdm
             // 
             // btnInitiateLink
             // 
-            this.btnInitiateLink.BackColor = System.Drawing.Color.White;
-            this.btnInitiateLink.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnInitiateLink.FlatAppearance.BorderSize = 2;
+            this.btnInitiateLink.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(41)))), ((int)(((byte)(128)))), ((int)(((byte)(185)))));
+            
+            this.btnInitiateLink.FlatAppearance.BorderSize = 0;
             this.btnInitiateLink.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnInitiateLink.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.btnInitiateLink.Location = new System.Drawing.Point(15, 300);
@@ -286,12 +289,13 @@ namespace HMS.abdm
             this.btnInitiateLink.Text = "2. Link Care Contexts";
             this.btnInitiateLink.UseVisualStyleBackColor = false;
             this.btnInitiateLink.Click += new System.EventHandler(this.btnInitiateLink_Click);
-            // 
+            
+            this.btnInitiateLink.ForeColor = System.Drawing.Color.White;// 
             // btnRegisterPatient
             // 
-            this.btnRegisterPatient.BackColor = System.Drawing.Color.White;
-            this.btnRegisterPatient.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
-            this.btnRegisterPatient.FlatAppearance.BorderSize = 2;
+            this.btnRegisterPatient.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(41)))), ((int)(((byte)(128)))), ((int)(((byte)(185)))));
+            
+            this.btnRegisterPatient.FlatAppearance.BorderSize = 0;
             this.btnRegisterPatient.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRegisterPatient.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.btnRegisterPatient.Location = new System.Drawing.Point(15, 260);
@@ -301,7 +305,8 @@ namespace HMS.abdm
             this.btnRegisterPatient.Text = "1. Register Patient in DB";
             this.btnRegisterPatient.UseVisualStyleBackColor = false;
             this.btnRegisterPatient.Click += new System.EventHandler(this.btnRegisterPatient_Click);
-            // 
+            
+            this.btnRegisterPatient.ForeColor = System.Drawing.Color.White;// 
             // txtHipCareContextDisplay
             // 
             this.txtHipCareContextDisplay.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -429,7 +434,8 @@ namespace HMS.abdm
             this.gbHiu.Controls.Add(this.txtHiuPatientAbha);
             this.gbHiu.Controls.Add(this.lblHiuPatientAbha);
             this.gbHiu.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold);
-            this.gbHiu.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
+            this.gbHiu.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(174)))), ((int)(((byte)(96)))));
+            this.gbHiu.BackColor = System.Drawing.Color.White;
             this.gbHiu.Location = new System.Drawing.Point(495, 65);
             this.gbHiu.Name = "gbHiu";
             this.gbHiu.Size = new System.Drawing.Size(470, 460);
@@ -439,9 +445,9 @@ namespace HMS.abdm
             // 
             // btnGetData
             // 
-            this.btnGetData.BackColor = System.Drawing.Color.White;
-            this.btnGetData.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
-            this.btnGetData.FlatAppearance.BorderSize = 2;
+            this.btnGetData.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(57)))), ((int)(((byte)(43)))));
+            
+            this.btnGetData.FlatAppearance.BorderSize = 0;
             this.btnGetData.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnGetData.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.btnGetData.Location = new System.Drawing.Point(20, 412);
@@ -451,7 +457,8 @@ namespace HMS.abdm
             this.btnGetData.Text = "4. View Decrypted Data";
             this.btnGetData.UseVisualStyleBackColor = false;
             this.btnGetData.Click += new System.EventHandler(this.btnGetData_Click);
-            // 
+            
+            this.btnGetData.ForeColor = System.Drawing.Color.White;// 
             // txtHiuTxnId
             // 
             this.txtHiuTxnId.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -473,9 +480,9 @@ namespace HMS.abdm
             // 
             // btnFetchRecords
             // 
-            this.btnFetchRecords.BackColor = System.Drawing.Color.White;
-            this.btnFetchRecords.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
-            this.btnFetchRecords.FlatAppearance.BorderSize = 2;
+            this.btnFetchRecords.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(126)))), ((int)(((byte)(34)))));
+            
+            this.btnFetchRecords.FlatAppearance.BorderSize = 0;
             this.btnFetchRecords.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnFetchRecords.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.btnFetchRecords.Location = new System.Drawing.Point(20, 340);
@@ -485,7 +492,8 @@ namespace HMS.abdm
             this.btnFetchRecords.Text = "3. Fetch Health Records";
             this.btnFetchRecords.UseVisualStyleBackColor = false;
             this.btnFetchRecords.Click += new System.EventHandler(this.btnFetchRecords_Click);
-            // 
+            
+            this.btnFetchRecords.ForeColor = System.Drawing.Color.White;// 
             // txtHiuConsentId
             // 
             this.txtHiuConsentId.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -507,9 +515,9 @@ namespace HMS.abdm
             // 
             // btnCheckConsentStatus
             // 
-            this.btnCheckConsentStatus.BackColor = System.Drawing.Color.White;
-            this.btnCheckConsentStatus.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
-            this.btnCheckConsentStatus.FlatAppearance.BorderSize = 2;
+            this.btnCheckConsentStatus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(174)))), ((int)(((byte)(96)))));
+            
+            this.btnCheckConsentStatus.FlatAppearance.BorderSize = 0;
             this.btnCheckConsentStatus.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCheckConsentStatus.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.btnCheckConsentStatus.Location = new System.Drawing.Point(20, 268);
@@ -519,7 +527,8 @@ namespace HMS.abdm
             this.btnCheckConsentStatus.Text = "2. Check Consent Status";
             this.btnCheckConsentStatus.UseVisualStyleBackColor = false;
             this.btnCheckConsentStatus.Click += new System.EventHandler(this.btnCheckConsentStatus_Click);
-            // 
+            
+            this.btnCheckConsentStatus.ForeColor = System.Drawing.Color.White;// 
             // txtHiuConsentReqId
             // 
             this.txtHiuConsentReqId.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -541,9 +550,9 @@ namespace HMS.abdm
             // 
             // btnRequestConsent
             // 
-            this.btnRequestConsent.BackColor = System.Drawing.Color.White;
-            this.btnRequestConsent.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
-            this.btnRequestConsent.FlatAppearance.BorderSize = 2;
+            this.btnRequestConsent.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(174)))), ((int)(((byte)(96)))));
+            
+            this.btnRequestConsent.FlatAppearance.BorderSize = 0;
             this.btnRequestConsent.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRequestConsent.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.btnRequestConsent.Location = new System.Drawing.Point(20, 196);
@@ -553,7 +562,8 @@ namespace HMS.abdm
             this.btnRequestConsent.Text = "1. Initiate Consent Request";
             this.btnRequestConsent.UseVisualStyleBackColor = false;
             this.btnRequestConsent.Click += new System.EventHandler(this.btnRequestConsent_Click);
-            // 
+            
+            this.btnRequestConsent.ForeColor = System.Drawing.Color.White;// 
             // txtHiuEraseAt
             // 
             this.txtHiuEraseAt.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -724,6 +734,7 @@ namespace HMS.abdm
             this.gbLog.TabIndex = 3;
             this.gbLog.TabStop = false;
             this.gbLog.Text = "Execution Output / Log";
+            this.gbLog.BackColor = System.Drawing.Color.White;
             // 
             // txtLog
             // 
@@ -742,7 +753,7 @@ namespace HMS.abdm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.White;
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(244)))), ((int)(((byte)(248)))));
             this.ClientSize = new System.Drawing.Size(980, 740);
             this.Controls.Add(this.gbLog);
             this.Controls.Add(this.gbHiu);
