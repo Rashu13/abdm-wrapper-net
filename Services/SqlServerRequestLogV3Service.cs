@@ -521,4 +521,24 @@ public class SqlServerRequestLogV3Service : IRequestLogV3Service
         await _context.RequestLogs.AddAsync(requestLog);
         await _context.SaveChangesAsync();
     }
+
+    public async Task SaveConsentRequestAsync(InitConsentRequest request, RequestStatus status)
+    {
+        if (request == null) return;
+
+        var log = new RequestLog
+        {
+            Module = "HIU_CONSENT",
+            AbhaAddress = request.Consent?.Patient?.Id ?? string.Empty,
+            ClientRequestId = request.RequestId,
+            GatewayRequestId = request.RequestId,
+            CreatedOn = DateTime.UtcNow,
+            LastUpdated = DateTime.UtcNow,
+            Status = status.ToString(),
+            RequestDetails = new BsonDocument { { "consentRequest", ToBsonDocument(request) } }
+        };
+
+        await _context.RequestLogs.AddAsync(log);
+        await _context.SaveChangesAsync();
+    }
 }

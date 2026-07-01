@@ -49,6 +49,8 @@ public class HIUConsentV3Service
         {
             _logger.LogInformation($"Initiating consent request: {request.RequestId}");
 
+            await _requestLogService.SaveConsentRequestAsync(request, RequestStatus.INITIATING);
+
             var headers = new Dictionary<string, string>
             {
                 ["X-HIU-ID"] = request.Consent?.Hiu?.Id ?? _config.HiuSetup?.HiuId ?? string.Empty,
