@@ -2,6 +2,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using AbdmWrapperNet.Services;
+using AbdmWrapperNet.Data;
+using System.Linq;
 
 namespace AbdmWrapperNet.Controllers;
 
@@ -11,11 +13,13 @@ public class ConfigController : ControllerBase
 {
     private readonly IGatewayClient _gatewayClient;
     private readonly ILogger<ConfigController> _logger;
+    private readonly AppDbContext _db;
 
-    public ConfigController(IGatewayClient gatewayClient, ILogger<ConfigController> logger)
+    public ConfigController(IGatewayClient gatewayClient, ILogger<ConfigController> logger, AppDbContext db)
     {
         _gatewayClient = gatewayClient;
         _logger = logger;
+        _db = db;
     }
 
     public class BridgeUrlRequest
@@ -53,5 +57,15 @@ public class ConfigController : ControllerBase
         var responseString = await _gatewayClient.GetFromGatewayAsync("hiecm/gateway/v3/bridge-services");
         
         return Content(responseString, "application/json");
+    }
+
+    [HttpGet("request-logs")]
+    public IActionResult GetRequestLogs()
+    {
+        var logs = _db.RequestLogs
+            .Where(r => r.Module == "HIU_HEALTH_INFORMATION")
+            .OrderByDescending(r => r.CreatedOn)
+            .ToList();
+        return Ok(logs);
     }
 }
