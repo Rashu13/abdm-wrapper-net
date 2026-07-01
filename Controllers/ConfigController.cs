@@ -65,7 +65,19 @@ public class ConfigController : ControllerBase
         var logs = _db.RequestLogs
             .Where(r => r.Module == "HIU_HEALTH_INFORMATION")
             .OrderByDescending(r => r.CreatedOn)
-            .ToList();
+            .ToList()
+            .Select(r => new 
+            {
+                r.Id,
+                r.ClientRequestId,
+                r.TransactionId,
+                r.Status,
+                r.GatewayRequestId,
+                r.CreatedOn,
+                r.LastUpdated,
+                RequestDetails = r.RequestDetails?.ToString(),
+                ResponseDetails = r.ResponseDetails?.ToString()
+            });
         return Ok(logs);
     }
 }
