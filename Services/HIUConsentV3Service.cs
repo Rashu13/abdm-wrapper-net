@@ -117,22 +117,74 @@ public class HIUConsentV3Service
             var log = await _requestLogService.FindByClientRequestIdAsync(clientRequestId);
 
             FacadeConsentDetails? consentDetails = null;
-            if (log != null && !string.IsNullOrEmpty(log.ConsentId))
+            if (log != null)
             {
-                consentDetails = new FacadeConsentDetails
+                var consentId = log.ConsentId;
+                if (string.IsNullOrEmpty(consentId) || consentId == "CONSENT_ON_NOTIFY_RESPONSE" || consentId == "CONSENT_ON_STATUS_RESPONSE")
                 {
-                    Consent = new List<ConsentStatus>
+                    if (log.RequestDetails != null && log.RequestDetails.Contains("consentDetails"))
                     {
-                        new ConsentStatus
+                        var details = log.RequestDetails["consentDetails"];
+                        if (details.IsBsonDocument)
                         {
-                            Status = log.Status,
-                            ConsentArtefacts = new List<ConsentArtefact>
+                            var detailsDoc = details.AsBsonDocument;
+                            var notifKey = detailsDoc.Contains("notification") ? "notification" : (detailsDoc.Contains("Notification") ? "Notification" : null);
+                            if (notifKey != null && detailsDoc[notifKey].IsBsonDocument)
                             {
-                                new ConsentArtefact { Id = log.ConsentId }
+                                var notif = detailsDoc[notifKey].AsBsonDocument;
+                                var artKey = notif.Contains("consentArtefacts") ? "consentArtefacts" : (notif.Contains("ConsentArtefacts") ? "ConsentArtefacts" : null);
+                                if (artKey != null && notif[artKey].IsBsonArray)
+                                {
+                                    var arr = notif[artKey].AsBsonArray;
+                                    if (arr.Count > 0 && arr[0].IsBsonDocument)
+                                    {
+                                        var art = arr[0].AsBsonDocument;
+                                        var idKey = art.Contains("id") ? "id" : (art.Contains("Id") ? "Id" : null);
+                                        if (idKey != null)
+                                        {
+                                            consentId = art[idKey].ToString();
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                var artKeyDirect = detailsDoc.Contains("consentArtefacts") ? "consentArtefacts" : (detailsDoc.Contains("ConsentArtefacts") ? "ConsentArtefacts" : null);
+                                if (artKeyDirect != null && detailsDoc[artKeyDirect].IsBsonArray)
+                                {
+                                    var arr = detailsDoc[artKeyDirect].AsBsonArray;
+                                    if (arr.Count > 0 && arr[0].IsBsonDocument)
+                                    {
+                                        var art = arr[0].AsBsonDocument;
+                                        var idKey = art.Contains("id") ? "id" : (art.Contains("Id") ? "Id" : null);
+                                        if (idKey != null)
+                                        {
+                                            consentId = art[idKey].ToString();
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
-                };
+                }
+
+                if (!string.IsNullOrEmpty(consentId) && consentId != "CONSENT_ON_NOTIFY_RESPONSE" && consentId != "CONSENT_ON_STATUS_RESPONSE")
+                {
+                    consentDetails = new FacadeConsentDetails
+                    {
+                        Consent = new List<ConsentStatus>
+                        {
+                            new ConsentStatus
+                            {
+                                Status = log.Status,
+                                ConsentArtefacts = new List<ConsentArtefact>
+                                {
+                                    new ConsentArtefact { Id = consentId }
+                                }
+                            }
+                        }
+                    };
+                }
             }
 
             return new ConsentStatusV3Response
@@ -214,9 +266,15 @@ public class HIUConsentV3Service
                 return 400;
             }
 
+            var consentId = "CONSENT_ON_STATUS_RESPONSE";
+            if (request.ConsentRequest.ConsentArtefacts != null && request.ConsentRequest.ConsentArtefacts.Count > 0)
+            {
+                consentId = request.ConsentRequest.ConsentArtefacts[0].Id;
+            }
+
             await _requestLogService.UpdateConsentResponseAsync(
                 gatewayRequestId,
-                "CONSENT_ON_STATUS_RESPONSE",
+                consentId,
                 RequestStatus.CONSENT_ON_STATUS_RESPONSE_RECEIVED,
                 request.ConsentRequest);
 
@@ -283,8 +341,13 @@ public class HIUConsentV3Service
             // GRANTED – fetch full consent artifacts from gateway
             if (gatewayRequestId != null)
             {
+                var consentId = "CONSENT_ON_NOTIFY_RESPONSE";
+                if (notification.ConsentArtefacts != null && notification.ConsentArtefacts.Count > 0)
+                {
+                    consentId = notification.ConsentArtefacts[0].Id;
+                }
                 await _requestLogService.UpdateConsentResponseAsync(gatewayRequestId,
-                    "CONSENT_ON_NOTIFY_RESPONSE",
+                    consentId,
                     RequestStatus.CONSENT_ON_NOTIFY_RESPONSE_RECEIVED,
                     request);
             }
