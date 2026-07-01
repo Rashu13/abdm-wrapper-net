@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AbdmWrapperNet.Models;
+using MongoDB.Bson;
 
 namespace AbdmWrapperNet.Services;
 
@@ -33,4 +34,6 @@ public interface IRequestLogV3Service
     Task SaveScanAndShareDetailsAsync(ProfileShareV3Request profileShareV3Request, object onShareV3Request);
     Task SaveConsentRequestAsync(InitConsentRequest request, RequestStatus status);
     Task<RequestLog?> FindByClientRequestIdAsync(string clientRequestId);
+    Task SaveResponseDetailsAsync(string transactionId, BsonDocument responseDetails);
+    Task SaveHiuHealthInformationRequestAsync(string clientRequestId, string consentId, string entityType, string hiuId, string status, BsonDocument requestDetails);
 }

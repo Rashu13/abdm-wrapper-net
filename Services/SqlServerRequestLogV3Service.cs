@@ -555,4 +555,37 @@ public class SqlServerRequestLogV3Service : IRequestLogV3Service
         return await _context.RequestLogs
             .FirstOrDefaultAsync(r => r.ClientRequestId == clientRequestId);
     }
+
+    public async Task SaveResponseDetailsAsync(string transactionId, BsonDocument responseDetails)
+    {
+        var log = await _context.RequestLogs
+            .FirstOrDefaultAsync(r => r.TransactionId == transactionId);
+        if (log != null)
+        {
+            log.ResponseDetails = responseDetails;
+            log.LastUpdated = DateTime.UtcNow;
+            _context.RequestLogs.Update(log);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task SaveHiuHealthInformationRequestAsync(string clientRequestId, string consentId, string entityType, string hiuId, string status, BsonDocument requestDetails)
+    {
+        var log = new RequestLog
+        {
+            Module = "HIU_HEALTH_INFORMATION",
+            ClientRequestId = clientRequestId,
+            GatewayRequestId = clientRequestId,
+            ConsentId = consentId,
+            EntityType = entityType,
+            HipId = hiuId,
+            Status = status,
+            CreatedOn = DateTime.UtcNow,
+            LastUpdated = DateTime.UtcNow,
+            RequestDetails = requestDetails
+        };
+
+        await _context.RequestLogs.AddAsync(log);
+        await _context.SaveChangesAsync();
+    }
 }

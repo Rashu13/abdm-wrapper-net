@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using AbdmWrapperNet.Common;
 using AbdmWrapperNet.Configuration;
 using AbdmWrapperNet.Models;
+using MongoDB.Bson;
 
 namespace AbdmWrapperNet.Services;
 
@@ -73,6 +74,21 @@ public class HIUHealthInformationV3Service
             var hiuKeys = cryptoService.GenerateKeys();
             // keyValue = raw uncompressed EC point (65 bytes base64)
             // Java's CipherKeyManager.getEncodedPublicKey() = ecKey.getQ().getEncoded(false) = raw point
+
+            // Save key material in request details log so we can decrypt pushed data later
+            var requestLogDetails = new BsonDocument
+            {
+                { "privateKey", hiuKeys.PrivateKey },
+                { "publicKey", hiuKeys.PublicKey },
+                { "nonce", hiuKeys.Nonce }
+            };
+            await _requestLogService.SaveHiuHealthInformationRequestAsync(
+                clientRequest.RequestId,
+                clientRequest.ConsentId,
+                "HIU",
+                hiuId,
+                RequestStatus.INITIATING.ToString(),
+                requestLogDetails);
 
             string dataPushUrl = _config.HiuSetup?.DataPushUrl ?? string.Empty;
             if (string.IsNullOrEmpty(dataPushUrl) || dataPushUrl.Contains("localhost") || dataPushUrl.Contains("127.0.0.1") || !dataPushUrl.StartsWith("https://"))
@@ -161,8 +177,18 @@ public class HIUHealthInformationV3Service
     {
         try
         {
+            var log = await _requestLogService.FindByClientRequestIdAsync(requestId);
+            if (log == null)
+            {
+                return new HealthInformationV3Response
+                {
+                    Errors = new List<ErrorV3Response> { new() { Error = new ErrorResponse { Code = "1000", Message = $"Request not found in database for: {requestId}" } } },
+                    HttpStatusCode = 404
+                };
+            }
+
             var statusResponse = await _requestLogService.GetStatusAsync(requestId);
-            return new HealthInformationV3Response
+            var response = new HealthInformationV3Response
             {
                 Status = statusResponse.Status,
                 Errors = statusResponse.Errors != null
@@ -170,6 +196,70 @@ public class HIUHealthInformationV3Service
                     : null,
                 HttpStatusCode = statusResponse.Errors != null ? 400 : 200
             };
+
+            // Check if we have received encrypted health data
+            if (log.ResponseDetails != null && log.ResponseDetails.Contains("entries"))
+            {
+                var pushRequestJson = log.ResponseDetails.ToString();
+                var pushRequest = System.Text.Json.JsonSerializer.Deserialize<HealthInformationPushRequest>(pushRequestJson);
+
+                if (pushRequest != null && pushRequest.Entries != null && pushRequest.KeyMaterial != null)
+                {
+                    string? hiuPrivateKey = null;
+                    string? hiuNonce = null;
+                    if (log.RequestDetails != null)
+                    {
+                        if (log.RequestDetails.Contains("privateKey")) hiuPrivateKey = log.RequestDetails["privateKey"].AsString;
+                        if (log.RequestDetails.Contains("nonce")) hiuNonce = log.RequestDetails["nonce"].AsString;
+                    }
+
+                    string? hipPublicKey = pushRequest.KeyMaterial.DhPublicKey?.KeyValue;
+                    string? hipNonce = pushRequest.KeyMaterial.Nonce;
+
+                    if (!string.IsNullOrEmpty(hiuPrivateKey) && !string.IsNullOrEmpty(hiuNonce) &&
+                        !string.IsNullOrEmpty(hipPublicKey) && !string.IsNullOrEmpty(hipNonce))
+                    {
+                        var cryptoService = new CryptographyService(Microsoft.Extensions.Logging.Abstractions.NullLogger<CryptographyService>.Instance);
+                        var decryptedEntries = new List<DecryptedEntry>();
+
+                        foreach (var entry in pushRequest.Entries)
+                        {
+                            try
+                            {
+                                var decryptedContent = cryptoService.Decrypt(hipNonce, hiuNonce, hiuPrivateKey, hipPublicKey, entry.Content);
+                                
+                                object? fhirBundleObj = null;
+                                try
+                                {
+                                    fhirBundleObj = System.Text.Json.JsonSerializer.Deserialize<object>(decryptedContent);
+                                }
+                                catch
+                                {
+                                    fhirBundleObj = decryptedContent;
+                                }
+
+                                decryptedEntries.Add(new DecryptedEntry
+                                {
+                                    CareContextReference = entry.CareContextReference,
+                                    FhirBundle = fhirBundleObj
+                                });
+                            }
+                            catch (Exception dex)
+                            {
+                                _logger.LogError(dex, $"Failed to decrypt entry for CareContext: {entry.CareContextReference}");
+                            }
+                        }
+
+                        response.DecryptedHealthInformation = decryptedEntries;
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Decryption keys or nonces missing for requestId: {requestId}");
+                    }
+                }
+            }
+
+            return response;
         }
         catch (Exception ex)
         {
@@ -231,6 +321,11 @@ public class HIUHealthInformationV3Service
         {
             return new GenericV3Response { HttpStatus = "BadRequest", Status = "Error", Message = "Transaction ID not found" };
         }
+
+        // Save the pushed encrypted health data into ResponseDetails
+        var jsonStr = System.Text.Json.JsonSerializer.Serialize(pushRequest);
+        var bsonDoc = BsonDocument.Parse(jsonStr);
+        await _requestLogService.SaveResponseDetailsAsync(pushRequest.TransactionId, bsonDoc);
 
         // Update status to indicate data received
         await _requestLogService.UpdateStatusAsync(

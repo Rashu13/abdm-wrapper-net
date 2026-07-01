@@ -548,4 +548,32 @@ public class RequestLogV3Service : IRequestLogV3Service
         var filter = Builders<RequestLog>.Filter.Eq(r => r.ClientRequestId, clientRequestId);
         return await _context.RequestLogs.Find(filter).FirstOrDefaultAsync();
     }
+
+    public async Task SaveResponseDetailsAsync(string transactionId, BsonDocument responseDetails)
+    {
+        var filter = Builders<RequestLog>.Filter.Eq(r => r.TransactionId, transactionId);
+        var update = Builders<RequestLog>.Update
+            .Set(r => r.ResponseDetails, responseDetails)
+            .Set(r => r.LastUpdated, DateTime.UtcNow);
+        await _context.RequestLogs.UpdateOneAsync(filter, update);
+    }
+
+    public async Task SaveHiuHealthInformationRequestAsync(string clientRequestId, string consentId, string entityType, string hiuId, string status, BsonDocument requestDetails)
+    {
+        var log = new RequestLog
+        {
+            Module = "HIU_HEALTH_INFORMATION",
+            ClientRequestId = clientRequestId,
+            GatewayRequestId = clientRequestId,
+            ConsentId = consentId,
+            EntityType = entityType,
+            HipId = hiuId,
+            Status = status,
+            CreatedOn = DateTime.UtcNow,
+            LastUpdated = DateTime.UtcNow,
+            RequestDetails = requestDetails
+        };
+
+        await _context.RequestLogs.InsertOneAsync(log);
+    }
 }
