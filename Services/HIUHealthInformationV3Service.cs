@@ -105,7 +105,7 @@ public class HIUHealthInformationV3Service
             };
 
             var response = await _gatewayClient.PostToGatewayAsync(
-                _config.HiuSetup?.HealthInformationRequestPath ?? "api/v3/health-information/request",
+                _config.Gateway?.HealthInformationConsentManagerPath ?? "api/v3/health-information/request",
                 gatewayRequest, headers);
 
             bool success = response?.HttpStatus is "OK" or "Accepted"
@@ -257,7 +257,7 @@ public class HIUHealthInformationV3Service
 
             var notification = new { notification = statusNotification };
             await _gatewayClient.PostToGatewayAsync(
-                _config.HiuSetup?.HealthInformationPushNotificationPath ?? "api/v3/health-information/notify",
+                _config.Gateway?.HealthInformationPushNotificationPath ?? "api/v3/health-information/notify",
                 notification,
                 new Dictionary<string, string>
                 {

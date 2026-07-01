@@ -57,7 +57,7 @@ public class HIUConsentV3Service
             };
 
             var response = await _gatewayClient.PostToGatewayAsync(
-                _config.HiuSetup?.ConsentInitPath ?? "api/v3/consent/request/init",
+                _config.Gateway?.ConsentInitPath ?? "api/v3/consent/request/init",
                 request, headers);
 
             bool success = response?.HttpStatus?.StartsWith("2") == true
@@ -283,7 +283,7 @@ public class HIUConsentV3Service
         };
 
         await _gatewayClient.PostToGatewayAsync(
-            _config.HiuSetup?.ConsentOnNotifyPath ?? "api/v3/hiu/consent/request/on-notify",
+            _config.Gateway?.ConsentHiuOnNotifyPath ?? "api/v3/hiu/consent/request/on-notify",
             onNotifyReq,
             new Dictionary<string, string>
             {
@@ -348,7 +348,7 @@ public class HIUConsentV3Service
         {
             var fetchRequest = new { consentId };
             await _gatewayClient.PostToGatewayAsync(
-                _config.HiuSetup?.FetchConsentPath ?? "api/v3/consent/fetch",
+                _config.Gateway?.FetchConsentPath ?? "api/v3/consent/fetch",
                 fetchRequest,
                 new Dictionary<string, string>
                 {
