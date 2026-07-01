@@ -74,6 +74,12 @@ public class HIUHealthInformationV3Service
             // keyValue = raw uncompressed EC point (65 bytes base64)
             // Java's CipherKeyManager.getEncodedPublicKey() = ecKey.getQ().getEncoded(false) = raw point
 
+            string dataPushUrl = _config.HiuSetup?.DataPushUrl ?? string.Empty;
+            if (string.IsNullOrEmpty(dataPushUrl) || dataPushUrl.Contains("localhost") || dataPushUrl.Contains("127.0.0.1") || !dataPushUrl.StartsWith("https://"))
+            {
+                dataPushUrl = "https://sbx.wati.digital/v3/hiu/health-information/transfer";
+            }
+
             var gatewayRequest = new
             {
                 requestId = clientRequest.RequestId,
@@ -86,7 +92,7 @@ public class HIUHealthInformationV3Service
                         from = clientRequest.DateRange?.From ?? "2020-01-01T00:00:00.000Z", 
                         to = clientRequest.DateRange?.To ?? Utils.GetCurrentTimeStamp() 
                     },
-                    dataPushUrl = _config.HiuSetup?.DataPushUrl ?? string.Empty,
+                    dataPushUrl = dataPushUrl,
                     keyMaterial = new
                     {
                         cryptoAlg = "ECDH",
