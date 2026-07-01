@@ -49,7 +49,12 @@ public class HIUHealthInformationV3Service
     {
         try
         {
-            _logger.LogInformation($"Initiating health information request for consent: {clientRequest.ConsentId}");
+            if (string.IsNullOrEmpty(hiuId))
+            {
+                hiuId = !string.IsNullOrEmpty(_config.HiuSetup?.HiuId) ? _config.HiuSetup.HiuId : _config.HipId;
+            }
+
+            _logger.LogInformation($"Initiating health information request for consent: {clientRequest.ConsentId} with HIU-ID: {hiuId}");
 
             // Validate consent exists for this HIU
             var consentMapping = await _consentPatientService.FindMappingByConsentIdAsync(

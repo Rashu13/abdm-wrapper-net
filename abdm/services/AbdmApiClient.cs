@@ -369,6 +369,11 @@ namespace ABDM.Api
                         cleanUserToken = cleanUserToken.Substring(7).Trim();
                     requestMessage.Headers.TryAddWithoutValidation("X-Token", "Bearer " + cleanUserToken);
                 }
+                if (!string.IsNullOrEmpty(_cfg.HipId))
+                {
+                    requestMessage.Headers.TryAddWithoutValidation("X-HIU-ID", _cfg.HipId);
+                    requestMessage.Headers.TryAddWithoutValidation("X-HIP-ID", _cfg.HipId);
+                }
                 var resp = await _http.SendAsync(requestMessage);
                 var body = await resp.Content.ReadAsStringAsync();
                 LastRawResponse = body;
@@ -392,6 +397,11 @@ namespace ABDM.Api
                         cleanUserToken = cleanUserToken.Substring(7).Trim();
                     requestMessage.Headers.TryAddWithoutValidation("X-Token", "Bearer " + cleanUserToken);
                 }
+                if (!string.IsNullOrEmpty(_cfg.HipId))
+                {
+                    requestMessage.Headers.TryAddWithoutValidation("X-HIU-ID", _cfg.HipId);
+                    requestMessage.Headers.TryAddWithoutValidation("X-HIP-ID", _cfg.HipId);
+                }
                 var resp = await _http.SendAsync(requestMessage);
                 var body = await resp.Content.ReadAsStringAsync();
                 LastRawResponse = body;
@@ -413,6 +423,11 @@ namespace ABDM.Api
                     if (cleanUserToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
                         cleanUserToken = cleanUserToken.Substring(7).Trim();
                     requestMessage.Headers.TryAddWithoutValidation("X-Token", "Bearer " + cleanUserToken);
+                }
+                if (!string.IsNullOrEmpty(_cfg.HipId))
+                {
+                    requestMessage.Headers.TryAddWithoutValidation("X-HIU-ID", _cfg.HipId);
+                    requestMessage.Headers.TryAddWithoutValidation("X-HIP-ID", _cfg.HipId);
                 }
                 var resp = await _http.SendAsync(requestMessage);
                 if (resp.Content.Headers.ContentType?.MediaType == "image/png" || path.Contains("/card"))
