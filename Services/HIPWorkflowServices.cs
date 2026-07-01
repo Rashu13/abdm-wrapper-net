@@ -244,8 +244,7 @@ public class HIPHealthInformationV3Service : IHIPHealthInformationV3Service
 
             if (!healthInformationBundles.Any())
             {
-                _logger.LogWarning("No FHIR bundles could be generated. Aborting push.");
-                return;
+                _logger.LogWarning("No FHIR bundles could be generated. Proceeding to push empty entries to complete transaction.");
             }
 
             // 3. Encrypt bundles using keyMaterial from the request
