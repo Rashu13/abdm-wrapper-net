@@ -34,6 +34,14 @@ public class SqlServerRequestLogV3Service : IRequestLogV3Service
         return BsonSerializer.Deserialize<BsonDocument>(json);
     }
 
+    private BsonValue ToBsonValue(object? obj)
+    {
+        if (obj == null) return BsonNull.Value;
+        if (obj is BsonValue value) return value;
+        var json = JsonSerializer.Serialize(obj);
+        return BsonSerializer.Deserialize<BsonValue>(json);
+    }
+
     public async Task UpdateConsentStatusAsync(string requestId, RequestStatus status)
     {
         var log = await _context.RequestLogs
@@ -135,7 +143,7 @@ public class SqlServerRequestLogV3Service : IRequestLogV3Service
         log.LastUpdated = DateTime.UtcNow;
 
         var requestDetails = log.RequestDetails ?? new BsonDocument();
-        requestDetails["consentDetails"] = ToBsonDocument(consentDetails);
+        requestDetails["consentDetails"] = ToBsonValue(consentDetails);
         log.RequestDetails = requestDetails;
 
         _context.RequestLogs.Update(log);
@@ -540,5 +548,11 @@ public class SqlServerRequestLogV3Service : IRequestLogV3Service
 
         await _context.RequestLogs.AddAsync(log);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<RequestLog?> FindByClientRequestIdAsync(string clientRequestId)
+    {
+        return await _context.RequestLogs
+            .FirstOrDefaultAsync(r => r.ClientRequestId == clientRequestId);
     }
 }

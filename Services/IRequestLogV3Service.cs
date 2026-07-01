@@ -32,4 +32,5 @@ public interface IRequestLogV3Service
     Task<RequestLog?> GetLogsByAbhaAddressAsync(string abhaAddress, string hipId);
     Task SaveScanAndShareDetailsAsync(ProfileShareV3Request profileShareV3Request, object onShareV3Request);
     Task SaveConsentRequestAsync(InitConsentRequest request, RequestStatus status);
+    Task<RequestLog?> FindByClientRequestIdAsync(string clientRequestId);
 }

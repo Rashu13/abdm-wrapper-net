@@ -114,9 +114,31 @@ public class HIUConsentV3Service
         try
         {
             var statusResponse = await _requestLogService.GetStatusAsync(clientRequestId);
+            var log = await _requestLogService.FindByClientRequestIdAsync(clientRequestId);
+
+            FacadeConsentDetails? consentDetails = null;
+            if (log != null && !string.IsNullOrEmpty(log.ConsentId))
+            {
+                consentDetails = new FacadeConsentDetails
+                {
+                    Consent = new List<ConsentStatus>
+                    {
+                        new ConsentStatus
+                        {
+                            Status = log.Status,
+                            ConsentArtefacts = new List<ConsentArtefact>
+                            {
+                                new ConsentArtefact { Id = log.ConsentId }
+                            }
+                        }
+                    }
+                };
+            }
+
             return new ConsentStatusV3Response
             {
                 Status = statusResponse.Status,
+                ConsentDetails = consentDetails,
                 Errors = statusResponse.Errors != null
                     ? statusResponse.Errors.ConvertAll(e => new ErrorV3Response { Error = e })
                     : null,

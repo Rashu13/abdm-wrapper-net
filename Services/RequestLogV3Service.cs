@@ -542,4 +542,10 @@ public class RequestLogV3Service : IRequestLogV3Service
 
         await _context.RequestLogs.InsertOneAsync(requestLog);
     }
+
+    public async Task<RequestLog?> FindByClientRequestIdAsync(string clientRequestId)
+    {
+        var filter = Builders<RequestLog>.Filter.Eq(r => r.ClientRequestId, clientRequestId);
+        return await _context.RequestLogs.Find(filter).FirstOrDefaultAsync();
+    }
 }
