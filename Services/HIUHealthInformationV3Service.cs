@@ -342,12 +342,17 @@ public class HIUHealthInformationV3Service
     {
         try
         {
+            if (string.IsNullOrEmpty(hiuId))
+            {
+                hiuId = !string.IsNullOrEmpty(_config.HiuSetup?.HiuId) ? _config.HiuSetup.HiuId : _config.HipId;
+            }
+
             var statusNotification = new
             {
                 consentId,
                 transactionId = pushRequest.TransactionId,
                 doneAt = Utils.GetCurrentTimeStamp(),
-                notifier = new { type = "HIU", id = hiuId },
+                notifier = new { type = "HIU", id = hiuId ?? "IN0610090658" },
                 statusNotification = new
                 {
                     sessionStatus = "TRANSFERRED",
