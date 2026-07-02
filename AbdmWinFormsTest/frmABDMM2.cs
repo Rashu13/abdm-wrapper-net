@@ -462,33 +462,146 @@ namespace HMS.abdm
 
                                 if (rec.ContainsKey("fhirBundle") && rec["fhirBundle"] is System.Collections.Generic.Dictionary<string, object> bundle)
                                 {
-                                    string bType = bundle.ContainsKey("bundleType") ? bundle["bundleType"]?.ToString() : "Unknown";
-                                    txtLog.AppendText($"Record Type: {bType}\n");
-
-                                    if (bundle.ContainsKey("clinicalNotes") && bundle["clinicalNotes"] != null)
+                                    // Check if it's a standard FHIR Bundle
+                                    if (bundle.ContainsKey("resourceType") && bundle["resourceType"]?.ToString() == "Bundle" && bundle.ContainsKey("entry") && bundle["entry"] is System.Collections.Generic.List<object> entries)
                                     {
-                                        txtLog.AppendText($"Clinical Notes: {bundle["clinicalNotes"]}\n");
-                                    }
-
-                                    if (bundle.ContainsKey("prescriptions") && bundle["prescriptions"] is System.Collections.Generic.List<object> meds)
-                                    {
-                                        txtLog.AppendText("Prescribed Medications:\n");
-                                        foreach (System.Collections.Generic.Dictionary<string, object> med in meds)
+                                        txtLog.AppendText("FHIR Bundle Contents:\n");
+                                        
+                                        foreach (var eObj in entries)
                                         {
-                                            string mName = med.ContainsKey("medicine") ? med["medicine"]?.ToString() : "";
-                                            string mDose = med.ContainsKey("dosage") ? med["dosage"]?.ToString() : "";
-                                            txtLog.AppendText($"  - {mName} ({mDose})\n");
+                                            if (eObj is System.Collections.Generic.Dictionary<string, object> entry && entry.ContainsKey("resource") && entry["resource"] is System.Collections.Generic.Dictionary<string, object> res)
+                                            {
+                                                string rType = res.ContainsKey("resourceType") ? res["resourceType"]?.ToString() : "";
+                                                
+                                                if (rType == "Composition")
+                                                {
+                                                    string title = "Clinical Document";
+                                                    if (res.ContainsKey("type") && res["type"] is System.Collections.Generic.Dictionary<string, object> tDict && tDict.ContainsKey("text"))
+                                                    {
+                                                        title = tDict["text"]?.ToString();
+                                                    }
+                                                    txtLog.AppendText($"  - Document Type: {title}\n");
+                                                }
+                                                else if (rType == "Practitioner")
+                                                {
+                                                    if (res.ContainsKey("name") && res["name"] is System.Collections.Generic.List<object> nList && nList.Count > 0 && nList[0] is System.Collections.Generic.Dictionary<string, object> nDict && nDict.ContainsKey("text"))
+                                                    {
+                                                        txtLog.AppendText($"  - Doctor: {nDict["text"]}\n");
+                                                    }
+                                                }
+                                                else if (rType == "MedicationRequest")
+                                                {
+                                                    string med = "Unknown Medication";
+                                                    if (res.ContainsKey("medicationCodeableConcept") && res["medicationCodeableConcept"] is System.Collections.Generic.Dictionary<string, object> mDict && mDict.ContainsKey("text"))
+                                                    {
+                                                        med = mDict["text"]?.ToString();
+                                                    }
+                                                    txtLog.AppendText($"  - Prescribed: {med}\n");
+                                                }
+                                                else if (rType == "Condition")
+                                                {
+                                                    string cond = "Unknown Condition";
+                                                    if (res.ContainsKey("code") && res["code"] is System.Collections.Generic.Dictionary<string, object> cDict && cDict.ContainsKey("text"))
+                                                    {
+                                                        cond = cDict["text"]?.ToString();
+                                                    }
+                                                    txtLog.AppendText($"  - Condition/Symptom: {cond}\n");
+                                                }
+                                                else if (rType == "DiagnosticReport")
+                                                {
+                                                    txtLog.AppendText($"  - Diagnostic Report Attached\n");
+                                                }
+                                                else if (rType == "DocumentReference")
+                                                {
+                                                    txtLog.AppendText($"  - Attachment: PDF/Image Document (Data hidden)\n");
+                                                    try
+                                                    {
+                                                        if (res.ContainsKey("content") && res["content"] is System.Collections.Generic.List<object> cList && cList.Count > 0)
+                                                        {
+                                                            if (cList[0] is System.Collections.Generic.Dictionary<string, object> cDict && cDict.ContainsKey("attachment") && cDict["attachment"] is System.Collections.Generic.Dictionary<string, object> att)
+                                                            {
+                                                                if (att.ContainsKey("data") && att["data"] != null)
+                                                                {
+                                                                    string base64 = att["data"].ToString();
+                                                                    string ext = ".pdf";
+                                                                    if (att.ContainsKey("contentType") && att["contentType"] != null)
+                                                                    {
+                                                                        string cType = att["contentType"].ToString().ToLower();
+                                                                        if (cType.Contains("jpeg") || cType.Contains("jpg")) ext = ".jpg";
+                                                                        else if (cType.Contains("png")) ext = ".png";
+                                                                    }
+                                                                    
+                                                                    byte[] fileBytes = Convert.FromBase64String(base64);
+                                                                    string tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"ABDM_Doc_{Guid.NewGuid().ToString().Substring(0, 8)}{ext}");
+                                                                    System.IO.File.WriteAllBytes(tempFile, fileBytes);
+                                                                    
+                                                                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                                                                    {
+                                                                        FileName = tempFile,
+                                                                        UseShellExecute = true
+                                                                    });
+                                                                    txtLog.AppendText($"    -> Opened attachment automatically: {System.IO.Path.GetFileName(tempFile)}\n");
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    catch (Exception ex)
+                                                    {
+                                                        txtLog.AppendText($"    -> Failed to open attachment: {ex.Message}\n");
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
-                                    
-                                    if (bundle.ContainsKey("documents") && bundle["documents"] is System.Collections.Generic.List<object> docs)
+                                    else
                                     {
-                                        txtLog.AppendText($"Attached Documents: {docs.Count} file(s). (Base64 PDF data omitted for readability)\n");
+                                        // Fallback to old format if it's not a strict FHIR bundle
+                                        string bType = bundle.ContainsKey("bundleType") ? bundle["bundleType"]?.ToString() : "Unknown";
+                                        txtLog.AppendText($"Record Type: {bType}\n");
+                                        if (bundle.ContainsKey("clinicalNotes") && bundle["clinicalNotes"] != null)
+                                            txtLog.AppendText($"Clinical Notes: {bundle["clinicalNotes"]}\n");
+                                        if (bundle.ContainsKey("prescriptions") && bundle["prescriptions"] is System.Collections.Generic.List<object> meds)
+                                        {
+                                            txtLog.AppendText("Prescribed Medications:\n");
+                                            foreach (System.Collections.Generic.Dictionary<string, object> med in meds)
+                                            {
+                                                string mName = med.ContainsKey("medicine") ? med["medicine"]?.ToString() : "";
+                                                string mDose = med.ContainsKey("dosage") ? med["dosage"]?.ToString() : "";
+                                                txtLog.AppendText($"  - {mName} ({mDose})\n");
+                                            }
+                                        }
+                                        if (bundle.ContainsKey("documents") && bundle["documents"] is System.Collections.Generic.List<object> docs)
+                                        {
+                                            txtLog.AppendText($"Attached Documents: {docs.Count} file(s). (Base64 PDF data omitted for readability)\n");
+                                            foreach (var dObj in docs)
+                                            {
+                                                try
+                                                {
+                                                    if (dObj is System.Collections.Generic.Dictionary<string, object> dDict && dDict.ContainsKey("data") && dDict["data"] != null)
+                                                    {
+                                                        string base64 = dDict["data"].ToString();
+                                                        byte[] pdfBytes = Convert.FromBase64String(base64);
+                                                        string tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"ABDM_Doc_{Guid.NewGuid().ToString().Substring(0, 8)}.pdf");
+                                                        System.IO.File.WriteAllBytes(tempFile, pdfBytes);
+                                                        
+                                                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                                                        {
+                                                            FileName = tempFile,
+                                                            UseShellExecute = true
+                                                        });
+                                                    }
+                                                }
+                                                catch { /* ignore errors */ }
+                                            }
+                                        }
                                     }
                                 }
                                 txtLog.AppendText("\n");
                             }
-                            txtLog.AppendText("Raw JSON below:\n" + FormatJson(resp.Data));
+                            
+                            // Hide large base64 strings in the raw JSON output for readability
+                            string rawJsonToDisplay = System.Text.RegularExpressions.Regex.Replace(resp.Data, "\"data\"\\s*:\\s*\"[A-Za-z0-9+/=]{100,}\"", "\"data\": \"[BASE64_DATA_HIDDEN]\"");
+                            txtLog.AppendText("Raw JSON below:\n" + FormatJson(rawJsonToDisplay));
                         }
                         else
                         {

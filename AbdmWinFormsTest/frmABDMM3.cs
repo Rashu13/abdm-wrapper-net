@@ -425,6 +425,41 @@ namespace HMS.abdm
                                                 else if (rType == "DocumentReference")
                                                 {
                                                     txtLog.AppendText($"  - Attachment: PDF/Image Document (Data hidden)\n");
+                                                    try
+                                                    {
+                                                        if (res.ContainsKey("content") && res["content"] is System.Collections.Generic.List<object> cList && cList.Count > 0)
+                                                        {
+                                                            if (cList[0] is System.Collections.Generic.Dictionary<string, object> cDict && cDict.ContainsKey("attachment") && cDict["attachment"] is System.Collections.Generic.Dictionary<string, object> att)
+                                                            {
+                                                                if (att.ContainsKey("data") && att["data"] != null)
+                                                                {
+                                                                    string base64 = att["data"].ToString();
+                                                                    string ext = ".pdf";
+                                                                    if (att.ContainsKey("contentType") && att["contentType"] != null)
+                                                                    {
+                                                                        string cType = att["contentType"].ToString().ToLower();
+                                                                        if (cType.Contains("jpeg") || cType.Contains("jpg")) ext = ".jpg";
+                                                                        else if (cType.Contains("png")) ext = ".png";
+                                                                    }
+                                                                    
+                                                                    byte[] fileBytes = Convert.FromBase64String(base64);
+                                                                    string tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"ABDM_Doc_{Guid.NewGuid().ToString().Substring(0, 8)}{ext}");
+                                                                    System.IO.File.WriteAllBytes(tempFile, fileBytes);
+                                                                    
+                                                                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                                                                    {
+                                                                        FileName = tempFile,
+                                                                        UseShellExecute = true
+                                                                    });
+                                                                    txtLog.AppendText($"    -> Opened attachment automatically: {System.IO.Path.GetFileName(tempFile)}\n");
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    catch (Exception ex)
+                                                    {
+                                                        txtLog.AppendText($"    -> Failed to open attachment: {ex.Message}\n");
+                                                    }
                                                 }
                                             }
                                         }
@@ -435,7 +470,7 @@ namespace HMS.abdm
                                         string bType = bundle.ContainsKey("bundleType") ? bundle["bundleType"]?.ToString() : "Unknown";
                                         txtLog.AppendText($"Record Type: {bType}\n");
                                         if (bundle.ContainsKey("clinicalNotes") && bundle["clinicalNotes"] != null)
-                                            txtLog.AppendText($"Clinical Notes: {bundle["clinicalNotes"]}\n");
+                                            txtLog.AppendText($"ClinicalNotes: {bundle["clinicalNotes"]}\n");
                                         if (bundle.ContainsKey("prescriptions") && bundle["prescriptions"] is System.Collections.Generic.List<object> meds)
                                         {
                                             txtLog.AppendText("Prescribed Medications:\n");
@@ -447,7 +482,29 @@ namespace HMS.abdm
                                             }
                                         }
                                         if (bundle.ContainsKey("documents") && bundle["documents"] is System.Collections.Generic.List<object> docs)
+                                        {
                                             txtLog.AppendText($"Attached Documents: {docs.Count} file(s). (Base64 PDF data omitted for readability)\n");
+                                            foreach (var dObj in docs)
+                                            {
+                                                try
+                                                {
+                                                    if (dObj is System.Collections.Generic.Dictionary<string, object> dDict && dDict.ContainsKey("data") && dDict["data"] != null)
+                                                    {
+                                                        string base64 = dDict["data"].ToString();
+                                                        byte[] pdfBytes = Convert.FromBase64String(base64);
+                                                        string tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"ABDM_Doc_{Guid.NewGuid().ToString().Substring(0, 8)}.pdf");
+                                                        System.IO.File.WriteAllBytes(tempFile, pdfBytes);
+                                                        
+                                                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                                                        {
+                                                            FileName = tempFile,
+                                                            UseShellExecute = true
+                                                        });
+                                                    }
+                                                }
+                                                catch { /* ignore errors */ }
+                                            }
+                                        }
                                     }
                                 }
                                 txtLog.AppendText("\n");
