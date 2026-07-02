@@ -290,6 +290,8 @@ public class HIUConsentV3Service
     /// </summary>
     public async Task<int> HiuNotifyAsync(NotifyHIURequest request, string hiuId, string incomingRequestId)
     {
+        _logger.LogInformation($"HiuNotifyAsync raw request: {System.Text.Json.JsonSerializer.Serialize(request)}");
+
         if (request?.Notification == null || request.Error != null)
         {
             if (request?.Error != null && request.Notification != null)
@@ -299,12 +301,12 @@ public class HIUConsentV3Service
                 if (gwReqId != null)
                 {
                     await _requestLogService.UpdateErrorAsync(gwReqId,
-                        new List<ErrorV3Response> { new() { Error = new ErrorResponse { Code = "1000", Message = "HIU Notify error" } } },
+                        new List<ErrorV3Response> { new() { Error = request.Error } },
                         RequestStatus.CONSENT_NOTIFY_ERROR);
                 }
             }
 
-            _logger.LogError("Something went wrong while executing hiu notify");
+            _logger.LogError($"Something went wrong while executing hiu notify. Notification is null: {request?.Notification == null}. Error is null: {request?.Error == null}");
             return 400;
         }
 

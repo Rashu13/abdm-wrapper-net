@@ -289,10 +289,13 @@ namespace HMS.abdm
                 return;
             }
 
+            var autoPilotRes = MessageBox.Show("Do you want to run the entire flow in Auto-Pilot mode?\n\n(It will wait for you to approve on the ABHA app, then automatically fetch and show the records!)", "1-Click Auto Fetch", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            bool isAutoPilot = (autoPilotRes == DialogResult.Yes);
+
             try
             {
                 btnRequestConsent.Enabled = false;
-                btnRequestConsent.Text = "Requesting...";
+                btnRequestConsent.Text = "Requesting Consent...";
 
                 var hiTypes = new List<string>
                 {
@@ -317,14 +320,173 @@ namespace HMS.abdm
                 ShowResult(resp.Success, resp.Message, resp.Data);
 
                 // Auto-fill Consent Request ID
+                string reqId = "";
                 if (resp.Success && !string.IsNullOrEmpty(resp.Data))
                 {
                     var dict = SimpleJson.Deserialize(resp.Data);
                     if (dict.ContainsKey("clientRequestId"))
                     {
-                        txtHiuConsentReqId.Text = dict["clientRequestId"]?.ToString() ?? "";
+                        reqId = dict["clientRequestId"]?.ToString() ?? "";
+                        txtHiuConsentReqId.Text = reqId;
                     }
                 }
+
+                if (!isAutoPilot) return;
+                if (string.IsNullOrEmpty(reqId))
+                {
+                    txtLog.AppendText("\nAuto-Pilot aborted: Could not get Consent Request ID.\n");
+                    return;
+                }
+
+                txtLog.AppendText("\n========================================\n");
+                txtLog.AppendText("🚀 AUTO-PILOT ACTIVATED 🚀\n");
+                txtLog.AppendText("========================================\n\n");
+
+                // --- PHASE 1: Wait for Consent Approval ---
+                string consentId = "";
+                bool isGranted = false;
+                int attempts = 0;
+                
+                txtLog.SelectionColor = Color.Blue;
+                txtLog.AppendText("⏳ Waiting for patient to APPROVE consent on ABHA App...\n");
+                txtLog.SelectionColor = Color.Black;
+
+                while (attempts < 60) // 5 minutes max (60 * 5s)
+                {
+                    await Task.Delay(5000); // poll every 5 seconds
+                    attempts++;
+                    
+                    var statusResp = await _client.GetConsentStatusAsync(reqId);
+                    if (statusResp.Success && !string.IsNullOrEmpty(statusResp.Data))
+                    {
+                        var dict = SimpleJson.Deserialize(statusResp.Data);
+                        string status = dict.ContainsKey("status") ? dict["status"]?.ToString() ?? "" : "";
+                        
+                        if (status.IndexOf("GRANTED", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            isGranted = true;
+                            // Extract Consent ID
+                            if (dict.ContainsKey("consentDetails") && dict["consentDetails"] is Dictionary<string, object> cDetails)
+                            {
+                                if (cDetails.ContainsKey("consent") && cDetails["consent"] is List<object> cList && cList.Count > 0)
+                                {
+                                    if (cList[0] is Dictionary<string, object> cObj && cObj.ContainsKey("consentArtefacts") && cObj["consentArtefacts"] is List<object> aList && aList.Count > 0)
+                                    {
+                                        if (aList[0] is Dictionary<string, object> aObj && aObj.ContainsKey("id"))
+                                        {
+                                            consentId = aObj["id"]?.ToString() ?? "";
+                                            txtHiuConsentId.Text = consentId;
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                        else if (status.IndexOf("DENIED", StringComparison.OrdinalIgnoreCase) >= 0 || status.IndexOf("REVOKED", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            txtLog.SelectionColor = Color.Red;
+                            txtLog.AppendText($"❌ Consent was {status} by the patient. Auto-Pilot aborted.\n");
+                            txtLog.SelectionColor = Color.Black;
+                            return;
+                        }
+                    }
+                }
+
+                if (!isGranted || string.IsNullOrEmpty(consentId))
+                {
+                    txtLog.SelectionColor = Color.Red;
+                    txtLog.AppendText("❌ Timeout waiting for consent approval. Auto-Pilot aborted.\n");
+                    txtLog.SelectionColor = Color.Black;
+                    return;
+                }
+
+                txtLog.SelectionColor = Color.DarkGreen;
+                txtLog.AppendText($"✅ Consent GRANTED! (Consent ID: {consentId})\n\n");
+                txtLog.SelectionColor = Color.Black;
+
+                // --- PHASE 2: Auto Fetch Health Records ---
+                txtLog.SelectionColor = Color.Blue;
+                txtLog.AppendText("⚡ Automatically requesting Health Records...\n");
+                txtLog.SelectionColor = Color.Black;
+                
+                var fetchResp = await _client.FetchHealthInformationAsync(
+                    consentId,
+                    txtHiuDateFrom.Text.Trim(),
+                    txtHiuDateTo.Text.Trim()
+                );
+                
+                string txnReqId = "";
+                if (fetchResp.Success && !string.IsNullOrEmpty(fetchResp.Data))
+                {
+                    var dict = SimpleJson.Deserialize(fetchResp.Data);
+                    if (dict.ContainsKey("clientRequestId"))
+                    {
+                        txnReqId = dict["clientRequestId"]?.ToString() ?? "";
+                        txtHiuTxnId.Text = txnReqId;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(txnReqId))
+                {
+                    txtLog.SelectionColor = Color.Red;
+                    txtLog.AppendText("❌ Failed to initiate fetch request. Auto-Pilot aborted.\n");
+                    txtLog.SelectionColor = Color.Black;
+                    return;
+                }
+
+                // --- PHASE 3: Wait for Data Push ---
+                txtLog.SelectionColor = Color.Blue;
+                txtLog.AppendText("⏳ Waiting for HIP to encrypt and push data (this may take a few seconds)...\n");
+                txtLog.SelectionColor = Color.Black;
+                
+                attempts = 0;
+                List<object> decryptedRecords = null;
+
+                while (attempts < 20) // 100 seconds max
+                {
+                    await Task.Delay(5000);
+                    attempts++;
+                    
+                    var dataResp = await _client.GetHealthInformationStatusAsync(txnReqId);
+                    if (dataResp.Success && !string.IsNullOrEmpty(dataResp.Data))
+                    {
+                        var dict = SimpleJson.Deserialize(dataResp.Data);
+                        if (dict.ContainsKey("decryptedHealthInformation") && dict["decryptedHealthInformation"] is List<object> records)
+                        {
+                            decryptedRecords = records;
+                            break;
+                        }
+                        
+                        string status = dict.ContainsKey("status") ? dict["status"]?.ToString() ?? "" : "";
+                        if (status.IndexOf("ERROR", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            txtLog.SelectionColor = Color.Red;
+                            txtLog.AppendText($"❌ Error occurred during data transfer: {status}\n");
+                            txtLog.SelectionColor = Color.Black;
+                            return;
+                        }
+                    }
+                }
+
+                if (decryptedRecords == null || decryptedRecords.Count == 0)
+                {
+                    txtLog.SelectionColor = Color.Red;
+                    txtLog.AppendText("❌ Timeout waiting for health data. Auto-Pilot aborted.\n");
+                    txtLog.SelectionColor = Color.Black;
+                    return;
+                }
+
+                txtLog.SelectionColor = Color.DarkGreen;
+                txtLog.AppendText($"✅ Decrypted {decryptedRecords.Count} Health Record(s) successfully!\n");
+                txtLog.AppendText($"🚀 Opening Health Record Viewer UI...\n");
+                txtLog.SelectionColor = Color.Black;
+
+                // Hide base64 data in the final json printout to keep the log clean
+                string rawJsonToDisplay = System.Text.RegularExpressions.Regex.Replace(fetchResp.Data, "\"data\"\\s*:\\s*\"[A-Za-z0-9+/=]{100,}\"", "\"data\": \"[BASE64_DATA_HIDDEN]\"");
+                
+                // Show the UI
+                var viewer = new frmHealthRecordViewer(decryptedRecords);
+                viewer.ShowDialog(this);
             }
             catch (Exception ex)
             {
@@ -462,144 +624,19 @@ namespace HMS.abdm
 
                                 if (rec.ContainsKey("fhirBundle") && rec["fhirBundle"] is System.Collections.Generic.Dictionary<string, object> bundle)
                                 {
-                                    // Check if it's a standard FHIR Bundle
-                                    if (bundle.ContainsKey("resourceType") && bundle["resourceType"]?.ToString() == "Bundle" && bundle.ContainsKey("entry") && bundle["entry"] is System.Collections.Generic.List<object> entries)
-                                    {
-                                        txtLog.AppendText("FHIR Bundle Contents:\n");
-                                        
-                                        foreach (var eObj in entries)
-                                        {
-                                            if (eObj is System.Collections.Generic.Dictionary<string, object> entry && entry.ContainsKey("resource") && entry["resource"] is System.Collections.Generic.Dictionary<string, object> res)
-                                            {
-                                                string rType = res.ContainsKey("resourceType") ? res["resourceType"]?.ToString() : "";
-                                                
-                                                if (rType == "Composition")
-                                                {
-                                                    string title = "Clinical Document";
-                                                    if (res.ContainsKey("type") && res["type"] is System.Collections.Generic.Dictionary<string, object> tDict && tDict.ContainsKey("text"))
-                                                    {
-                                                        title = tDict["text"]?.ToString();
-                                                    }
-                                                    txtLog.AppendText($"  - Document Type: {title}\n");
-                                                }
-                                                else if (rType == "Practitioner")
-                                                {
-                                                    if (res.ContainsKey("name") && res["name"] is System.Collections.Generic.List<object> nList && nList.Count > 0 && nList[0] is System.Collections.Generic.Dictionary<string, object> nDict && nDict.ContainsKey("text"))
-                                                    {
-                                                        txtLog.AppendText($"  - Doctor: {nDict["text"]}\n");
-                                                    }
-                                                }
-                                                else if (rType == "MedicationRequest")
-                                                {
-                                                    string med = "Unknown Medication";
-                                                    if (res.ContainsKey("medicationCodeableConcept") && res["medicationCodeableConcept"] is System.Collections.Generic.Dictionary<string, object> mDict && mDict.ContainsKey("text"))
-                                                    {
-                                                        med = mDict["text"]?.ToString();
-                                                    }
-                                                    txtLog.AppendText($"  - Prescribed: {med}\n");
-                                                }
-                                                else if (rType == "Condition")
-                                                {
-                                                    string cond = "Unknown Condition";
-                                                    if (res.ContainsKey("code") && res["code"] is System.Collections.Generic.Dictionary<string, object> cDict && cDict.ContainsKey("text"))
-                                                    {
-                                                        cond = cDict["text"]?.ToString();
-                                                    }
-                                                    txtLog.AppendText($"  - Condition/Symptom: {cond}\n");
-                                                }
-                                                else if (rType == "DiagnosticReport")
-                                                {
-                                                    txtLog.AppendText($"  - Diagnostic Report Attached\n");
-                                                }
-                                                else if (rType == "DocumentReference")
-                                                {
-                                                    txtLog.AppendText($"  - Attachment: PDF/Image Document (Data hidden)\n");
-                                                    try
-                                                    {
-                                                        if (res.ContainsKey("content") && res["content"] is System.Collections.Generic.List<object> cList && cList.Count > 0)
-                                                        {
-                                                            if (cList[0] is System.Collections.Generic.Dictionary<string, object> cDict && cDict.ContainsKey("attachment") && cDict["attachment"] is System.Collections.Generic.Dictionary<string, object> att)
-                                                            {
-                                                                if (att.ContainsKey("data") && att["data"] != null)
-                                                                {
-                                                                    string base64 = att["data"].ToString();
-                                                                    string ext = ".pdf";
-                                                                    if (att.ContainsKey("contentType") && att["contentType"] != null)
-                                                                    {
-                                                                        string cType = att["contentType"].ToString().ToLower();
-                                                                        if (cType.Contains("jpeg") || cType.Contains("jpg")) ext = ".jpg";
-                                                                        else if (cType.Contains("png")) ext = ".png";
-                                                                    }
-                                                                    
-                                                                    byte[] fileBytes = Convert.FromBase64String(base64);
-                                                                    string tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"ABDM_Doc_{Guid.NewGuid().ToString().Substring(0, 8)}{ext}");
-                                                                    System.IO.File.WriteAllBytes(tempFile, fileBytes);
-                                                                    
-                                                                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
-                                                                    {
-                                                                        FileName = tempFile,
-                                                                        UseShellExecute = true
-                                                                    });
-                                                                    txtLog.AppendText($"    -> Opened attachment automatically: {System.IO.Path.GetFileName(tempFile)}\n");
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                    catch (Exception ex)
-                                                    {
-                                                        txtLog.AppendText($"    -> Failed to open attachment: {ex.Message}\n");
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        // Fallback to old format if it's not a strict FHIR bundle
-                                        string bType = bundle.ContainsKey("bundleType") ? bundle["bundleType"]?.ToString() : "Unknown";
-                                        txtLog.AppendText($"Record Type: {bType}\n");
-                                        if (bundle.ContainsKey("clinicalNotes") && bundle["clinicalNotes"] != null)
-                                            txtLog.AppendText($"Clinical Notes: {bundle["clinicalNotes"]}\n");
-                                        if (bundle.ContainsKey("prescriptions") && bundle["prescriptions"] is System.Collections.Generic.List<object> meds)
-                                        {
-                                            txtLog.AppendText("Prescribed Medications:\n");
-                                            foreach (System.Collections.Generic.Dictionary<string, object> med in meds)
-                                            {
-                                                string mName = med.ContainsKey("medicine") ? med["medicine"]?.ToString() : "";
-                                                string mDose = med.ContainsKey("dosage") ? med["dosage"]?.ToString() : "";
-                                                txtLog.AppendText($"  - {mName} ({mDose})\n");
-                                            }
-                                        }
-                                        if (bundle.ContainsKey("documents") && bundle["documents"] is System.Collections.Generic.List<object> docs)
-                                        {
-                                            txtLog.AppendText($"Attached Documents: {docs.Count} file(s). (Base64 PDF data omitted for readability)\n");
-                                            foreach (var dObj in docs)
-                                            {
-                                                try
-                                                {
-                                                    if (dObj is System.Collections.Generic.Dictionary<string, object> dDict && dDict.ContainsKey("data") && dDict["data"] != null)
-                                                    {
-                                                        string base64 = dDict["data"].ToString();
-                                                        byte[] pdfBytes = Convert.FromBase64String(base64);
-                                                        string tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"ABDM_Doc_{Guid.NewGuid().ToString().Substring(0, 8)}.pdf");
-                                                        System.IO.File.WriteAllBytes(tempFile, pdfBytes);
-                                                        
-                                                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
-                                                        {
-                                                            FileName = tempFile,
-                                                            UseShellExecute = true
-                                                        });
-                                                    }
-                                                }
-                                                catch { /* ignore errors */ }
-                                            }
-                                        }
-                                    }
+                                    string bType = bundle.ContainsKey("bundleType") ? bundle["bundleType"]?.ToString() : "Unknown";
+                                    txtLog.AppendText($"Record Type: {bType}\n");
                                 }
                                 txtLog.AppendText("\n");
                             }
                             
-                            // Hide large base64 strings in the raw JSON output for readability
+                            txtLog.AppendText("Opening Health Record Viewer UI...\n");
+                            
+                            // Open the new UI viewer
+                            var viewer = new frmHealthRecordViewer(records);
+                            viewer.ShowDialog(this);
+                            
+                            // Still show raw json (with base64 hidden) for debugging
                             string rawJsonToDisplay = System.Text.RegularExpressions.Regex.Replace(resp.Data, "\"data\"\\s*:\\s*\"[A-Za-z0-9+/=]{100,}\"", "\"data\": \"[BASE64_DATA_HIDDEN]\"");
                             txtLog.AppendText("Raw JSON below:\n" + FormatJson(rawJsonToDisplay));
                         }
