@@ -188,6 +188,246 @@ namespace HMS.abdm
             }
         }
 
+        // ==========================================
+        // === HIU (Consent & Data Flow) Event Handlers ===
+        // ==========================================
+
+        private async void btnRequestConsent_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtHiuPatientAbha.Text))
+            {
+                MessageBox.Show("Please enter Patient ABHA Address.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                btnRequestConsent.Enabled = false;
+                btnRequestConsent.Text = "Requesting...";
+
+                var hiTypes = new List<string>
+                {
+                    "DiagnosticReport",
+                    "DischargeSummary",
+                    "HealthDocumentRecord",
+                    "ImmunizationRecord",
+                    "OPConsultation",
+                    "Prescription",
+                    "WellnessRecord"
+                };
+
+                var resp = await _client.InitiateConsentRequestAsync(
+                    txtHiuPatientAbha.Text.Trim(),
+                    cmbPurpose.Text.Split('-')[0].Trim(),
+                    hiTypes,
+                    txtHiuDateFrom.Text.Trim(),
+                    txtHiuDateTo.Text.Trim(),
+                    txtHiuEraseAt.Text.Trim()
+                );
+
+                ShowResult(resp.Success, resp.Message, resp.Data);
+
+                // Auto-fill Consent Request ID
+                if (resp.Success && !string.IsNullOrEmpty(resp.Data))
+                {
+                    var dict = SimpleJson.Deserialize(resp.Data);
+                    if (dict.ContainsKey("clientRequestId"))
+                    {
+                        txtHiuConsentReqId.Text = dict["clientRequestId"]?.ToString() ?? "";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnRequestConsent.Enabled = true;
+                btnRequestConsent.Text = "1. Initiate Consent Request";
+            }
+        }
+
+        private async void btnCheckConsentStatus_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtHiuConsentReqId.Text))
+            {
+                MessageBox.Show("Please enter Consent Request ID.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                btnCheckConsentStatus.Enabled = false;
+                btnCheckConsentStatus.Text = "Checking...";
+
+                var resp = await _client.GetConsentStatusAsync(txtHiuConsentReqId.Text.Trim());
+                ShowResult(resp.Success, resp.Message, resp.Data);
+
+                // If Consent was granted, parse out the consent artefact ID
+                if (resp.Success && !string.IsNullOrEmpty(resp.Data))
+                {
+                    var dict = SimpleJson.Deserialize(resp.Data);
+                    if (dict.ContainsKey("consentDetails") && dict["consentDetails"] is Dictionary<string, object> details)
+                    {
+                        if (details.ContainsKey("consent") && details["consent"] is List<object> consents && consents.Count > 0)
+                        {
+                            var consentObj = consents[0] as Dictionary<string, object>;
+                            if (consentObj != null && consentObj.ContainsKey("consentArtefacts") && consentObj["consentArtefacts"] is List<object> artefacts && artefacts.Count > 0)
+                            {
+                                var art = artefacts[0] as Dictionary<string, object>;
+                                if (art != null && art.ContainsKey("id"))
+                                {
+                                    txtHiuConsentId.Text = art["id"]?.ToString() ?? "";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnCheckConsentStatus.Enabled = true;
+                btnCheckConsentStatus.Text = "2. Check Consent Status";
+            }
+        }
+
+        private async void btnFetchRecords_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtHiuConsentId.Text))
+            {
+                MessageBox.Show("Please enter a Consent ID.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                btnFetchRecords.Enabled = false;
+                btnFetchRecords.Text = "Fetching...";
+
+                var resp = await _client.FetchHealthInformationAsync(
+                    txtHiuConsentId.Text.Trim(),
+                    txtHiuDateFrom.Text.Trim(),
+                    txtHiuDateTo.Text.Trim()
+                );
+
+                ShowResult(resp.Success, resp.Message, resp.Data);
+
+                // Auto-fill Health Info Txn/Req ID
+                if (resp.Success && !string.IsNullOrEmpty(resp.Data))
+                {
+                    var dict = SimpleJson.Deserialize(resp.Data);
+                    if (dict.ContainsKey("clientRequestId"))
+                    {
+                        txtHiuTxnId.Text = dict["clientRequestId"]?.ToString() ?? "";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnFetchRecords.Enabled = true;
+                btnFetchRecords.Text = "3. Fetch Health Records";
+            }
+        }
+
+        private async void btnGetData_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtHiuTxnId.Text))
+            {
+                MessageBox.Show("Please enter Health Request/Txn ID.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                btnGetData.Enabled = false;
+                btnGetData.Text = "Loading...";
+
+                var resp = await _client.GetHealthInformationStatusAsync(txtHiuTxnId.Text.Trim());
+                if (resp.Success && !string.IsNullOrEmpty(resp.Data))
+                {
+                    try
+                    {
+                        var dict = SimpleJson.Deserialize(resp.Data);
+                        if (dict.ContainsKey("decryptedHealthInformation") && dict["decryptedHealthInformation"] is System.Collections.Generic.List<object> records)
+                        {
+                            txtLog.Clear();
+                            txtLog.SelectionColor = Color.DarkGreen;
+                            txtLog.AppendText("[SUCCESS] Decrypted Health Records Received!\n\n");
+                            txtLog.SelectionColor = Color.Black;
+
+                            foreach (System.Collections.Generic.Dictionary<string, object> rec in records)
+                            {
+                                string ccRef = rec.ContainsKey("careContextReference") ? rec["careContextReference"]?.ToString() : "Unknown";
+                                txtLog.SelectionColor = Color.Blue;
+                                txtLog.AppendText($"--- Care Context: {ccRef} ---\n");
+                                txtLog.SelectionColor = Color.Black;
+
+                                if (rec.ContainsKey("fhirBundle") && rec["fhirBundle"] is System.Collections.Generic.Dictionary<string, object> bundle)
+                                {
+                                    string bType = bundle.ContainsKey("bundleType") ? bundle["bundleType"]?.ToString() : "Unknown";
+                                    txtLog.AppendText($"Record Type: {bType}\n");
+
+                                    if (bundle.ContainsKey("clinicalNotes") && bundle["clinicalNotes"] != null)
+                                    {
+                                        txtLog.AppendText($"Clinical Notes: {bundle["clinicalNotes"]}\n");
+                                    }
+
+                                    if (bundle.ContainsKey("prescriptions") && bundle["prescriptions"] is System.Collections.Generic.List<object> meds)
+                                    {
+                                        txtLog.AppendText("Prescribed Medications:\n");
+                                        foreach (System.Collections.Generic.Dictionary<string, object> med in meds)
+                                        {
+                                            string mName = med.ContainsKey("medicine") ? med["medicine"]?.ToString() : "";
+                                            string mDose = med.ContainsKey("dosage") ? med["dosage"]?.ToString() : "";
+                                            txtLog.AppendText($"  - {mName} ({mDose})\n");
+                                        }
+                                    }
+                                    
+                                    if (bundle.ContainsKey("documents") && bundle["documents"] is System.Collections.Generic.List<object> docs)
+                                    {
+                                        txtLog.AppendText($"Attached Documents: {docs.Count} file(s). (Base64 PDF data omitted for readability)\n");
+                                    }
+                                }
+                                txtLog.AppendText("\n");
+                            }
+                            txtLog.AppendText("Raw JSON below:\n" + FormatJson(resp.Data));
+                        }
+                        else
+                        {
+                            ShowResult(resp.Success, resp.Message, resp.Data);
+                        }
+                    }
+                    catch
+                    {
+                        ShowResult(resp.Success, resp.Message, resp.Data);
+                    }
+                }
+                else
+                {
+                    ShowResult(resp.Success, resp.Message, resp.Data);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnGetData.Enabled = true;
+                btnGetData.Text = "4. View Decrypted Data";
+            }
+        }
+
+        
         private void LogText(string text)
         {
             txtLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {text}{Environment.NewLine}");
@@ -225,6 +465,82 @@ namespace HMS.abdm
             catch
             {
                 return string.Empty;
+            }
+        }
+    
+        // Helper to format and show API results
+        private void ShowResult(bool success, string message, string json)
+        {
+            txtLog.Clear();
+            txtLog.SelectionColor = success ? Color.DarkGreen : Color.DarkRed;
+            txtLog.AppendText($"[RESULT] {(success ? "SUCCESS" : "FAILURE")}\n");
+            txtLog.SelectionColor = Color.Black;
+            if (!string.IsNullOrEmpty(message))
+            {
+                txtLog.AppendText($"Message: {message}\n\n");
+            }
+            if (!string.IsNullOrEmpty(json))
+            {
+                txtLog.AppendText("Response JSON:\n" + FormatJson(json));
+            }
+        }
+
+        private string FormatJson(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return "";
+            try
+            {
+                // Basic pretty-print implementation
+                int indent = 0;
+                var sb = new System.Text.StringBuilder();
+                bool inQuotes = false;
+                for (int i = 0; i < json.Length; i++)
+                {
+                    char c = json[i];
+                    if (c == '"')
+                    {
+                        inQuotes = !inQuotes;
+                        sb.Append(c);
+                    }
+                    else if (inQuotes)
+                    {
+                        sb.Append(c);
+                    }
+                    else if (c == '{' || c == '[')
+                    {
+                        sb.Append(c);
+                        sb.Append(Environment.NewLine);
+                        indent++;
+                        sb.Append(new string(' ', indent * 2));
+                    }
+                    else if (c == '}' || c == ']')
+                    {
+                        sb.Append(Environment.NewLine);
+                        indent--;
+                        sb.Append(new string(' ', indent * 2));
+                        sb.Append(c);
+                    }
+                    else if (c == ',')
+                    {
+                        sb.Append(c);
+                        sb.Append(Environment.NewLine);
+                        sb.Append(new string(' ', indent * 2));
+                    }
+                    else if (c == ':')
+                    {
+                        sb.Append(c);
+                        sb.Append(' ');
+                    }
+                    else
+                    {
+                        sb.Append(c);
+                    }
+                }
+                return sb.ToString();
+            }
+            catch
+            {
+                return json;
             }
         }
     }

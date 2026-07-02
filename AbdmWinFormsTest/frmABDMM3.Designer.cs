@@ -38,12 +38,15 @@ namespace HMS.abdm
             this.txtSubscriptionReqId = new System.Windows.Forms.TextBox();
             this.btnCheckStatus = new System.Windows.Forms.Button();
             this.gbLog = new System.Windows.Forms.GroupBox();
+            this.gbHiu = new System.Windows.Forms.GroupBox();
+            
             this.txtLog = new System.Windows.Forms.RichTextBox();
 
             this.pnlHeader.SuspendLayout();
             this.gbSubscriptionReq.SuspendLayout();
             this.gbSubscriptionStatus.SuspendLayout();
             this.gbLog.SuspendLayout();
+            this.gbHiu.SuspendLayout();
             this.SuspendLayout();
 
             // 
@@ -55,7 +58,7 @@ namespace HMS.abdm
             this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlHeader.Location = new System.Drawing.Point(0, 0);
             this.pnlHeader.Name = "pnlHeader";
-            this.pnlHeader.Size = new System.Drawing.Size(980, 50);
+            this.pnlHeader.Size = new System.Drawing.Size(1460, 50);
             this.pnlHeader.TabIndex = 0;
             // 
             // btnClose
@@ -287,6 +290,323 @@ namespace HMS.abdm
             this.btnCheckStatus.UseVisualStyleBackColor = false;
             this.btnCheckStatus.Click += new System.EventHandler(this.btnCheckStatus_Click);
             // 
+            // gbHiu
+            // 
+            this.gbHiu.Controls.Add(this.btnGetData);
+            this.gbHiu.Controls.Add(this.txtHiuTxnId);
+            this.gbHiu.Controls.Add(this.lblHiuTxnId);
+            this.gbHiu.Controls.Add(this.btnFetchRecords);
+            this.gbHiu.Controls.Add(this.txtHiuConsentId);
+            this.gbHiu.Controls.Add(this.lblHiuConsentId);
+            this.gbHiu.Controls.Add(this.btnCheckConsentStatus);
+            this.gbHiu.Controls.Add(this.txtHiuConsentReqId);
+            this.gbHiu.Controls.Add(this.lblHiuConsentReqId);
+            this.gbHiu.Controls.Add(this.btnRequestConsent);
+            this.gbHiu.Controls.Add(this.txtHiuEraseAt);
+            this.gbHiu.Controls.Add(this.lblHiuEraseAt);
+            this.gbHiu.Controls.Add(this.txtHiuDateTo);
+            this.gbHiu.Controls.Add(this.lblHiuDateTo);
+            this.gbHiu.Controls.Add(this.txtHiuDateFrom);
+            this.gbHiu.Controls.Add(this.lblHiuDateFrom);
+            this.gbHiu.Controls.Add(this.chkDiagnostic);
+            this.gbHiu.Controls.Add(this.chkPrescription);
+            this.gbHiu.Controls.Add(this.chkConsultation);
+            this.gbHiu.Controls.Add(this.lblHiTypes);
+            this.gbHiu.Controls.Add(this.cmbPurpose);
+            this.gbHiu.Controls.Add(this.lblPurpose);
+            this.gbHiu.Controls.Add(this.txtHiuPatientAbha);
+            this.gbHiu.Controls.Add(this.lblHiuPatientAbha);
+            this.gbHiu.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold);
+            this.gbHiu.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(174)))), ((int)(((byte)(96)))));
+            this.gbHiu.BackColor = System.Drawing.Color.White;
+            this.gbHiu.Location = new System.Drawing.Point(975, 65);
+            this.gbHiu.Name = "gbHiu";
+            this.gbHiu.Size = new System.Drawing.Size(470, 460);
+            this.gbHiu.TabIndex = 2;
+            this.gbHiu.TabStop = false;
+            this.gbHiu.Text = "HIU Operations (Consent & Health Data Fetch)";
+            // 
+            // btnGetData
+            // 
+            this.btnGetData.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(57)))), ((int)(((byte)(43)))));
+            
+            this.btnGetData.FlatAppearance.BorderSize = 0;
+            this.btnGetData.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGetData.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnGetData.Location = new System.Drawing.Point(20, 412);
+            this.btnGetData.Name = "btnGetData";
+            this.btnGetData.Size = new System.Drawing.Size(435, 35);
+            this.btnGetData.TabIndex = 23;
+            this.btnGetData.Text = "4. View Decrypted Data";
+            this.btnGetData.UseVisualStyleBackColor = false;
+            this.btnGetData.Click += new System.EventHandler(this.btnGetData_Click);
+            
+            this.btnGetData.ForeColor = System.Drawing.Color.White;// 
+            // txtHiuTxnId
+            // 
+            this.txtHiuTxnId.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.txtHiuTxnId.Location = new System.Drawing.Point(145, 380);
+            this.txtHiuTxnId.Name = "txtHiuTxnId";
+            this.txtHiuTxnId.Size = new System.Drawing.Size(310, 27);
+            this.txtHiuTxnId.TabIndex = 22;
+            // 
+            // lblHiuTxnId
+            // 
+            this.lblHiuTxnId.AutoSize = true;
+            this.lblHiuTxnId.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lblHiuTxnId.ForeColor = System.Drawing.Color.Black;
+            this.lblHiuTxnId.Location = new System.Drawing.Point(20, 383);
+            this.lblHiuTxnId.Name = "lblHiuTxnId";
+            this.lblHiuTxnId.Size = new System.Drawing.Size(124, 20);
+            this.lblHiuTxnId.TabIndex = 21;
+            this.lblHiuTxnId.Text = "Health Request ID:";
+            // 
+            // btnFetchRecords
+            // 
+            this.btnFetchRecords.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(126)))), ((int)(((byte)(34)))));
+            
+            this.btnFetchRecords.FlatAppearance.BorderSize = 0;
+            this.btnFetchRecords.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnFetchRecords.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnFetchRecords.Location = new System.Drawing.Point(20, 340);
+            this.btnFetchRecords.Name = "btnFetchRecords";
+            this.btnFetchRecords.Size = new System.Drawing.Size(435, 35);
+            this.btnFetchRecords.TabIndex = 20;
+            this.btnFetchRecords.Text = "3. Fetch Health Records";
+            this.btnFetchRecords.UseVisualStyleBackColor = false;
+            this.btnFetchRecords.Click += new System.EventHandler(this.btnFetchRecords_Click);
+            
+            this.btnFetchRecords.ForeColor = System.Drawing.Color.White;// 
+            // txtHiuConsentId
+            // 
+            this.txtHiuConsentId.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.txtHiuConsentId.Location = new System.Drawing.Point(145, 308);
+            this.txtHiuConsentId.Name = "txtHiuConsentId";
+            this.txtHiuConsentId.Size = new System.Drawing.Size(310, 27);
+            this.txtHiuConsentId.TabIndex = 19;
+            // 
+            // lblHiuConsentId
+            // 
+            this.lblHiuConsentId.AutoSize = true;
+            this.lblHiuConsentId.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lblHiuConsentId.ForeColor = System.Drawing.Color.Black;
+            this.lblHiuConsentId.Location = new System.Drawing.Point(20, 311);
+            this.lblHiuConsentId.Name = "lblHiuConsentId";
+            this.lblHiuConsentId.Size = new System.Drawing.Size(83, 20);
+            this.lblHiuConsentId.TabIndex = 18;
+            this.lblHiuConsentId.Text = "Consent ID:";
+            // 
+            // btnCheckConsentStatus
+            // 
+            this.btnCheckConsentStatus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(174)))), ((int)(((byte)(96)))));
+            
+            this.btnCheckConsentStatus.FlatAppearance.BorderSize = 0;
+            this.btnCheckConsentStatus.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnCheckConsentStatus.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnCheckConsentStatus.Location = new System.Drawing.Point(20, 268);
+            this.btnCheckConsentStatus.Name = "btnCheckConsentStatus";
+            this.btnCheckConsentStatus.Size = new System.Drawing.Size(435, 35);
+            this.btnCheckConsentStatus.TabIndex = 17;
+            this.btnCheckConsentStatus.Text = "2. Check Consent Status";
+            this.btnCheckConsentStatus.UseVisualStyleBackColor = false;
+            this.btnCheckConsentStatus.Click += new System.EventHandler(this.btnCheckConsentStatus_Click);
+            
+            this.btnCheckConsentStatus.ForeColor = System.Drawing.Color.White;// 
+            // txtHiuConsentReqId
+            // 
+            this.txtHiuConsentReqId.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.txtHiuConsentReqId.Location = new System.Drawing.Point(145, 236);
+            this.txtHiuConsentReqId.Name = "txtHiuConsentReqId";
+            this.txtHiuConsentReqId.Size = new System.Drawing.Size(310, 27);
+            this.txtHiuConsentReqId.TabIndex = 16;
+            // 
+            // lblHiuConsentReqId
+            // 
+            this.lblHiuConsentReqId.AutoSize = true;
+            this.lblHiuConsentReqId.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lblHiuConsentReqId.ForeColor = System.Drawing.Color.Black;
+            this.lblHiuConsentReqId.Location = new System.Drawing.Point(20, 239);
+            this.lblHiuConsentReqId.Name = "lblHiuConsentReqId";
+            this.lblHiuConsentReqId.Size = new System.Drawing.Size(113, 20);
+            this.lblHiuConsentReqId.TabIndex = 15;
+            this.lblHiuConsentReqId.Text = "Consent Req ID:";
+            // 
+            // btnRequestConsent
+            // 
+            this.btnRequestConsent.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(39)))), ((int)(((byte)(174)))), ((int)(((byte)(96)))));
+            
+            this.btnRequestConsent.FlatAppearance.BorderSize = 0;
+            this.btnRequestConsent.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRequestConsent.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnRequestConsent.Location = new System.Drawing.Point(20, 196);
+            this.btnRequestConsent.Name = "btnRequestConsent";
+            this.btnRequestConsent.Size = new System.Drawing.Size(435, 35);
+            this.btnRequestConsent.TabIndex = 14;
+            this.btnRequestConsent.Text = "1. Initiate Consent Request";
+            this.btnRequestConsent.UseVisualStyleBackColor = false;
+            this.btnRequestConsent.Click += new System.EventHandler(this.btnRequestConsent_Click);
+            
+            this.btnRequestConsent.ForeColor = System.Drawing.Color.White;// 
+            // txtHiuEraseAt
+            // 
+            this.txtHiuEraseAt.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.txtHiuEraseAt.Location = new System.Drawing.Point(145, 163);
+            this.txtHiuEraseAt.Name = "txtHiuEraseAt";
+            this.txtHiuEraseAt.Size = new System.Drawing.Size(310, 27);
+            this.txtHiuEraseAt.TabIndex = 13;
+            this.txtHiuEraseAt.Text = "2026-12-31T00:00:00.000Z";
+            // 
+            // lblHiuEraseAt
+            // 
+            this.lblHiuEraseAt.AutoSize = true;
+            this.lblHiuEraseAt.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lblHiuEraseAt.ForeColor = System.Drawing.Color.Black;
+            this.lblHiuEraseAt.Location = new System.Drawing.Point(20, 166);
+            this.lblHiuEraseAt.Name = "lblHiuEraseAt";
+            this.lblHiuEraseAt.Size = new System.Drawing.Size(65, 20);
+            this.lblHiuEraseAt.TabIndex = 12;
+            this.lblHiuEraseAt.Text = "Erase At:";
+            // 
+            // txtHiuDateTo
+            // 
+            this.txtHiuDateTo.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.txtHiuDateTo.Location = new System.Drawing.Point(145, 136);
+            this.txtHiuDateTo.Name = "txtHiuDateTo";
+            this.txtHiuDateTo.Size = new System.Drawing.Size(310, 27);
+            this.txtHiuDateTo.TabIndex = 11;
+            this.txtHiuDateTo.Text = "2026-06-16T00:00:00.000Z";
+            // 
+            // lblHiuDateTo
+            // 
+            this.lblHiuDateTo.AutoSize = true;
+            this.lblHiuDateTo.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lblHiuDateTo.ForeColor = System.Drawing.Color.Black;
+            this.lblHiuDateTo.Location = new System.Drawing.Point(20, 139);
+            this.lblHiuDateTo.Name = "lblHiuDateTo";
+            this.lblHiuDateTo.Size = new System.Drawing.Size(65, 20);
+            this.lblHiuDateTo.TabIndex = 10;
+            this.lblHiuDateTo.Text = "Date To:";
+            // 
+            // txtHiuDateFrom
+            // 
+            this.txtHiuDateFrom.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.txtHiuDateFrom.Location = new System.Drawing.Point(145, 109);
+            this.txtHiuDateFrom.Name = "txtHiuDateFrom";
+            this.txtHiuDateFrom.Size = new System.Drawing.Size(310, 27);
+            this.txtHiuDateFrom.TabIndex = 9;
+            this.txtHiuDateFrom.Text = "2024-01-01T00:00:00.000Z";
+            // 
+            // lblHiuDateFrom
+            // 
+            this.lblHiuDateFrom.AutoSize = true;
+            this.lblHiuDateFrom.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lblHiuDateFrom.ForeColor = System.Drawing.Color.Black;
+            this.lblHiuDateFrom.Location = new System.Drawing.Point(20, 112);
+            this.lblHiuDateFrom.Name = "lblHiuDateFrom";
+            this.lblHiuDateFrom.Size = new System.Drawing.Size(83, 20);
+            this.lblHiuDateFrom.TabIndex = 8;
+            this.lblHiuDateFrom.Text = "Date From:";
+            // 
+            // chkDiagnostic
+            // 
+            this.chkDiagnostic.AutoSize = true;
+            this.chkDiagnostic.Checked = true;
+            this.chkDiagnostic.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkDiagnostic.Font = new System.Drawing.Font("Segoe UI", 8.5F);
+            this.chkDiagnostic.ForeColor = System.Drawing.Color.Black;
+            this.chkDiagnostic.Location = new System.Drawing.Point(340, 83);
+            this.chkDiagnostic.Name = "chkDiagnostic";
+            this.chkDiagnostic.Size = new System.Drawing.Size(102, 24);
+            this.chkDiagnostic.TabIndex = 7;
+            this.chkDiagnostic.Text = "Diag Report";
+            this.chkDiagnostic.UseVisualStyleBackColor = true;
+            // 
+            // chkPrescription
+            // 
+            this.chkPrescription.AutoSize = true;
+            this.chkPrescription.Checked = true;
+            this.chkPrescription.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkPrescription.Font = new System.Drawing.Font("Segoe UI", 8.5F);
+            this.chkPrescription.ForeColor = System.Drawing.Color.Black;
+            this.chkPrescription.Location = new System.Drawing.Point(235, 83);
+            this.chkPrescription.Name = "chkPrescription";
+            this.chkPrescription.Size = new System.Drawing.Size(109, 24);
+            this.chkPrescription.TabIndex = 6;
+            this.chkPrescription.Text = "Prescription";
+            this.chkPrescription.UseVisualStyleBackColor = true;
+            // 
+            // chkConsultation
+            // 
+            this.chkConsultation.AutoSize = true;
+            this.chkConsultation.Checked = true;
+            this.chkConsultation.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkConsultation.Font = new System.Drawing.Font("Segoe UI", 8.5F);
+            this.chkConsultation.ForeColor = System.Drawing.Color.Black;
+            this.chkConsultation.Location = new System.Drawing.Point(145, 83);
+            this.chkConsultation.Name = "chkConsultation";
+            this.chkConsultation.Size = new System.Drawing.Size(89, 24);
+            this.chkConsultation.TabIndex = 5;
+            this.chkConsultation.Text = "OP Consult";
+            this.chkConsultation.UseVisualStyleBackColor = true;
+            // 
+            // lblHiTypes
+            // 
+            this.lblHiTypes.AutoSize = true;
+            this.lblHiTypes.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lblHiTypes.ForeColor = System.Drawing.Color.Black;
+            this.lblHiTypes.Location = new System.Drawing.Point(20, 84);
+            this.lblHiTypes.Name = "lblHiTypes";
+            this.lblHiTypes.Size = new System.Drawing.Size(68, 20);
+            this.lblHiTypes.TabIndex = 4;
+            this.lblHiTypes.Text = "HI Types:";
+            // 
+            // cmbPurpose
+            // 
+            this.cmbPurpose.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbPurpose.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.cmbPurpose.FormattingEnabled = true;
+            this.cmbPurpose.Items.AddRange(new object[] {
+            "CACT - Care Management",
+            "PUBHLTH - Public Health",
+            "PATRQT - Patient Request"});
+            this.cmbPurpose.Location = new System.Drawing.Point(145, 50);
+            this.cmbPurpose.Name = "cmbPurpose";
+            this.cmbPurpose.Size = new System.Drawing.Size(310, 28);
+            this.cmbPurpose.TabIndex = 3;
+            this.cmbPurpose.SelectedIndex = 0;
+            // 
+            // lblPurpose
+            // 
+            this.lblPurpose.AutoSize = true;
+            this.lblPurpose.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lblPurpose.ForeColor = System.Drawing.Color.Black;
+            this.lblPurpose.Location = new System.Drawing.Point(20, 53);
+            this.lblPurpose.Name = "lblPurpose";
+            this.lblPurpose.Size = new System.Drawing.Size(65, 20);
+            this.lblPurpose.TabIndex = 2;
+            this.lblPurpose.Text = "Purpose:";
+            // 
+            // txtHiuPatientAbha
+            // 
+            this.txtHiuPatientAbha.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.txtHiuPatientAbha.Location = new System.Drawing.Point(145, 20);
+            this.txtHiuPatientAbha.Name = "txtHiuPatientAbha";
+            this.txtHiuPatientAbha.Size = new System.Drawing.Size(310, 27);
+            this.txtHiuPatientAbha.TabIndex = 1;
+            this.txtHiuPatientAbha.Text = "testpatient123@sbx";
+            // 
+            // lblHiuPatientAbha
+            // 
+            this.lblHiuPatientAbha.AutoSize = true;
+            this.lblHiuPatientAbha.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lblHiuPatientAbha.ForeColor = System.Drawing.Color.Black;
+            this.lblHiuPatientAbha.Location = new System.Drawing.Point(20, 23);
+            this.lblHiuPatientAbha.Name = "lblHiuPatientAbha";
+            this.lblHiuPatientAbha.Size = new System.Drawing.Size(107, 20);
+            this.lblHiuPatientAbha.TabIndex = 0;
+            this.lblHiuPatientAbha.Text = "Patient ABHA:";
+            
+            // 
             // gbLog
             // 
             this.gbLog.BackColor = System.Drawing.Color.White;
@@ -294,7 +614,7 @@ namespace HMS.abdm
             this.gbLog.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold);
             this.gbLog.Location = new System.Drawing.Point(15, 535);
             this.gbLog.Name = "gbLog";
-            this.gbLog.Size = new System.Drawing.Size(950, 190);
+            this.gbLog.Size = new System.Drawing.Size(1430, 190);
             this.gbLog.TabIndex = 3;
             this.gbLog.TabStop = false;
             this.gbLog.Text = "Execution Output / Log";
@@ -309,7 +629,7 @@ namespace HMS.abdm
             this.txtLog.Location = new System.Drawing.Point(3, 25);
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
-            this.txtLog.Size = new System.Drawing.Size(944, 162);
+            this.txtLog.Size = new System.Drawing.Size(1424, 162);
             this.txtLog.TabIndex = 0;
             this.txtLog.Text = "";
             // 
@@ -318,8 +638,9 @@ namespace HMS.abdm
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(244)))), ((int)(((byte)(248)))));
-            this.ClientSize = new System.Drawing.Size(980, 740);
+            this.ClientSize = new System.Drawing.Size(1460, 740);
             this.Controls.Add(this.gbLog);
+            this.Controls.Add(this.gbHiu);
             this.Controls.Add(this.gbSubscriptionStatus);
             this.Controls.Add(this.gbSubscriptionReq);
             this.Controls.Add(this.pnlHeader);
@@ -334,6 +655,8 @@ namespace HMS.abdm
             this.gbSubscriptionStatus.ResumeLayout(false);
             this.gbSubscriptionStatus.PerformLayout();
             this.gbLog.ResumeLayout(false);
+            this.gbHiu.ResumeLayout(false);
+            this.gbHiu.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -361,6 +684,31 @@ namespace HMS.abdm
         private System.Windows.Forms.TextBox txtSubscriptionReqId;
         private System.Windows.Forms.Button btnCheckStatus;
         private System.Windows.Forms.GroupBox gbLog;
+        private System.Windows.Forms.GroupBox gbHiu;
+        private System.Windows.Forms.TextBox txtHiuPatientAbha;
+        private System.Windows.Forms.Label lblHiuPatientAbha;
+        private System.Windows.Forms.Label lblPurpose;
+        private System.Windows.Forms.ComboBox cmbPurpose;
+        private System.Windows.Forms.Label lblHiTypes;
+        private System.Windows.Forms.CheckBox chkConsultation;
+        private System.Windows.Forms.CheckBox chkPrescription;
+        private System.Windows.Forms.CheckBox chkDiagnostic;
+        private System.Windows.Forms.TextBox txtHiuDateFrom;
+        private System.Windows.Forms.Label lblHiuDateFrom;
+        private System.Windows.Forms.TextBox txtHiuDateTo;
+        private System.Windows.Forms.Label lblHiuDateTo;
+        private System.Windows.Forms.TextBox txtHiuEraseAt;
+        private System.Windows.Forms.Label lblHiuEraseAt;
+        private System.Windows.Forms.Button btnRequestConsent;
+        private System.Windows.Forms.TextBox txtHiuConsentReqId;
+        private System.Windows.Forms.Label lblHiuConsentReqId;
+        private System.Windows.Forms.Button btnCheckConsentStatus;
+        private System.Windows.Forms.TextBox txtHiuConsentId;
+        private System.Windows.Forms.Label lblHiuConsentId;
+        private System.Windows.Forms.Button btnFetchRecords;
+        private System.Windows.Forms.TextBox txtHiuTxnId;
+        private System.Windows.Forms.Label lblHiuTxnId;
+        private System.Windows.Forms.Button btnGetData;
         private System.Windows.Forms.RichTextBox txtLog;
     }
 }

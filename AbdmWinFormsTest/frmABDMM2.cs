@@ -441,7 +441,69 @@ namespace HMS.abdm
                 btnGetData.Text = "Loading...";
 
                 var resp = await _client.GetHealthInformationStatusAsync(txtHiuTxnId.Text.Trim());
-                ShowResult(resp.Success, resp.Message, resp.Data);
+                if (resp.Success && !string.IsNullOrEmpty(resp.Data))
+                {
+                    try
+                    {
+                        var dict = SimpleJson.Deserialize(resp.Data);
+                        if (dict.ContainsKey("decryptedHealthInformation") && dict["decryptedHealthInformation"] is System.Collections.Generic.List<object> records)
+                        {
+                            txtLog.Clear();
+                            txtLog.SelectionColor = Color.DarkGreen;
+                            txtLog.AppendText("[SUCCESS] Decrypted Health Records Received!\n\n");
+                            txtLog.SelectionColor = Color.Black;
+
+                            foreach (System.Collections.Generic.Dictionary<string, object> rec in records)
+                            {
+                                string ccRef = rec.ContainsKey("careContextReference") ? rec["careContextReference"]?.ToString() : "Unknown";
+                                txtLog.SelectionColor = Color.Blue;
+                                txtLog.AppendText($"--- Care Context: {ccRef} ---\n");
+                                txtLog.SelectionColor = Color.Black;
+
+                                if (rec.ContainsKey("fhirBundle") && rec["fhirBundle"] is System.Collections.Generic.Dictionary<string, object> bundle)
+                                {
+                                    string bType = bundle.ContainsKey("bundleType") ? bundle["bundleType"]?.ToString() : "Unknown";
+                                    txtLog.AppendText($"Record Type: {bType}\n");
+
+                                    if (bundle.ContainsKey("clinicalNotes") && bundle["clinicalNotes"] != null)
+                                    {
+                                        txtLog.AppendText($"Clinical Notes: {bundle["clinicalNotes"]}\n");
+                                    }
+
+                                    if (bundle.ContainsKey("prescriptions") && bundle["prescriptions"] is System.Collections.Generic.List<object> meds)
+                                    {
+                                        txtLog.AppendText("Prescribed Medications:\n");
+                                        foreach (System.Collections.Generic.Dictionary<string, object> med in meds)
+                                        {
+                                            string mName = med.ContainsKey("medicine") ? med["medicine"]?.ToString() : "";
+                                            string mDose = med.ContainsKey("dosage") ? med["dosage"]?.ToString() : "";
+                                            txtLog.AppendText($"  - {mName} ({mDose})\n");
+                                        }
+                                    }
+                                    
+                                    if (bundle.ContainsKey("documents") && bundle["documents"] is System.Collections.Generic.List<object> docs)
+                                    {
+                                        txtLog.AppendText($"Attached Documents: {docs.Count} file(s). (Base64 PDF data omitted for readability)\n");
+                                    }
+                                }
+                                txtLog.AppendText("\n");
+                            }
+                            txtLog.AppendText("Raw JSON below:\n" + FormatJson(resp.Data));
+                        }
+                        else
+                        {
+                            ShowResult(resp.Success, resp.Message, resp.Data);
+                        }
+                    }
+                    catch
+                    {
+                        ShowResult(resp.Success, resp.Message, resp.Data);
+                    }
+                }
+                else
+                {
+                    ShowResult(resp.Success, resp.Message, resp.Data);
+                }
             }
             catch (Exception ex)
             {
