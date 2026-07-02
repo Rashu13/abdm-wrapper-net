@@ -362,9 +362,8 @@ namespace HMS.abdm
                         var dict = SimpleJson.Deserialize(statusResp.Data);
                         string status = dict.ContainsKey("status") ? dict["status"]?.ToString() ?? "" : "";
                         
-                        if (status.IndexOf("GRANTED", StringComparison.OrdinalIgnoreCase) >= 0)
+                        if (status.IndexOf("NOTIFY_RESPONSE", StringComparison.OrdinalIgnoreCase) >= 0 || status.IndexOf("GRANTED", StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            isGranted = true;
                             // Extract Consent ID
                             if (dict.ContainsKey("consentDetails") && dict["consentDetails"] is Dictionary<string, object> cDetails)
                             {
@@ -380,14 +379,19 @@ namespace HMS.abdm
                                     }
                                 }
                             }
-                            break;
-                        }
-                        else if (status.IndexOf("DENIED", StringComparison.OrdinalIgnoreCase) >= 0 || status.IndexOf("REVOKED", StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            txtLog.SelectionColor = Color.Red;
-                            txtLog.AppendText($"❌ Consent was {status} by the patient. Auto-Pilot aborted.\n");
-                            txtLog.SelectionColor = Color.Black;
-                            return;
+
+                            if (!string.IsNullOrEmpty(consentId) && consentId != "CONSENT_ON_NOTIFY_RESPONSE")
+                            {
+                                isGranted = true;
+                                break;
+                            }
+                            else if (consentId == "CONSENT_ON_NOTIFY_RESPONSE" || status.IndexOf("DENIED", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                txtLog.SelectionColor = Color.Red;
+                                txtLog.AppendText($"❌ Consent was DENIED by the patient. Auto-Pilot aborted.\n");
+                                txtLog.SelectionColor = Color.Black;
+                                return;
+                            }
                         }
                     }
                 }
