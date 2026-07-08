@@ -2252,6 +2252,9 @@ public class FhirMapperService : IFhirMapperService
             DateElement = new FhirDateTime(authoredOn)
         };
         var lineItemsElement = GetProperty(root, "lineItems");
+        decimal totalNetVal = 0;
+        bool hasPrices = false;
+
         if (lineItemsElement.ValueKind == JsonValueKind.Array && lineItemsElement.GetArrayLength() > 0)
         {
             int seq = 1;
@@ -2268,6 +2271,8 @@ public class FhirMapperService : IFhirMapperService
                 
                 if (decimal.TryParse(priceStr, out decimal price))
                 {
+                    hasPrices = true;
+                    totalNetVal += price;
                     lineItem.PriceComponent = new List<Hl7.Fhir.Model.Invoice.PriceComponentComponent>
                     {
                         new Hl7.Fhir.Model.Invoice.PriceComponentComponent
@@ -2288,6 +2293,12 @@ public class FhirMapperService : IFhirMapperService
                 Sequence = 1,
                 ChargeItem = new CodeableConcept { Text = "Consultation & Clinical Services" }
             });
+        }
+
+        if (hasPrices)
+        {
+            invoice.TotalNet = new Money { Value = totalNetVal, Currency = Hl7.Fhir.Model.Money.Currencies.INR };
+            invoice.TotalGross = new Money { Value = totalNetVal, Currency = Hl7.Fhir.Model.Money.Currencies.INR };
         }
 
         // 6. Create Composition for Invoice Record
