@@ -207,8 +207,11 @@ public class HIPHealthInformationV3Service : IHIPHealthInformationV3Service
                     string refNo = cc.CareContextReference ?? "";
                     if (refNo.StartsWith("OPD", StringComparison.OrdinalIgnoreCase) || refNo.StartsWith("OP", StringComparison.OrdinalIgnoreCase)) recordType = "OPConsultation";
                     else if (refNo.StartsWith("LAB", StringComparison.OrdinalIgnoreCase)) recordType = "DiagnosticReport";
-                    else if (refNo.StartsWith("WEL", StringComparison.OrdinalIgnoreCase)) recordType = "HealthDocument";
+                    else if (refNo.StartsWith("WEL", StringComparison.OrdinalIgnoreCase)) recordType = "WellnessRecord";
                     else if (refNo.StartsWith("DIS", StringComparison.OrdinalIgnoreCase)) recordType = "DischargeSummary";
+                    else if (refNo.StartsWith("IMM", StringComparison.OrdinalIgnoreCase)) recordType = "ImmunizationRecord";
+                    else if (refNo.StartsWith("INV", StringComparison.OrdinalIgnoreCase)) recordType = "Invoice";
+                    else if (refNo.StartsWith("HD", StringComparison.OrdinalIgnoreCase) || refNo.StartsWith("DOC", StringComparison.OrdinalIgnoreCase)) recordType = "HealthDocumentRecord";
 
                     var mockPayload = new
                     {
@@ -276,6 +279,18 @@ public class HIPHealthInformationV3Service : IHIPHealthInformationV3Service
                         else if (record.RecordType != null && (record.RecordType.Equals("DischargeSummary", StringComparison.OrdinalIgnoreCase) || record.RecordType.Equals("DischargeSummaryRecord", StringComparison.OrdinalIgnoreCase)))
                         {
                             fhirBundleStr = await _fhirMapperService.GenerateDischargeSummaryBundleAsync(record.FhirJsonPayload);
+                        }
+                        else if (record.RecordType != null && (record.RecordType.Equals("ImmunizationRecord", StringComparison.OrdinalIgnoreCase) || record.RecordType.Equals("Immunization", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            fhirBundleStr = await _fhirMapperService.GenerateImmunizationBundleAsync(record.FhirJsonPayload);
+                        }
+                        else if (record.RecordType != null && (record.RecordType.Equals("WellnessRecord", StringComparison.OrdinalIgnoreCase) || record.RecordType.Equals("Wellness", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            fhirBundleStr = await _fhirMapperService.GenerateWellnessRecordBundleAsync(record.FhirJsonPayload);
+                        }
+                        else if (record.RecordType != null && (record.RecordType.Equals("InvoiceRecord", StringComparison.OrdinalIgnoreCase) || record.RecordType.Equals("Invoice", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            fhirBundleStr = await _fhirMapperService.GenerateInvoiceBundleAsync(record.FhirJsonPayload);
                         }
                         else
                         {

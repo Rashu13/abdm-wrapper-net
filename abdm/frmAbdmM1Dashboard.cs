@@ -7,42 +7,10 @@ using ABDM.Models;
 
 namespace HMS.abdm
 {
-    public class frmAbdmM1Dashboard : Form
+    public partial class frmAbdmM1Dashboard : Form
     {
         private readonly AbdmApiClient _client;
         private SavedSession _currentSession;
-
-        // UI Components
-        private GroupBox grpActions;
-        private GroupBox grpProfile;
-        private GroupBox grpCardPreview;
-        
-        private Button btnCreateAbha;
-        private Button btnLogin;
-        private Button btnReKyc;
-        private Button btnScanShare;
-        private Button btnClearSession;
-        private Button btnM2Dashboard;
-        private Button btnM3Dashboard;
-        private Button btnDownloadCard;
-        private Button btnClose;
-
-        private Label lblNameTitle;
-        private Label lblNameVal;
-        private Label lblAbhaAddrTitle;
-        private Label lblAbhaAddrVal;
-        private Label lblAbhaNumTitle;
-        private Label lblAbhaNumVal;
-        private Label lblGenderTitle;
-        private Label lblGenderVal;
-        private Label lblDobTitle;
-        private Label lblDobVal;
-        private Label lblMobileTitle;
-        private Label lblMobileVal;
-        private Label lblStatus;
-
-        private PictureBox picPhoto;
-        private PictureBox picCard;
 
         public frmAbdmM1Dashboard()
         {
@@ -64,284 +32,6 @@ namespace HMS.abdm
                 Environment = System.Configuration.ConfigurationManager.AppSettings["AbdmSettings:Environment"] ?? "Sandbox"
             };
             return new AbdmApiClient(settings);
-        }
-
-        private void InitializeComponent()
-        {
-            this.grpActions = new GroupBox();
-            this.grpProfile = new GroupBox();
-            this.grpCardPreview = new GroupBox();
-            
-            this.btnCreateAbha = new Button();
-            this.btnLogin = new Button();
-            this.btnReKyc = new Button();
-            this.btnScanShare = new Button();
-            this.btnClearSession = new Button();
-            this.btnDownloadCard = new Button();
-            this.btnClose = new Button();
-
-            this.lblNameTitle = new Label();
-            this.lblNameVal = new Label();
-            this.lblAbhaAddrTitle = new Label();
-            this.lblAbhaAddrVal = new Label();
-            this.lblAbhaNumTitle = new Label();
-            this.lblAbhaNumVal = new Label();
-            this.lblGenderTitle = new Label();
-            this.lblGenderVal = new Label();
-            this.lblDobTitle = new Label();
-            this.lblDobVal = new Label();
-            this.lblMobileTitle = new Label();
-            this.lblMobileVal = new Label();
-            this.lblStatus = new Label();
-
-            this.picPhoto = new PictureBox();
-            this.picCard = new PictureBox();
-
-            // Form Layout
-            this.Text = "ABDM Milestone 1 (M1) Integration Dashboard";
-            this.Size = new Size(950, 580);
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.BackColor = Color.FromArgb(245, 246, 250);
-
-            // GroupBox Actions
-            this.grpActions.Text = "ABHA Actions (M1)";
-            this.grpActions.Location = new Point(15, 15);
-            this.grpActions.Size = new Size(250, 450);
-            this.grpActions.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
-            this.grpActions.BackColor = Color.White;
-
-            int btnY = 35;
-            int btnHeight = 45;
-            int spacing = 15;
-
-            // btnCreateAbha
-            this.btnCreateAbha.Text = "Create New ABHA";
-            this.btnCreateAbha.Location = new Point(20, btnY);
-            this.btnCreateAbha.Size = new Size(210, btnHeight);
-            this.btnCreateAbha.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular);
-            this.btnCreateAbha.BackColor = Color.FromArgb(41, 128, 185);
-            this.btnCreateAbha.ForeColor = Color.White;
-            this.btnCreateAbha.FlatStyle = FlatStyle.Flat;
-            this.btnCreateAbha.Click += btnCreateAbha_Click;
-            this.grpActions.Controls.Add(this.btnCreateAbha);
-
-            // btnLogin
-            btnY += btnHeight + spacing;
-            this.btnLogin.Text = "Login / Verify ABHA";
-            this.btnLogin.Location = new Point(20, btnY);
-            this.btnLogin.Size = new Size(210, btnHeight);
-            this.btnLogin.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular);
-            this.btnLogin.BackColor = Color.FromArgb(39, 174, 96);
-            this.btnLogin.ForeColor = Color.White;
-            this.btnLogin.FlatStyle = FlatStyle.Flat;
-            this.btnLogin.Click += btnLogin_Click;
-            this.grpActions.Controls.Add(this.btnLogin);
-
-            // btnScanShare
-            btnY += btnHeight + spacing;
-            this.btnScanShare.Text = "Scan & Share Requests";
-            this.btnScanShare.Location = new Point(20, btnY);
-            this.btnScanShare.Size = new Size(210, btnHeight);
-            this.btnScanShare.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular);
-            this.btnScanShare.BackColor = Color.FromArgb(142, 68, 173);
-            this.btnScanShare.ForeColor = Color.White;
-            this.btnScanShare.FlatStyle = FlatStyle.Flat;
-            this.btnScanShare.Click += btnScanShare_Click;
-            this.grpActions.Controls.Add(this.btnScanShare);
-
-            // btnReKyc
-            btnY += btnHeight + spacing;
-            this.btnReKyc.Text = "Verify Re-KYC";
-            this.btnReKyc.Location = new Point(20, btnY);
-            this.btnReKyc.Size = new Size(210, btnHeight);
-            this.btnReKyc.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular);
-            this.btnReKyc.BackColor = Color.FromArgb(230, 126, 34);
-            this.btnReKyc.ForeColor = Color.White;
-            this.btnReKyc.FlatStyle = FlatStyle.Flat;
-            this.btnReKyc.Click += btnReKyc_Click;
-            this.grpActions.Controls.Add(this.btnReKyc);
-
-            // btnClearSession
-            btnY += btnHeight + spacing;
-            this.btnClearSession.Text = "Clear Session / Logout";
-            this.btnClearSession.Location = new Point(20, btnY);
-            this.btnClearSession.Size = new Size(210, btnHeight);
-            this.btnClearSession.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular);
-            this.btnClearSession.BackColor = Color.FromArgb(192, 57, 43);
-            this.btnClearSession.ForeColor = Color.White;
-            this.btnClearSession.FlatStyle = FlatStyle.Flat;
-            this.btnClearSession.Click += btnClearSession_Click;
-            this.grpActions.Controls.Add(this.btnClearSession);
-
-            // btnM2Dashboard
-            btnY += btnHeight + spacing;
-            this.btnM2Dashboard = new Button();
-            this.btnM2Dashboard.Text = "ABDM M2 Dashboard";
-            this.btnM2Dashboard.Location = new Point(20, btnY);
-            this.btnM2Dashboard.Size = new Size(210, btnHeight);
-            this.btnM2Dashboard.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
-            this.btnM2Dashboard.BackColor = Color.FromArgb(52, 73, 94);
-            this.btnM2Dashboard.ForeColor = Color.White;
-            this.btnM2Dashboard.FlatStyle = FlatStyle.Flat;
-            this.btnM2Dashboard.Click += btnM2Dashboard_Click;
-            this.grpActions.Controls.Add(this.btnM2Dashboard);
-
-            // btnM3Dashboard
-            btnY += btnHeight + spacing;
-            this.btnM3Dashboard = new Button();
-            this.btnM3Dashboard.Text = "ABDM M3 Dashboard";
-            this.btnM3Dashboard.Location = new Point(20, btnY);
-            this.btnM3Dashboard.Size = new Size(210, btnHeight);
-            this.btnM3Dashboard.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
-            this.btnM3Dashboard.BackColor = Color.FromArgb(41, 128, 185);
-            this.btnM3Dashboard.ForeColor = Color.White;
-            this.btnM3Dashboard.FlatStyle = FlatStyle.Flat;
-            this.btnM3Dashboard.Click += btnM3Dashboard_Click;
-            this.grpActions.Controls.Add(this.btnM3Dashboard);
-
-            // GroupBox Profile
-            this.grpProfile.Text = "Active Patient Profile";
-            this.grpProfile.Location = new Point(280, 15);
-            this.grpProfile.Size = new Size(380, 450);
-            this.grpProfile.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
-            this.grpProfile.BackColor = Color.White;
-
-            // picPhoto
-            this.picPhoto.Location = new Point(20, 35);
-            this.picPhoto.Size = new Size(110, 130);
-            this.picPhoto.SizeMode = PictureBoxSizeMode.Zoom;
-            this.picPhoto.BorderStyle = BorderStyle.FixedSingle;
-            this.picPhoto.BackColor = Color.FromArgb(236, 240, 241);
-            this.grpProfile.Controls.Add(this.picPhoto);
-
-            int lblX = 145;
-            int lblY = 35;
-            int lblHeight = 22;
-
-            // Name
-            this.lblNameTitle.Text = "Name:";
-            this.lblNameTitle.Location = new Point(lblX, lblY);
-            this.lblNameTitle.Size = new Size(50, lblHeight);
-            this.lblNameTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            this.lblNameVal.Location = new Point(lblX + 55, lblY);
-            this.lblNameVal.Size = new Size(170, lblHeight);
-            this.lblNameVal.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
-            this.grpProfile.Controls.Add(this.lblNameTitle);
-            this.grpProfile.Controls.Add(this.lblNameVal);
-
-            // ABHA Address
-            lblY += 30;
-            this.lblAbhaAddrTitle.Text = "ABHA ID:";
-            this.lblAbhaAddrTitle.Location = new Point(lblX, lblY);
-            this.lblAbhaAddrTitle.Size = new Size(55, lblHeight);
-            this.lblAbhaAddrTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            this.lblAbhaAddrVal.Location = new Point(lblX + 55, lblY);
-            this.lblAbhaAddrVal.Size = new Size(170, lblHeight);
-            this.lblAbhaAddrVal.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
-            this.grpProfile.Controls.Add(this.lblAbhaAddrTitle);
-            this.grpProfile.Controls.Add(this.lblAbhaAddrVal);
-
-            // ABHA Number
-            lblY += 30;
-            this.lblAbhaNumTitle.Text = "ABHA No:";
-            this.lblAbhaNumTitle.Location = new Point(lblX, lblY);
-            this.lblAbhaNumTitle.Size = new Size(60, lblHeight);
-            this.lblAbhaNumTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            this.lblAbhaNumVal.Location = new Point(lblX + 60, lblY);
-            this.lblAbhaNumVal.Size = new Size(165, lblHeight);
-            this.lblAbhaNumVal.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
-            this.grpProfile.Controls.Add(this.lblAbhaNumTitle);
-            this.grpProfile.Controls.Add(this.lblAbhaNumVal);
-
-            // Gender
-            lblY += 30;
-            this.lblGenderTitle.Text = "Gender:";
-            this.lblGenderTitle.Location = new Point(lblX, lblY);
-            this.lblGenderTitle.Size = new Size(55, lblHeight);
-            this.lblGenderTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            this.lblGenderVal.Location = new Point(lblX + 55, lblY);
-            this.lblGenderVal.Size = new Size(170, lblHeight);
-            this.lblGenderVal.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
-            this.grpProfile.Controls.Add(this.lblGenderTitle);
-            this.grpProfile.Controls.Add(this.lblGenderVal);
-
-            // DOB
-            lblY = 175;
-            this.lblDobTitle.Text = "Date of Birth:";
-            this.lblDobTitle.Location = new Point(20, lblY);
-            this.lblDobTitle.Size = new Size(90, lblHeight);
-            this.lblDobTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            this.lblDobVal.Location = new Point(120, lblY);
-            this.lblDobVal.Size = new Size(240, lblHeight);
-            this.lblDobVal.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
-            this.grpProfile.Controls.Add(this.lblDobTitle);
-            this.grpProfile.Controls.Add(this.lblDobVal);
-
-            // Mobile
-            lblY += 30;
-            this.lblMobileTitle.Text = "Mobile Number:";
-            this.lblMobileTitle.Location = new Point(20, lblY);
-            this.lblMobileTitle.Size = new Size(95, lblHeight);
-            this.lblMobileTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            this.lblMobileVal.Location = new Point(120, lblY);
-            this.lblMobileVal.Size = new Size(240, lblHeight);
-            this.lblMobileVal.Font = new Font("Segoe UI", 9F, FontStyle.Regular);
-            this.grpProfile.Controls.Add(this.lblMobileTitle);
-            this.grpProfile.Controls.Add(this.lblMobileVal);
-
-            // Card Downloader Button inside profile
-            this.btnDownloadCard.Text = "Download & Preview ABHA Card";
-            this.btnDownloadCard.Location = new Point(20, 380);
-            this.btnDownloadCard.Size = new Size(340, 45);
-            this.btnDownloadCard.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
-            this.btnDownloadCard.BackColor = Color.FromArgb(52, 152, 219);
-            this.btnDownloadCard.ForeColor = Color.White;
-            this.btnDownloadCard.FlatStyle = FlatStyle.Flat;
-            this.btnDownloadCard.Click += btnDownloadCard_Click;
-            this.grpProfile.Controls.Add(this.btnDownloadCard);
-
-            // GroupBox Card Preview
-            this.grpCardPreview.Text = "ABHA Physical Card Preview";
-            this.grpCardPreview.Location = new Point(675, 15);
-            this.grpCardPreview.Size = new Size(245, 450);
-            this.grpCardPreview.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
-            this.grpCardPreview.BackColor = Color.White;
-
-            // picCard
-            this.picCard.Location = new Point(15, 35);
-            this.picCard.Size = new Size(215, 390);
-            this.picCard.SizeMode = PictureBoxSizeMode.Zoom;
-            this.picCard.BorderStyle = BorderStyle.FixedSingle;
-            this.picCard.BackColor = Color.FromArgb(236, 240, 241);
-            this.grpCardPreview.Controls.Add(this.picCard);
-
-            // Status bar label
-            this.lblStatus.Location = new Point(15, 485);
-            this.lblStatus.Size = new Size(740, 30);
-            this.lblStatus.Font = new Font("Segoe UI", 9F, FontStyle.Italic);
-            this.lblStatus.ForeColor = Color.FromArgb(127, 140, 141);
-            this.lblStatus.Text = "Loading Session Info...";
-
-            // btnClose
-            this.btnClose.Text = "Close Dashboard";
-            this.btnClose.Location = new Point(770, 480);
-            this.btnClose.Size = new Size(150, 40);
-            this.btnClose.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
-            this.btnClose.BackColor = Color.FromArgb(149, 165, 166);
-            this.btnClose.ForeColor = Color.White;
-            this.btnClose.FlatStyle = FlatStyle.Flat;
-            this.btnClose.Click += (s, e) => this.Close();
-
-            // Add all controls to form
-            this.Controls.Add(this.grpActions);
-            this.Controls.Add(this.grpProfile);
-            this.Controls.Add(this.grpCardPreview);
-            this.Controls.Add(this.lblStatus);
-            this.Controls.Add(this.btnClose);
-
-            this.Load += frmAbdmM1Dashboard_Load;
         }
 
         private void frmAbdmM1Dashboard_Load(object sender, EventArgs e)
@@ -582,6 +272,20 @@ namespace HMS.abdm
             {
                 frm.ShowDialog();
             }
+        }
+
+        private void btnBridgeConfig_Click(object sender, EventArgs e)
+        {
+            using (var frm = new frmBridgeConfig())
+            {
+                frm.ShowDialog();
+            }
+        }
+
+        private void btnCreateRecord_Click(object sender, EventArgs e)
+        {
+            var frm = new frmPrescription();
+            frm.Show();
         }
 
         private string PromptDialog(string text, string caption)

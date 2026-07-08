@@ -18,6 +18,6 @@
     <EmbeddedResource Include="..\abdm\**\*.resx" />
   </ItemGroup>
 
-  <!-- Force project file reload to pick up external/new files in the shared abdm directory -->
+  <!-- Force project file reload to pick up external/new files in the shared abdm directory (Last updated: 2026-07-08 14:16) -->
 
 </Project>

@@ -67,7 +67,7 @@ namespace HMS.abdm
                 string aadhaar = (txtAadhaar1.Text + txtAadhaar2.Text + txtAadhaar3.Text).Trim();
                 if (aadhaar.Length != 12 || !aadhaar.All(char.IsDigit))
                 {
-                    ShowWarning("Please enter a valid 12-digit Aadhaar number.");
+                    ShowWarning("Aadhaar Number is not valid.");
                     return;
                 }
 
@@ -100,7 +100,7 @@ namespace HMS.abdm
                             if (resp.Success && resp.Data != null)
                             {
                                 _txnId = resp.Data.TransactionId;
-                                SwitchToOtpMode();
+                                SwitchToOtpMode(resp.Data.MaskedMobile);
                             }
                             else
                             {
@@ -310,7 +310,7 @@ namespace HMS.abdm
             btnCancel.BringToFront();
         }
 
-        private void SwitchToOtpMode()
+        private void SwitchToOtpMode(string maskedMobile = null)
         {
             isOtpMode = true;
             otpSeconds = 60;
@@ -330,6 +330,12 @@ namespace HMS.abdm
             lblResendOTP.Visible = true;
             lblResendOTP.Enabled = false;
             lblMobileNote.Visible = true;
+            
+            if (string.IsNullOrEmpty(maskedMobile))
+                maskedMobile = "*******XXXX";
+                
+            lblMobileNote.Text = $"We just sent an OTP on the Mobile Number {maskedMobile} linked with Aadhaar. Enter the OTP below to proceed with ABHA creation.";
+            lblMobileNote.ForeColor = Color.FromArgb(230, 100, 50); // Highlight note
             
             // Update button text, position and ensure they are on top
             btnSubmit.Text = "Submit OTP";

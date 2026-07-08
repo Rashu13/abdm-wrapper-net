@@ -6,119 +6,19 @@ using ABDM.Models;
 
 namespace HMS.abdm
 {
-    public class frmABHAScanUserQR : BaseForm
+    public partial class frmABHAScanUserQR : BaseForm
     {
-        private Panel pnlHeader;
-        private Label lblTitle;
-        private Button btnClose;
-
-        private Panel pnlCameraFrame;
-        private Label lblCameraOverlay;
-        private System.Windows.Forms.Timer timerScanLine;
         private int scanLineY = 0;
         private bool scanLineDirectionDown = true;
-
-        private Button btnScan;
-        private Label lblInstruction;
 
         public frmABHAScanUserQR()
         {
             InitializeComponent();
-        }
-
-        private void InitializeComponent()
-        {
-            this.Size = new Size(500, 480);
-            this.FormBorderStyle = FormBorderStyle.None;
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.BackColor = Color.White;
-
-            // Header
-            pnlHeader = new Panel
-            {
-                BackColor = Color.FromArgb(55, 115, 200),
-                Dock = DockStyle.Top,
-                Height = 50
-            };
-
-            lblTitle = new Label
-            {
-                Text = "Scan Patient ABHA Card QR (M1)",
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI Semibold", 11, FontStyle.Bold),
-                AutoSize = true,
-                Location = new Point(12, 12)
-            };
-
-            btnClose = new Button
-            {
-                Text = "X",
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                FlatStyle = FlatStyle.Flat,
-                Size = new Size(50, 50),
-                Location = new Point(450, 0),
-                Cursor = Cursors.Hand
-            };
-            btnClose.FlatAppearance.BorderSize = 0;
             btnClose.Click += (s, e) => this.Close();
-
-            pnlHeader.Controls.AddRange(new Control[] { lblTitle, btnClose });
-            this.Controls.Add(pnlHeader);
-
-            // Instructions
-            lblInstruction = new Label
-            {
-                Text = "Position the patient's ABHA QR code in front of the scanner webcam.",
-                Location = new Point(20, 65),
-                Size = new Size(460, 45),
-                Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(70, 70, 70),
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-            this.Controls.Add(lblInstruction);
-
-            // Camera Frame/Scanner Simulation panel
-            pnlCameraFrame = new Panel
-            {
-                Location = new Point(80, 120),
-                Size = new Size(340, 240),
-                BackColor = Color.Black,
-                BorderStyle = BorderStyle.FixedSingle
-            };
             pnlCameraFrame.Paint += PnlCameraFrame_Paint;
-
-            lblCameraOverlay = new Label
-            {
-                Text = "📷 Camera View Active\n[Waiting for ABHA QR Code]",
-                Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
-                ForeColor = Color.LightGray,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Dock = DockStyle.Fill
-            };
-            pnlCameraFrame.Controls.Add(lblCameraOverlay);
-            this.Controls.Add(pnlCameraFrame);
-
-            // Scan line animator timer
-            timerScanLine = new System.Windows.Forms.Timer { Interval = 30 };
             timerScanLine.Tick += TimerScanLine_Tick;
-            timerScanLine.Start();
-
-            // Action Button
-            btnScan = new Button
-            {
-                Text = "Simulate Scan Card QR",
-                Location = new Point(150, 395),
-                Size = new Size(200, 45),
-                BackColor = Color.FromArgb(46, 117, 89),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold),
-                Cursor = Cursors.Hand
-            };
-            btnScan.FlatAppearance.BorderSize = 0;
             btnScan.Click += BtnScan_Click;
-            this.Controls.Add(btnScan);
+            timerScanLine.Start();
         }
 
         private void TimerScanLine_Tick(object sender, EventArgs e)

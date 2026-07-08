@@ -16,6 +16,20 @@ namespace HMS.abdm
         {
             InitializeComponent();
             _client = GetAbdmClient();
+
+            // === Set dynamic dates for HIU Consent Request ===
+            // DateFrom: 1 year back to include all historical records
+            txtHiuDateFrom.Text = DateTime.UtcNow.AddYears(-1).ToString("yyyy-MM-ddT00:00:00.000Z");
+            // DateTo: tomorrow — ensures today's records are always included
+            txtHiuDateTo.Text = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-ddT23:59:59.000Z");
+            // EraseAt: 6 months from now
+            txtHiuEraseAt.Text = DateTime.UtcNow.AddMonths(6).ToString("yyyy-MM-ddT00:00:00.000Z");
+
+            // Check all HI types by default
+            for (int i = 0; i < clbHiTypes.Items.Count; i++)
+            {
+                clbHiTypes.SetItemChecked(i, true);
+            }
         }
 
         private AbdmApiClient GetAbdmClient()
@@ -37,6 +51,12 @@ namespace HMS.abdm
         private void btnClose_Click(object sender, EventArgs e)
         {
             this.Close();
+        }
+
+        private void btnCreateRecord_Click(object sender, EventArgs e)
+        {
+            var frm = new frmPrescription();
+            frm.Show();
         }
 
         // ==========================================
@@ -297,16 +317,18 @@ namespace HMS.abdm
                 btnRequestConsent.Enabled = false;
                 btnRequestConsent.Text = "Requesting Consent...";
 
-                var hiTypes = new List<string>
+                var hiTypes = new List<string>();
+                foreach (var item in clbHiTypes.CheckedItems)
                 {
-                    "DiagnosticReport",
-                    "DischargeSummary",
-                    "HealthDocumentRecord",
-                    "ImmunizationRecord",
-                    "OPConsultation",
-                    "Prescription",
-                    "WellnessRecord"
-                };
+                    hiTypes.Add(item.ToString());
+                }
+                if (hiTypes.Count == 0)
+                {
+                    MessageBox.Show("Please select at least one HI Type.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    btnRequestConsent.Enabled = true;
+                    btnRequestConsent.Text = "1. Initiate Consent Request";
+                    return;
+                }
 
                 var resp = await _client.InitiateConsentRequestAsync(
                     txtHiuPatientAbha.Text.Trim(),
@@ -361,8 +383,9 @@ namespace HMS.abdm
                     {
                         var dict = SimpleJson.Deserialize(statusResp.Data);
                         string status = dict.ContainsKey("status") ? dict["status"]?.ToString() ?? "" : "";
+                        txtLog.AppendText($"[Polling] Current Status: {status}\n");
                         
-                        if (status.IndexOf("NOTIFY_RESPONSE", StringComparison.OrdinalIgnoreCase) >= 0 || status.IndexOf("GRANTED", StringComparison.OrdinalIgnoreCase) >= 0)
+                        if (status.IndexOf("hiu notify", StringComparison.OrdinalIgnoreCase) >= 0 || status.IndexOf("GRANTED", StringComparison.OrdinalIgnoreCase) >= 0)
                         {
                             // Extract Consent ID
                             if (dict.ContainsKey("consentDetails") && dict["consentDetails"] is Dictionary<string, object> cDetails)

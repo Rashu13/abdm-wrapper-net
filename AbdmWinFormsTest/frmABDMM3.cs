@@ -27,9 +27,23 @@ namespace HMS.abdm
             this.pnlHeader.MouseMove += Header_MouseMove;
             this.pnlHeader.MouseUp += Header_MouseUp;
 
-            // Set default date range values
+            // Set default date range values for Subscription (M3 sub flow)
             txtDateFrom.Text = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
             txtDateTo.Text = DateTime.UtcNow.AddYears(1).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+
+            // === Set dynamic dates for HIU Consent Request ===
+            // DateFrom: 1 year back (to include all historical records)
+            txtHiuDateFrom.Text = DateTime.UtcNow.AddYears(-1).ToString("yyyy-MM-ddT00:00:00.000Z");
+            // DateTo: tomorrow (ensures today's records are included in range)
+            txtHiuDateTo.Text = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-ddT23:59:59.000Z");
+            // EraseAt: 6 months from now (consent data expiry)
+            txtHiuEraseAt.Text = DateTime.UtcNow.AddMonths(6).ToString("yyyy-MM-ddT00:00:00.000Z");
+
+            // Check all HI types by default
+            for (int i = 0; i < clbHiTypes.Items.Count; i++)
+            {
+                clbHiTypes.SetItemChecked(i, true);
+            }
         }
 
         private AbdmApiClient GetAbdmClient()
@@ -205,16 +219,18 @@ namespace HMS.abdm
                 btnRequestConsent.Enabled = false;
                 btnRequestConsent.Text = "Requesting...";
 
-                var hiTypes = new List<string>
+                var hiTypes = new List<string>();
+                foreach (var item in clbHiTypes.CheckedItems)
                 {
-                    "DiagnosticReport",
-                    "DischargeSummary",
-                    "HealthDocumentRecord",
-                    "ImmunizationRecord",
-                    "OPConsultation",
-                    "Prescription",
-                    "WellnessRecord"
-                };
+                    hiTypes.Add(item.ToString());
+                }
+                if (hiTypes.Count == 0)
+                {
+                    MessageBox.Show("Please select at least one HI Type.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    btnRequestConsent.Enabled = true;
+                    btnRequestConsent.Text = "1. Initiate Consent Request";
+                    return;
+                }
 
                 var resp = await _client.InitiateConsentRequestAsync(
                     txtHiuPatientAbha.Text.Trim(),

@@ -70,10 +70,44 @@ namespace HMS.abdm
         public frmPrescription()
         {
             InitializeComponent();
+            ApplyModernTheme();
             SetupExtraMedicationFields();
             _client = GetAbdmClient();
             cmbRecordType.SelectedIndexChanged += cmbRecordType_SelectedIndexChanged;
             InitializeDefaultValues();
+        }
+
+        private void ApplyModernTheme()
+        {
+            this.BackColor = Color.FromArgb(245, 247, 250);
+            pnlHeader.BackColor = Color.FromArgb(44, 62, 80);
+            
+            btnSaveAndPush.BackColor = Color.FromArgb(41, 128, 185);
+            btnSaveAndPush.ForeColor = Color.White;
+            btnSaveAndPush.FlatAppearance.BorderSize = 0;
+            btnSaveAndPush.Cursor = Cursors.Hand;
+
+            btnInitiateLink.BackColor = Color.FromArgb(39, 174, 96);
+            btnInitiateLink.ForeColor = Color.White;
+            btnInitiateLink.FlatAppearance.BorderSize = 0;
+            btnInitiateLink.Cursor = Cursors.Hand;
+
+            btnAutoFlow.BackColor = Color.FromArgb(142, 68, 173);
+            btnAutoFlow.ForeColor = Color.White;
+            btnAutoFlow.FlatAppearance.BorderSize = 0;
+            btnAutoFlow.Cursor = Cursors.Hand;
+
+            btnUploadPdf.BackColor = Color.FromArgb(230, 126, 34);
+            btnUploadPdf.ForeColor = Color.White;
+            btnUploadPdf.FlatAppearance.BorderSize = 0;
+            btnUploadPdf.Cursor = Cursors.Hand;
+
+            btnClose.Cursor = Cursors.Hand;
+            btnClose.FlatAppearance.MouseOverBackColor = Color.Red;
+
+            txtLogs.BackColor = Color.FromArgb(30, 30, 30);
+            txtLogs.ForeColor = Color.LightGreen;
+            txtLogs.Font = new Font("Consolas", 10F);
         }
 
         private AbdmApiClient GetAbdmClient()
@@ -135,11 +169,13 @@ namespace HMS.abdm
                 Text = "Add Item",
                 Location = new Point(580, 5),
                 Size = new Size(110, 28),
-                BackColor = Color.FromArgb(55, 115, 200),
+                BackColor = Color.FromArgb(41, 128, 185),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = gbPrescribe.Font
+                Font = gbPrescribe.Font,
+                Cursor = Cursors.Hand
             };
+            btnAdd.FlatAppearance.BorderSize = 0;
             btnAdd.Click += onAdd;
 
             var btnRemove = new Button
@@ -147,11 +183,13 @@ namespace HMS.abdm
                 Text = "Remove Selected",
                 Location = new Point(580, 35),
                 Size = new Size(110, 28),
-                BackColor = Color.DarkRed,
+                BackColor = Color.FromArgb(192, 57, 43),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Font = gbPrescribe.Font
+                Font = gbPrescribe.Font,
+                Cursor = Cursors.Hand
             };
+            btnRemove.FlatAppearance.BorderSize = 0;
             btnRemove.Click += onRemove;
 
             tp.Controls.Add(btnAdd);
@@ -168,7 +206,9 @@ namespace HMS.abdm
                 GridLines = true,
                 View = View.Details,
                 HideSelection = false,
-                Font = gbPrescribe.Font
+                Font = gbPrescribe.Font,
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = Color.White
             };
             for (int i = 0; i < columns.Length; i++)
             {
@@ -506,6 +546,18 @@ namespace HMS.abdm
                 {
                     hiType = "DischargeSummary";
                 }
+                else if (recordType == "ImmunizationRecord")
+                {
+                    hiType = "ImmunizationRecord";
+                }
+                else if (recordType == "WellnessRecord")
+                {
+                    hiType = "WellnessRecord";
+                }
+                else if (recordType == "Invoice")
+                {
+                    hiType = "Invoice";
+                }
 
                 var careContexts = new List<Dictionary<string, object>>
                 {
@@ -661,6 +713,18 @@ namespace HMS.abdm
                 {
                     hiType = "DischargeSummary";
                 }
+                else if (recordType == "ImmunizationRecord")
+                {
+                    hiType = "ImmunizationRecord";
+                }
+                else if (recordType == "WellnessRecord")
+                {
+                    hiType = "WellnessRecord";
+                }
+                else if (recordType == "Invoice")
+                {
+                    hiType = "Invoice";
+                }
 
                 var careContexts = new List<Dictionary<string, object>>
                 {
@@ -745,7 +809,7 @@ namespace HMS.abdm
                     tcRecordDetails.SelectedTab = tpDiagnosticReport;
                 else if (recordType == "DischargeSummary")
                     tcRecordDetails.SelectedTab = tpDischargeSummary;
-                else if (recordType == "HealthDocumentRecord")
+                else if (recordType == "HealthDocumentRecord" || recordType == "ImmunizationRecord" || recordType == "WellnessRecord" || recordType == "Invoice")
                     tcRecordDetails.SelectedTab = tpHealthDocument;
 
                 UpdateUiForRecordType();
@@ -768,7 +832,7 @@ namespace HMS.abdm
             txtLogs.Location = new Point(460, 500);
             txtLogs.Height = 180;
 
-            if (recordType == "HealthDocumentRecord")
+            if (recordType == "HealthDocumentRecord" || recordType == "ImmunizationRecord" || recordType == "WellnessRecord" || recordType == "Invoice")
             {
                 gbPrescribe.Visible = false;
                 gbPdf.Location = new Point(460, 65);
@@ -802,6 +866,9 @@ namespace HMS.abdm
                     else if (recordType == "OPConsultationRecord") title = "MIDHA HOSPITAL - OP CONSULTATION REPORT";
                     else if (recordType == "DiagnosticReport") title = "MIDHA HOSPITAL - DIAGNOSTIC REPORT";
                     else if (recordType == "DischargeSummary") title = "MIDHA HOSPITAL - DISCHARGE SUMMARY";
+                    else if (recordType == "ImmunizationRecord") title = "MIDHA HOSPITAL - IMMUNIZATION RECORD";
+                    else if (recordType == "WellnessRecord") title = "MIDHA HOSPITAL - WELLNESS RECORD";
+                    else if (recordType == "Invoice") title = "MIDHA HOSPITAL - INVOICE";
 
                     sb.Append($"BT\n/F1 14 Tf\n50 750 Td\n({title}) Tj\nET\n");
                     sb.Append($"BT\n/F1 10 Tf\n50 710 Td\n(Patient Name: {patientName}) Tj\nET\n");

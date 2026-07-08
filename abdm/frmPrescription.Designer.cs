@@ -147,7 +147,7 @@ namespace HMS.abdm
             // 
             cmbRecordType.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbRecordType.FormattingEnabled = true;
-            cmbRecordType.Items.AddRange(new object[] { "PrescriptionRecord", "OPConsultationRecord", "HealthDocumentRecord", "DiagnosticReport", "DischargeSummary" });
+            cmbRecordType.Items.AddRange(new object[] { "PrescriptionRecord", "OPConsultationRecord", "HealthDocumentRecord", "DiagnosticReport", "DischargeSummary", "ImmunizationRecord", "WellnessRecord", "Invoice" });
             cmbRecordType.Location = new Point(170, 434);
             cmbRecordType.Margin = new Padding(3, 4, 3, 4);
             cmbRecordType.Name = "cmbRecordType";

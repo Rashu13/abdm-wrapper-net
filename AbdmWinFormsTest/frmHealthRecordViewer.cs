@@ -8,7 +8,7 @@ namespace HMS.abdm
 {
     public class frmHealthRecordViewer : Form
     {
-        private TreeView treeView;
+        private DataGridView gridRecords;
         private RichTextBox txtDetails;
         private FlowLayoutPanel pnlAttachments;
         private List<Dictionary<string, object>> _records;
@@ -25,210 +25,516 @@ namespace HMS.abdm
                 }
             }
             InitializeComponent();
-            PopulateTree();
+            PopulateGrid();
         }
 
         private void InitializeComponent()
         {
             this.Text = "Health Record Viewer";
-            this.Size = new Size(1000, 600);
+            this.Size = new Size(1100, 650);
             this.StartPosition = FormStartPosition.CenterScreen;
+            this.BackColor = Color.FromArgb(245, 246, 250);
 
             var splitContainer = new SplitContainer
             {
                 Dock = DockStyle.Fill,
-                SplitterDistance = 300
+                SplitterDistance = 450, 
+                BackColor = Color.FromArgb(220, 224, 230),
+                SplitterWidth = 4
             };
 
-            treeView = new TreeView
+            gridRecords = new DataGridView
             {
                 Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 10F)
+                Font = new Font("Segoe UI", 10F),
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                ReadOnly = true,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                BackgroundColor = Color.White,
+                RowHeadersVisible = false,
+                BorderStyle = BorderStyle.None,
+                CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal,
+                GridColor = Color.FromArgb(230, 230, 230),
+                EnableHeadersVisualStyles = false,
+                Cursor = Cursors.Hand
             };
-            treeView.AfterSelect += TreeView_AfterSelect;
+            
+            gridRecords.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(52, 73, 94);
+            gridRecords.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            gridRecords.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10.5F, FontStyle.Bold);
+            gridRecords.ColumnHeadersHeight = 45;
+            gridRecords.DefaultCellStyle.SelectionBackColor = Color.FromArgb(224, 232, 240);
+            gridRecords.DefaultCellStyle.SelectionForeColor = Color.Black;
+            gridRecords.DefaultCellStyle.Padding = new Padding(10, 5, 10, 5);
+            gridRecords.RowTemplate.Height = 40;
+            gridRecords.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(248, 250, 252);
 
-            var rightPanel = new Panel { Dock = DockStyle.Fill };
+            gridRecords.Columns.Add("Date", "Visit Date");
+            gridRecords.Columns.Add("Context", "Care Context");
+            gridRecords.Columns.Add("Items", "Contents");
+            gridRecords.Columns[0].FillWeight = 30;
+            gridRecords.Columns[1].FillWeight = 40;
+            gridRecords.Columns[2].FillWeight = 30;
+
+            gridRecords.SelectionChanged += GridRecords_SelectionChanged;
+
+            var rightPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(20), BackColor = Color.White };
 
             txtDetails = new RichTextBox
             {
                 Dock = DockStyle.Fill,
                 Font = new Font("Segoe UI", 11F),
                 ReadOnly = true,
-                BackColor = Color.White
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.None
             };
 
             pnlAttachments = new FlowLayoutPanel
             {
                 Dock = DockStyle.Top,
-                Height = 50,
-                BackColor = Color.LightGray,
+                Height = 60,
+                BackColor = Color.White,
                 Visible = false,
-                Padding = new Padding(5)
+                Padding = new Padding(0, 0, 0, 10)
             };
 
-            rightPanel.Controls.Add(txtDetails);
             rightPanel.Controls.Add(pnlAttachments);
+            rightPanel.Controls.Add(txtDetails);
 
-            splitContainer.Panel1.Controls.Add(treeView);
+            splitContainer.Panel1.Controls.Add(gridRecords);
             splitContainer.Panel2.Controls.Add(rightPanel);
 
             this.Controls.Add(splitContainer);
         }
 
-        private void PopulateTree()
+        private void PopulateGrid()
         {
-            treeView.Nodes.Clear();
+            gridRecords.Rows.Clear();
 
             foreach (var rec in _records)
             {
                 string ccRef = rec.ContainsKey("careContextReference") ? rec["careContextReference"]?.ToString() ?? "Unknown CC" : "Unknown CC";
-                var ccNode = new TreeNode($"Care Context: {ccRef}") { Tag = rec };
-
+                string visitDate = "Unknown Date";
+                int resourceCount = 0;
+                
                 if (rec.ContainsKey("fhirBundle") && rec["fhirBundle"] is Dictionary<string, object> bundle)
                 {
                     if (bundle.ContainsKey("entry") && bundle["entry"] is List<object> entries)
                     {
+                        resourceCount = entries.Count;
                         foreach (var eObj in entries)
                         {
                             if (eObj is Dictionary<string, object> entry && entry.ContainsKey("resource") && entry["resource"] is Dictionary<string, object> res)
                             {
                                 string rType = res.ContainsKey("resourceType") ? res["resourceType"]?.ToString() ?? "" : "";
-                                
-                                string nodeText = rType;
-                                if (rType == "Composition") nodeText = "Clinical Document";
-                                else if (rType == "Practitioner") nodeText = "Doctor Details";
-                                else if (rType == "MedicationRequest") nodeText = "Prescription";
-                                else if (rType == "Condition") nodeText = "Condition/Symptom";
-                                else if (rType == "DocumentReference") nodeText = "Attachment";
-
-                                var resNode = new TreeNode(nodeText) { Tag = res };
-                                ccNode.Nodes.Add(resNode);
+                                if (rType == "Encounter")
+                                {
+                                    if (res.ContainsKey("period") && res["period"] is Dictionary<string, object> pDict && pDict.ContainsKey("start"))
+                                    {
+                                        DateTime dt;
+                                        if (DateTime.TryParse(pDict["start"].ToString(), out dt))
+                                        {
+                                            visitDate = dt.ToString("dd-MMM-yyyy");
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
-                
-                treeView.Nodes.Add(ccNode);
-            }
 
-            treeView.ExpandAll();
+                int rowIndex = gridRecords.Rows.Add(visitDate, ccRef, $"{resourceCount} resources");
+                gridRecords.Rows[rowIndex].Tag = rec;
+            }
+            
+            // Auto select first row if available
+            if (gridRecords.Rows.Count > 0)
+            {
+                gridRecords.Rows[0].Selected = true;
+            }
         }
 
-        private void TreeView_AfterSelect(object sender, TreeViewEventArgs e)
+        private void GridRecords_SelectionChanged(object sender, EventArgs e)
+        {
+            if (gridRecords.SelectedRows.Count == 0) return;
+            
+            var selectedRow = gridRecords.SelectedRows[0];
+            if (selectedRow.Tag is Dictionary<string, object> rec)
+            {
+                ShowSummary(rec);
+            }
+        }
+
+        private void ShowSummary(Dictionary<string, object> rec)
         {
             txtDetails.Clear();
             pnlAttachments.Controls.Clear();
             pnlAttachments.Visible = false;
 
-            if (e.Node.Tag is Dictionary<string, object> tagData)
+            string ccRef = rec.ContainsKey("careContextReference") ? rec["careContextReference"]?.ToString() ?? "N/A" : "N/A";
+            
+            string patientName = "N/A";
+            string abhaAddress = "N/A";
+            string gender = "N/A";
+            string dob = "N/A";
+            string visitDate = "N/A";
+            List<string> medicines = new List<string>();
+            List<string> diagnostics = new List<string>();
+            List<string> observations = new List<string>();
+            List<string> immunizations = new List<string>();
+            List<string> sections = new List<string>();
+            List<Dictionary<string, object>> attachments = new List<Dictionary<string, object>>();
+
+            if (rec.ContainsKey("fhirBundle") && rec["fhirBundle"] is Dictionary<string, object> bundle)
             {
-                // Check if it's a full record (Care Context level)
-                if (tagData.ContainsKey("careContextReference"))
+                if (bundle.ContainsKey("entry") && bundle["entry"] is List<object> entries)
                 {
-                    txtDetails.AppendText($"Select a specific resource under this Care Context to view details.");
-                }
-                // Check if it's a resource level
-                else if (tagData.ContainsKey("resourceType"))
-                {
-                    string rType = tagData["resourceType"].ToString();
-                    txtDetails.SelectionFont = new Font(txtDetails.Font, FontStyle.Bold);
-                    txtDetails.AppendText($"Resource Type: {rType}\n\n");
-                    txtDetails.SelectionFont = new Font(txtDetails.Font, FontStyle.Regular);
-
-                    if (rType == "Composition")
+                    foreach (var eObj in entries)
                     {
-                        if (tagData.ContainsKey("type") && tagData["type"] is Dictionary<string, object> tDict && tDict.ContainsKey("text"))
+                        if (eObj is Dictionary<string, object> entry && entry.ContainsKey("resource") && entry["resource"] is Dictionary<string, object> r)
                         {
-                            txtDetails.AppendText($"Type: {tDict["text"]}\n");
-                        }
-                        if (tagData.ContainsKey("status")) txtDetails.AppendText($"Status: {tagData["status"]}\n");
-                    }
-                    else if (rType == "Practitioner")
-                    {
-                        if (tagData.ContainsKey("name") && tagData["name"] is List<object> nList && nList.Count > 0 && nList[0] is Dictionary<string, object> nDict && nDict.ContainsKey("text"))
-                        {
-                            txtDetails.AppendText($"Name: {nDict["text"]}\n");
-                        }
-                    }
-                    else if (rType == "MedicationRequest")
-                    {
-                        if (tagData.ContainsKey("medicationCodeableConcept") && tagData["medicationCodeableConcept"] is Dictionary<string, object> mDict && mDict.ContainsKey("text"))
-                        {
-                            txtDetails.AppendText($"Medication: {mDict["text"]}\n");
-                        }
-                    }
-                    else if (rType == "Condition")
-                    {
-                        if (tagData.ContainsKey("code") && tagData["code"] is Dictionary<string, object> cDict && cDict.ContainsKey("text"))
-                        {
-                            txtDetails.AppendText($"Condition: {cDict["text"]}\n");
-                        }
-                    }
-                    else if (rType == "DocumentReference")
-                    {
-                        txtDetails.AppendText("This resource contains an attachment. Click the button above to view it.");
-                        
-                        // Show attachment button
-                        try
-                        {
-                            if (tagData.ContainsKey("content") && tagData["content"] is List<object> cList && cList.Count > 0)
+                            string rType = r.ContainsKey("resourceType") ? r["resourceType"].ToString() : "";
+                            
+                            if (rType == "Patient")
                             {
-                                if (cList[0] is Dictionary<string, object> cDict && cDict.ContainsKey("attachment") && cDict["attachment"] is Dictionary<string, object> att)
+                                if (r.ContainsKey("name") && r["name"] is List<object> nList && nList.Count > 0 && nList[0] is Dictionary<string, object> nDict && nDict.ContainsKey("text"))
+                                    patientName = nDict["text"].ToString();
+                                
+                                if (r.ContainsKey("gender")) 
                                 {
-                                    if (att.ContainsKey("data") && att["data"] != null)
+                                    string g = r["gender"].ToString();
+                                    if (!string.IsNullOrEmpty(g)) gender = g.Substring(0, 1).ToUpper(); 
+                                }
+                                
+                                if (r.ContainsKey("birthDate")) dob = r["birthDate"].ToString();
+                                
+                                if (r.ContainsKey("identifier") && r["identifier"] is List<object> idList)
+                                {
+                                    foreach (var idObj in idList)
                                     {
-                                        string base64 = att["data"].ToString();
-                                        string ext = ".pdf";
-                                        if (att.ContainsKey("contentType") && att["contentType"] != null)
+                                        if (idObj is Dictionary<string, object> idDict && idDict.ContainsKey("value"))
                                         {
-                                            string cType = att["contentType"].ToString().ToLower();
-                                            if (cType.Contains("jpeg") || cType.Contains("jpg")) ext = ".jpg";
-                                            else if (cType.Contains("png")) ext = ".png";
+                                            string val = idDict["value"].ToString();
+                                            if (val.Contains("@")) abhaAddress = val;
                                         }
-
-                                        var btnOpen = new Button
-                                        {
-                                            Text = $"Open Attachment ({ext})",
-                                            Width = 200,
-                                            Height = 35,
-                                            BackColor = Color.CornflowerBlue,
-                                            ForeColor = Color.White,
-                                            FlatStyle = FlatStyle.Flat
-                                        };
-                                        btnOpen.Click += (s, args) => 
-                                        {
-                                            try
-                                            {
-                                                byte[] fileBytes = Convert.FromBase64String(base64);
-                                                string tempFile = Path.Combine(Path.GetTempPath(), $"ABDM_Doc_{Guid.NewGuid().ToString().Substring(0, 8)}{ext}");
-                                                File.WriteAllBytes(tempFile, fileBytes);
-                                                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
-                                                {
-                                                    FileName = tempFile,
-                                                    UseShellExecute = true
-                                                });
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                MessageBox.Show($"Failed to open: {ex.Message}");
-                                            }
-                                        };
-                                        
-                                        pnlAttachments.Controls.Add(btnOpen);
-                                        pnlAttachments.Visible = true;
                                     }
                                 }
                             }
-                        }
-                        catch { /* ignore */ }
-                    }
+                            else if (rType == "Encounter")
+                            {
+                                if (r.ContainsKey("period") && r["period"] is Dictionary<string, object> pDict && pDict.ContainsKey("start"))
+                                {
+                                    DateTime dt;
+                                    if (DateTime.TryParse(pDict["start"].ToString(), out dt))
+                                        visitDate = dt.ToString("dd-MMM-yyyy HH:mm");
+                                }
+                            }
+                            else if (rType == "MedicationRequest")
+                            {
+                                string medName = "Unknown Medicine";
+                                if (r.ContainsKey("medicationCodeableConcept") && r["medicationCodeableConcept"] is Dictionary<string, object> mDict && mDict.ContainsKey("text"))
+                                    medName = mDict["text"].ToString();
+                                else if (r.ContainsKey("medicationReference") && r["medicationReference"] is Dictionary<string, object> mrDict && mrDict.ContainsKey("display"))
+                                    medName = mrDict["display"].ToString();
 
-                    // Dump raw json of just this resource minus base64 data
-                    var rawJson = System.Text.Json.JsonSerializer.Serialize(tagData, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-                    rawJson = System.Text.RegularExpressions.Regex.Replace(rawJson, "\"data\"\\s*:\\s*\"[A-Za-z0-9+/=]{100,}\"", "\"data\": \"[BASE64_DATA_HIDDEN]\"");
-                    
-                    txtDetails.AppendText("\n\n--- Raw Details ---\n");
-                    txtDetails.AppendText(rawJson);
+                                string dosage = "Not Specified";
+                                if (r.ContainsKey("dosageInstruction") && r["dosageInstruction"] is List<object> dList && dList.Count > 0 && dList[0] is Dictionary<string, object> dDict && dDict.ContainsKey("text"))
+                                {
+                                    dosage = dDict["text"].ToString();
+                                }
+                                
+                                medicines.Add($"- {medName} - Dosage: {dosage}");
+                            }
+                            else if (rType == "DiagnosticReport")
+                            {
+                                string repName = "Diagnostic Report";
+                                if (r.ContainsKey("code") && r["code"] is Dictionary<string, object> cDict && cDict.ContainsKey("text"))
+                                    repName = cDict["text"].ToString();
+
+                                string conclusion = "";
+                                if (r.ContainsKey("conclusion"))
+                                    conclusion = r["conclusion"].ToString();
+
+                                string status = r.ContainsKey("status") ? r["status"].ToString() : "";
+                                string diagStr = $"- {repName} (Status: {status})";
+                                if (!string.IsNullOrEmpty(conclusion))
+                                    diagStr += $" - Conclusion: {conclusion}";
+                                diagnostics.Add(diagStr);
+                            }
+                            else if (rType == "Observation")
+                            {
+                                string obsName = "Observation";
+                                if (r.ContainsKey("code") && r["code"] is Dictionary<string, object> cDict && cDict.ContainsKey("text"))
+                                    obsName = cDict["text"].ToString();
+
+                                string obsVal = "";
+                                if (r.ContainsKey("valueQuantity") && r["valueQuantity"] is Dictionary<string, object> vQ)
+                                {
+                                    string val = vQ.ContainsKey("value") ? vQ["value"].ToString() : "";
+                                    string unit = vQ.ContainsKey("unit") ? vQ["unit"].ToString() : "";
+                                    obsVal = $"{val} {unit}".Trim();
+                                }
+                                else if (r.ContainsKey("valueString"))
+                                {
+                                    obsVal = r["valueString"].ToString();
+                                }
+                                else if (r.ContainsKey("valueCodeableConcept") && r["valueCodeableConcept"] is Dictionary<string, object> vC && vC.ContainsKey("text"))
+                                {
+                                    obsVal = vC["text"].ToString();
+                                }
+
+                                string status = r.ContainsKey("status") ? r["status"].ToString() : "";
+                                string obsStr = $"- {obsName}: {obsVal}";
+                                if (!string.IsNullOrEmpty(status))
+                                    obsStr += $" ({status})";
+                                observations.Add(obsStr);
+                            }
+                            else if (rType == "Immunization")
+                            {
+                                string vaccine = "Unknown Vaccine";
+                                if (r.ContainsKey("vaccineCode") && r["vaccineCode"] is Dictionary<string, object> vCode && vCode.ContainsKey("text"))
+                                    vaccine = vCode["text"].ToString();
+
+                                string occDate = "";
+                                if (r.ContainsKey("occurrenceDateTime"))
+                                    occDate = r["occurrenceDateTime"].ToString();
+
+                                string dose = "";
+                                if (r.ContainsKey("protocolApplied") && r["protocolApplied"] is List<object> pList && pList.Count > 0)
+                                {
+                                    if (pList[0] is Dictionary<string, object> pDict && pDict.ContainsKey("doseNumberPositiveInt"))
+                                        dose = $" (Dose: {pDict["doseNumberPositiveInt"]})";
+                                }
+
+                                string status = r.ContainsKey("status") ? r["status"].ToString() : "";
+                                string immStr = $"- {vaccine}{dose}";
+                                if (!string.IsNullOrEmpty(occDate))
+                                    immStr += $" given on {occDate}";
+                                if (!string.IsNullOrEmpty(status))
+                                    immStr += $" [Status: {status}]";
+                                immunizations.Add(immStr);
+                            }
+                            else if (rType == "Composition")
+                            {
+                                if (r.ContainsKey("title"))
+                                {
+                                    string compTitle = r["title"].ToString();
+                                    string compStatus = r.ContainsKey("status") ? r["status"].ToString() : "";
+                                    sections.Add($"Document Type: {compTitle} (Status: {compStatus})");
+                                }
+                                if (r.ContainsKey("section") && r["section"] is List<object> sList)
+                                {
+                                    foreach (var sObj in sList)
+                                    {
+                                        if (sObj is Dictionary<string, object> sDict)
+                                        {
+                                            string sTitle = sDict.ContainsKey("title") ? sDict["title"].ToString() : "Section";
+                                            string sText = "";
+                                            if (sDict.ContainsKey("text") && sDict["text"] is Dictionary<string, object> tDict && tDict.ContainsKey("div"))
+                                            {
+                                                sText = tDict["div"].ToString();
+                                                sText = System.Text.RegularExpressions.Regex.Replace(sText, "<.*?>", string.Empty).Trim();
+                                            }
+                                            sections.Add($"* {sTitle}: {sText}");
+                                        }
+                                    }
+                                }
+                            }
+                            else if (rType == "DocumentReference")
+                            {
+                                attachments.Add(r);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Build Beautiful Output
+            txtDetails.SelectionFont = new Font("Segoe UI", 15F, FontStyle.Bold);
+            txtDetails.SelectionColor = Color.FromArgb(41, 128, 185); // Bright Blue for name
+            txtDetails.AppendText($"Patient Name: {patientName}\n");
+            
+            txtDetails.SelectionFont = new Font("Segoe UI", 11.5F, FontStyle.Regular);
+            txtDetails.SelectionColor = Color.FromArgb(100, 100, 100);
+            txtDetails.AppendText($"ABHA Address: {abhaAddress}\n\n");
+
+            txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Bold);
+            txtDetails.SelectionColor = Color.FromArgb(52, 73, 94);
+            txtDetails.AppendText($"Gender: ");
+            txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Regular);
+            txtDetails.SelectionColor = Color.Black;
+            txtDetails.AppendText($"{gender} | ");
+            
+            txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Bold);
+            txtDetails.SelectionColor = Color.FromArgb(52, 73, 94);
+            txtDetails.AppendText($"DOB: ");
+            txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Regular);
+            txtDetails.SelectionColor = Color.Black;
+            txtDetails.AppendText($"{dob}\n\n");
+            
+            txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Bold);
+            txtDetails.SelectionColor = Color.FromArgb(52, 73, 94);
+            txtDetails.AppendText($"Care Context Ref: ");
+            txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Regular);
+            txtDetails.SelectionColor = Color.Black;
+            txtDetails.AppendText($"{ccRef}\n\n");
+            
+            txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Bold);
+            txtDetails.SelectionColor = Color.FromArgb(52, 73, 94);
+            txtDetails.AppendText($"Date: ");
+            txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Regular);
+            txtDetails.SelectionColor = Color.Black;
+            txtDetails.AppendText($"{visitDate}\n\n");
+
+            if (medicines.Count > 0)
+            {
+                txtDetails.SelectionFont = new Font("Segoe UI", 14F, FontStyle.Bold);
+                txtDetails.SelectionColor = Color.FromArgb(41, 128, 185);
+                txtDetails.AppendText($"Prescribed Medicines:\n");
+                
+                txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Regular);
+                txtDetails.SelectionColor = Color.Black;
+                foreach(var m in medicines)
+                {
+                    txtDetails.AppendText($"{m}\n");
+                }
+                txtDetails.AppendText("\n");
+            }
+
+            if (diagnostics.Count > 0)
+            {
+                txtDetails.SelectionFont = new Font("Segoe UI", 14F, FontStyle.Bold);
+                txtDetails.SelectionColor = Color.FromArgb(230, 126, 34); // Orange for Diagnostic
+                txtDetails.AppendText($"Diagnostic Reports:\n");
+                
+                txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Regular);
+                txtDetails.SelectionColor = Color.Black;
+                foreach(var d in diagnostics)
+                {
+                    txtDetails.AppendText($"{d}\n");
+                }
+                txtDetails.AppendText("\n");
+            }
+
+            if (observations.Count > 0)
+            {
+                txtDetails.SelectionFont = new Font("Segoe UI", 14F, FontStyle.Bold);
+                txtDetails.SelectionColor = Color.FromArgb(46, 204, 113); // Green for Observations/Vital Signs
+                txtDetails.AppendText($"Observations & Vitals:\n");
+                
+                txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Regular);
+                txtDetails.SelectionColor = Color.Black;
+                foreach(var o in observations)
+                {
+                    txtDetails.AppendText($"{o}\n");
+                }
+                txtDetails.AppendText("\n");
+            }
+
+            if (immunizations.Count > 0)
+            {
+                txtDetails.SelectionFont = new Font("Segoe UI", 14F, FontStyle.Bold);
+                txtDetails.SelectionColor = Color.FromArgb(155, 89, 182); // Purple for Immunization
+                txtDetails.AppendText($"Immunization Records:\n");
+                
+                txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Regular);
+                txtDetails.SelectionColor = Color.Black;
+                foreach(var imm in immunizations)
+                {
+                    txtDetails.AppendText($"{imm}\n");
+                }
+                txtDetails.AppendText("\n");
+            }
+
+            if (sections.Count > 0)
+            {
+                txtDetails.SelectionFont = new Font("Segoe UI", 14F, FontStyle.Bold);
+                txtDetails.SelectionColor = Color.FromArgb(52, 73, 94); // Dark slate for Document Notes
+                txtDetails.AppendText($"Clinical & Consultation Notes:\n");
+                
+                txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Regular);
+                txtDetails.SelectionColor = Color.Black;
+                foreach(var sec in sections)
+                {
+                    txtDetails.AppendText($"{sec}\n");
+                }
+                txtDetails.AppendText("\n");
+            }
+
+            // Create buttons for attachments
+            if (attachments.Count > 0)
+            {
+                int attIndex = 1;
+                foreach(var attRes in attachments)
+                {
+                    try
+                    {
+                        if (attRes.ContainsKey("content") && attRes["content"] is List<object> cList && cList.Count > 0)
+                        {
+                            if (cList[0] is Dictionary<string, object> cDict && cDict.ContainsKey("attachment") && cDict["attachment"] is Dictionary<string, object> att)
+                            {
+                                if (att.ContainsKey("data") && att["data"] != null)
+                                {
+                                    string base64 = att["data"].ToString();
+                                    string ext = ".pdf";
+                                    if (att.ContainsKey("contentType") && att["contentType"] != null)
+                                    {
+                                        string cType = att["contentType"].ToString().ToLower();
+                                        if (cType.Contains("jpeg") || cType.Contains("jpg")) ext = ".jpg";
+                                        else if (cType.Contains("png")) ext = ".png";
+                                    }
+
+                                    var btnOpen = new Button
+                                    {
+                                        Text = $"View Document {attIndex} ({ext})",
+                                        Width = 180,
+                                        Height = 40,
+                                        BackColor = Color.FromArgb(46, 204, 113),
+                                        ForeColor = Color.White,
+                                        FlatStyle = FlatStyle.Flat,
+                                        Cursor = Cursors.Hand,
+                                        Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                                        Margin = new Padding(0, 0, 10, 10)
+                                    };
+                                    btnOpen.FlatAppearance.BorderSize = 0;
+                                    
+                                    Action openPdfAction = () => 
+                                    {
+                                        try
+                                        {
+                                            byte[] fileBytes = Convert.FromBase64String(base64);
+                                            string tempFile = Path.Combine(Path.GetTempPath(), $"ABDM_Doc_{Guid.NewGuid().ToString().Substring(0, 8)}{ext}");
+                                            File.WriteAllBytes(tempFile, fileBytes);
+                                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                                            {
+                                                FileName = tempFile,
+                                                UseShellExecute = true
+                                            });
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            MessageBox.Show($"Failed to open: {ex.Message}");
+                                        }
+                                    };
+                                    
+                                    btnOpen.Click += (s, args) => openPdfAction();
+                                    pnlAttachments.Controls.Add(btnOpen);
+                                    
+                                    // Auto open the very first attachment when they click the row
+                                    if (attIndex == 1) openPdfAction();
+                                }
+                            }
+                        }
+                    }
+                    catch { /* ignore */ }
+                    attIndex++;
+                }
+                
+                if (pnlAttachments.Controls.Count > 0)
+                {
+                    pnlAttachments.Visible = true;
                 }
             }
         }
