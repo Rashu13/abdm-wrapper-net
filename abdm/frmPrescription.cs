@@ -65,6 +65,26 @@ namespace HMS.abdm
         private TextBox txtCondition_Disch;
         private ListView lvMedicines_Disch;
 
+        // Immunization Controls
+        private TabPage tpImmunization;
+        private TextBox txtVaccineName_Imm;
+        private TextBox txtLotNumber_Imm;
+        private TextBox txtDoseNumber_Imm;
+        private ListView lvMedicines_Imm;
+
+        // Wellness Controls
+        private TabPage tpWellness;
+        private TextBox txtObservation_Well;
+        private TextBox txtResult_Well;
+        private TextBox txtUnit_Well;
+        private ListView lvObservations_Well;
+
+        // Invoice Controls
+        private TabPage tpInvoice;
+        private TextBox txtItemName_Inv;
+        private TextBox txtAmount_Inv;
+        private ListView lvItems_Inv;
+
         private bool _isSyncing = false;
 
         public frmPrescription()
@@ -138,6 +158,9 @@ namespace HMS.abdm
             if (lvMedicines_OP != null) lvMedicines_OP.Items.Clear();
             if (lvMedicines_Diag != null) lvMedicines_Diag.Items.Clear();
             if (lvMedicines_Disch != null) lvMedicines_Disch.Items.Clear();
+            if (lvMedicines_Imm != null) lvMedicines_Imm.Items.Clear();
+            if (lvObservations_Well != null) lvObservations_Well.Items.Clear();
+            if (lvItems_Inv != null) lvItems_Inv.Items.Clear();
 
             _pdfBytes = null;
             _pdfFileName = string.Empty;
@@ -149,6 +172,9 @@ namespace HMS.abdm
             if (txtMedicineName_OP != null) txtMedicineName_OP.Text = "";
             if (txtTestName_Diag != null) txtTestName_Diag.Text = "";
             if (txtMedicineName_Disch != null) txtMedicineName_Disch.Text = "";
+            if (txtVaccineName_Imm != null) txtVaccineName_Imm.Text = "";
+            if (txtObservation_Well != null) txtObservation_Well.Text = "";
+            if (txtItemName_Inv != null) txtItemName_Inv.Text = "";
 
             cmbRecordType.SelectedIndex = 0; // PrescriptionRecord
         }
@@ -225,6 +251,9 @@ namespace HMS.abdm
             if (recordType == "OPConsultationRecord") return lvMedicines_OP;
             if (recordType == "DiagnosticReport") return lvMedicines_Diag;
             if (recordType == "DischargeSummary") return lvMedicines_Disch;
+            if (recordType == "ImmunizationRecord") return lvMedicines_Imm;
+            if (recordType == "WellnessRecord") return lvObservations_Well;
+            if (recordType == "Invoice") return lvItems_Inv;
             return null;
         }
 
@@ -324,6 +353,44 @@ namespace HMS.abdm
                 ForeColor = Color.DarkBlue
             };
             tpHealthDocument.Controls.Add(lblInfo);
+
+            // Tab 6: Immunization
+            tpImmunization = new TabPage("Immunization");
+            tcRecordDetails.TabPages.Add(tpImmunization);
+
+            txtVaccineName_Imm = CreateInputRow(tpImmunization, "Vaccine Name", 10, 8, 115, 5, 200, "Covishield");
+            txtLotNumber_Imm = CreateInputRow(tpImmunization, "Lot Number", 330, 8, 415, 5, 150, "LOT-1234");
+            txtDoseNumber_Imm = CreateInputRow(tpImmunization, "Dose Number", 10, 38, 115, 35, 200, "1");
+
+            CreateButtons(tpImmunization, btnAddMedicine_Imm_Click, btnRemoveMedicine_Imm_Click);
+            lvMedicines_Imm = CreateListView(tpImmunization,
+                new[] { "Vaccine Name", "Lot Number", "Dose Number" },
+                new[] { 250, 150, 100 });
+
+            // Tab 7: Wellness
+            tpWellness = new TabPage("Wellness");
+            tcRecordDetails.TabPages.Add(tpWellness);
+
+            txtObservation_Well = CreateInputRow(tpWellness, "Observation", 10, 8, 115, 5, 200, "Heart rate");
+            txtResult_Well = CreateInputRow(tpWellness, "Result Value", 330, 8, 415, 5, 150, "72");
+            txtUnit_Well = CreateInputRow(tpWellness, "Unit", 10, 38, 115, 35, 200, "beats/minute");
+
+            CreateButtons(tpWellness, btnAddMedicine_Well_Click, btnRemoveMedicine_Well_Click);
+            lvObservations_Well = CreateListView(tpWellness,
+                new[] { "Observation", "Result Value", "Unit" },
+                new[] { 250, 150, 150 });
+
+            // Tab 8: Invoice
+            tpInvoice = new TabPage("Invoice");
+            tcRecordDetails.TabPages.Add(tpInvoice);
+
+            txtItemName_Inv = CreateInputRow(tpInvoice, "Item Name", 10, 8, 115, 5, 200, "Consultation & Clinical Services");
+            txtAmount_Inv = CreateInputRow(tpInvoice, "Amount", 330, 8, 415, 5, 150, "500");
+
+            CreateButtons(tpInvoice, btnAddMedicine_Inv_Click, btnRemoveMedicine_Inv_Click);
+            lvItems_Inv = CreateListView(tpInvoice,
+                new[] { "Item Name", "Amount" },
+                new[] { 350, 200 });
         }
 
         private void tcRecordDetails_SelectedIndexChanged(object sender, EventArgs e)
@@ -342,6 +409,12 @@ namespace HMS.abdm
                     cmbRecordType.Text = "DischargeSummary";
                 else if (tcRecordDetails.SelectedTab == tpHealthDocument)
                     cmbRecordType.Text = "HealthDocumentRecord";
+                else if (tcRecordDetails.SelectedTab == tpImmunization)
+                    cmbRecordType.Text = "ImmunizationRecord";
+                else if (tcRecordDetails.SelectedTab == tpWellness)
+                    cmbRecordType.Text = "WellnessRecord";
+                else if (tcRecordDetails.SelectedTab == tpInvoice)
+                    cmbRecordType.Text = "Invoice";
 
                 UpdateUiForRecordType();
             }
@@ -349,6 +422,59 @@ namespace HMS.abdm
             {
                 _isSyncing = false;
             }
+        }
+
+        private void btnAddMedicine_Imm_Click(object sender, EventArgs e)
+        {
+            string name = txtVaccineName_Imm.Text.Trim();
+            if (string.IsNullOrEmpty(name)) return;
+            var item = new ListViewItem(name);
+            item.SubItems.Add(txtLotNumber_Imm.Text.Trim());
+            item.SubItems.Add(txtDoseNumber_Imm.Text.Trim());
+            lvMedicines_Imm.Items.Add(item);
+            txtVaccineName_Imm.Clear();
+            txtVaccineName_Imm.Focus();
+        }
+
+        private void btnRemoveMedicine_Imm_Click(object sender, EventArgs e)
+        {
+            if (lvMedicines_Imm.SelectedItems.Count > 0)
+                lvMedicines_Imm.Items.Remove(lvMedicines_Imm.SelectedItems[0]);
+        }
+
+        private void btnAddMedicine_Well_Click(object sender, EventArgs e)
+        {
+            string name = txtObservation_Well.Text.Trim();
+            if (string.IsNullOrEmpty(name)) return;
+            var item = new ListViewItem(name);
+            item.SubItems.Add(txtResult_Well.Text.Trim());
+            item.SubItems.Add(txtUnit_Well.Text.Trim());
+            lvObservations_Well.Items.Add(item);
+            txtObservation_Well.Clear();
+            txtObservation_Well.Focus();
+        }
+
+        private void btnRemoveMedicine_Well_Click(object sender, EventArgs e)
+        {
+            if (lvObservations_Well.SelectedItems.Count > 0)
+                lvObservations_Well.Items.Remove(lvObservations_Well.SelectedItems[0]);
+        }
+
+        private void btnAddMedicine_Inv_Click(object sender, EventArgs e)
+        {
+            string name = txtItemName_Inv.Text.Trim();
+            if (string.IsNullOrEmpty(name)) return;
+            var item = new ListViewItem(name);
+            item.SubItems.Add(txtAmount_Inv.Text.Trim());
+            lvItems_Inv.Items.Add(item);
+            txtItemName_Inv.Clear();
+            txtItemName_Inv.Focus();
+        }
+
+        private void btnRemoveMedicine_Inv_Click(object sender, EventArgs e)
+        {
+            if (lvItems_Inv.SelectedItems.Count > 0)
+                lvItems_Inv.Items.Remove(lvItems_Inv.SelectedItems[0]);
         }
 
         private void btnAddMedicine_Presc_Click(object sender, EventArgs e)
@@ -591,21 +717,82 @@ namespace HMS.abdm
 
                 // Step B: Build FHIR-mappable payload
                 var medicinesList = new List<object>();
+                var immunizationsList = new List<object>();
+                var vitalSignsList = new List<object>();
+                var lineItemsList = new List<object>();
+
                 var activeLv2 = GetActiveListView();
                 if (activeLv2 != null)
                 {
-                    foreach (ListViewItem item in activeLv2.Items)
+                    if (recordType == "PrescriptionRecord" || recordType == "OPConsultationRecord" || recordType == "DischargeSummary")
                     {
-                        medicinesList.Add(new
+                        foreach (ListViewItem item in activeLv2.Items)
                         {
-                            medicine = item.Text,
-                            dosage = item.SubItems.Count > 1 ? item.SubItems[1].Text : "",
-                            timing = item.SubItems.Count > 2 ? item.SubItems[2].Text : "",
-                            route = item.SubItems.Count > 3 ? item.SubItems[3].Text : "",
-                            method = item.SubItems.Count > 4 ? item.SubItems[4].Text : "",
-                            additionalInstructions = item.SubItems.Count > 5 ? item.SubItems[5].Text : "",
-                            reason = item.SubItems.Count > 6 ? item.SubItems[6].Text : ""
-                        });
+                            medicinesList.Add(new
+                            {
+                                medicine = item.Text,
+                                dosage = item.SubItems.Count > 1 ? item.SubItems[1].Text : "",
+                                timing = item.SubItems.Count > 2 ? item.SubItems[2].Text : "",
+                                route = item.SubItems.Count > 3 ? item.SubItems[3].Text : "",
+                                method = item.SubItems.Count > 4 ? item.SubItems[4].Text : "",
+                                additionalInstructions = item.SubItems.Count > 5 ? item.SubItems[5].Text : "",
+                                reason = item.SubItems.Count > 6 ? item.SubItems[6].Text : ""
+                            });
+                        }
+                    }
+                    else if (recordType == "DiagnosticReport")
+                    {
+                        foreach (ListViewItem item in activeLv2.Items)
+                        {
+                            medicinesList.Add(new
+                            {
+                                name = item.Text,
+                                specimen = item.SubItems.Count > 1 ? item.SubItems[1].Text : "",
+                                result = item.SubItems.Count > 2 ? item.SubItems[2].Text : "",
+                                unit = item.SubItems.Count > 3 ? item.SubItems[3].Text : "",
+                                referenceRange = item.SubItems.Count > 4 ? item.SubItems[4].Text : "",
+                                remarks = item.SubItems.Count > 5 ? item.SubItems[5].Text : "",
+                                interpretation = item.SubItems.Count > 6 ? item.SubItems[6].Text : ""
+                            });
+                        }
+                    }
+                    else if (recordType == "ImmunizationRecord")
+                    {
+                        foreach (ListViewItem item in activeLv2.Items)
+                        {
+                            int doseVal = 1;
+                            int.TryParse(item.SubItems.Count > 2 ? item.SubItems[2].Text : "1", out doseVal);
+                            immunizationsList.Add(new
+                            {
+                                vaccineName = item.Text,
+                                lotNumber = item.SubItems.Count > 1 ? item.SubItems[1].Text : "LOT123",
+                                doseNumber = doseVal,
+                                date = DateTime.UtcNow.ToString("o")
+                            });
+                        }
+                    }
+                    else if (recordType == "WellnessRecord")
+                    {
+                        foreach (ListViewItem item in activeLv2.Items)
+                        {
+                            vitalSignsList.Add(new
+                            {
+                                codeText = item.Text,
+                                value = item.SubItems.Count > 1 ? item.SubItems[1].Text : "",
+                                unit = item.SubItems.Count > 2 ? item.SubItems[2].Text : ""
+                            });
+                        }
+                    }
+                    else if (recordType == "Invoice")
+                    {
+                        foreach (ListViewItem item in activeLv2.Items)
+                        {
+                            lineItemsList.Add(new
+                            {
+                                itemName = item.Text,
+                                price = item.SubItems.Count > 1 ? item.SubItems[1].Text : ""
+                            });
+                        }
                     }
                 }
 
@@ -636,6 +823,9 @@ namespace HMS.abdm
                     organisation = new { facilityName = "MIDHA HOSPITAL", facilityId = "IN0610090658" },
                     clinicalNotes = $"{recordType} Details",
                     prescriptions = medicinesList.ToArray(),
+                    immunizations = immunizationsList.ToArray(),
+                    vitalSigns = vitalSignsList.ToArray(),
+                    lineItems = lineItemsList.ToArray(),
                     documents = documentsList.ToArray()
                 };
 
@@ -809,8 +999,14 @@ namespace HMS.abdm
                     tcRecordDetails.SelectedTab = tpDiagnosticReport;
                 else if (recordType == "DischargeSummary")
                     tcRecordDetails.SelectedTab = tpDischargeSummary;
-                else if (recordType == "HealthDocumentRecord" || recordType == "ImmunizationRecord" || recordType == "WellnessRecord" || recordType == "Invoice")
+                else if (recordType == "HealthDocumentRecord")
                     tcRecordDetails.SelectedTab = tpHealthDocument;
+                else if (recordType == "ImmunizationRecord")
+                    tcRecordDetails.SelectedTab = tpImmunization;
+                else if (recordType == "WellnessRecord")
+                    tcRecordDetails.SelectedTab = tpWellness;
+                else if (recordType == "Invoice")
+                    tcRecordDetails.SelectedTab = tpInvoice;
 
                 UpdateUiForRecordType();
             }
@@ -832,7 +1028,7 @@ namespace HMS.abdm
             txtLogs.Location = new Point(460, 500);
             txtLogs.Height = 180;
 
-            if (recordType == "HealthDocumentRecord" || recordType == "ImmunizationRecord" || recordType == "WellnessRecord" || recordType == "Invoice")
+            if (recordType == "HealthDocumentRecord")
             {
                 gbPrescribe.Visible = false;
                 gbPdf.Location = new Point(460, 65);
@@ -934,6 +1130,44 @@ namespace HMS.abdm
                             string timing = item.Length > 2 ? item[2] : "";
                             string complaints = item.Length > 6 ? item[6] : "";
                             sb.Append($"BT\n/F1 10 Tf\n50 {y} Td\n(- {medName} [Dosage: {dosage}, Timing: {timing}]  Complaints: {complaints}) Tj\nET\n");
+                            y -= 20;
+                        }
+                    }
+                    else if (recordType == "ImmunizationRecord")
+                    {
+                        sb.Append("BT\n/F1 12 Tf\n50 590 Td\n(Immunization History:) Tj\nET\n");
+                        y = 560;
+                        foreach (var item in items)
+                        {
+                            string vaccineName = item[0];
+                            string lotNo = item.Length > 1 ? item[1] : "";
+                            string doseNo = item.Length > 2 ? item[2] : "";
+                            sb.Append($"BT\n/F1 10 Tf\n50 {y} Td\n(- {vaccineName}  [Lot: {lotNo}, Dose: {doseNo}]) Tj\nET\n");
+                            y -= 20;
+                        }
+                    }
+                    else if (recordType == "WellnessRecord")
+                    {
+                        sb.Append("BT\n/F1 12 Tf\n50 590 Td\n(Vitals & Wellness Readings:) Tj\nET\n");
+                        y = 560;
+                        foreach (var item in items)
+                        {
+                            string obsName = item[0];
+                            string val = item.Length > 1 ? item[1] : "";
+                            string unit = item.Length > 2 ? item[2] : "";
+                            sb.Append($"BT\n/F1 10 Tf\n50 {y} Td\n(- {obsName}: {val} {unit}) Tj\nET\n");
+                            y -= 20;
+                        }
+                    }
+                    else if (recordType == "Invoice")
+                    {
+                        sb.Append("BT\n/F1 12 Tf\n50 590 Td\n(Invoice Line Items:) Tj\nET\n");
+                        y = 560;
+                        foreach (var item in items)
+                        {
+                            string itemName = item[0];
+                            string price = item.Length > 1 ? item[1] : "";
+                            sb.Append($"BT\n/F1 10 Tf\n50 {y} Td\n(- {itemName}: Rs. {price}) Tj\nET\n");
                             y -= 20;
                         }
                     }

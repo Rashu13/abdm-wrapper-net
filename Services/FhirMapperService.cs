@@ -1724,48 +1724,7 @@ public class FhirMapperService : IFhirMapperService
                 immIndex++;
             }
         }
-        else
-        {
-            // Default mock immunization
-            var immunization = new Immunization
-            {
-                Id = "Immunization-1",
-                Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/Immunization"),
-                Status = Immunization.ImmunizationStatusCodes.Completed,
-                Patient = new ResourceReference($"Patient/{patient.Id}"),
-                Occurrence = new FhirDateTime(authoredOn),
-                PrimarySource = true,
-                LotNumber = "MOCK-LOT-001"
-            };
-
-            immunization.VaccineCode = new CodeableConcept
-            {
-                Text = "COVID-19 Vaccine",
-                Coding = new List<Coding>
-                {
-                    new Coding(SNOMED_URL, "1119000", "COVID-19 Vaccine")
-                }
-            };
-
-            immunization.Extension.Add(new Extension
-            {
-                Url = "https://nrces.in/ndhm/fhir/r4/StructureDefinition/BrandName",
-                Value = new FhirString("Covishield")
-            });
-
-            immunization.ProtocolApplied.Add(new Immunization.ProtocolAppliedComponent
-            {
-                DoseNumber = new PositiveInt(1)
-            });
-
-            immunization.Performer.Add(new Immunization.PerformerComponent
-            {
-                Actor = new ResourceReference($"Practitioner/{practitioner.Id}")
-            });
-
-            immunizationSection.Entry.Add(new ResourceReference($"Immunization/{immunization.Id}"));
-            entries.Add(new Bundle.EntryComponent { FullUrl = $"Immunization/{immunization.Id}", Resource = immunization });
-        }
+        // No default mock immunization is added to enforce strictly dynamic data flow.
 
         // 6. Create DocumentReference entries if present
         var documentsElement = GetProperty(root, "documents");
@@ -2011,28 +1970,7 @@ public class FhirMapperService : IFhirMapperService
         var otherObservationsElement = GetProperty(root, "otherObservations");
         var otherObservationsList = ParseObservations(otherObservationsElement, "Other Observations", patient, practitioner, ref obsIndex);
 
-        // Check if all are empty and create at least one default observation
-        if (vitalSignsList.Count == 0 && bodyMeasurementsList.Count == 0 && physicalActivitiesList.Count == 0 &&
-            generalAssessmentsList.Count == 0 && womanHealthsList.Count == 0 && lifeStylesList.Count == 0 &&
-            otherObservationsList.Count == 0)
-        {
-            var defaultObs = new Observation
-            {
-                Id = $"Observation-{obsIndex}",
-                Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/Observation"),
-                Status = ObservationStatus.Final,
-                Code = new CodeableConcept
-                {
-                    Text = "Heart rate",
-                    Coding = new List<Coding> { new Coding(SNOMED_URL, "364075005", "Heart rate") }
-                },
-                Subject = new ResourceReference($"Patient/{patient.Id}"),
-                Value = new Quantity(72, "beats/minute")
-            };
-            defaultObs.Performer.Add(new ResourceReference($"Practitioner/{practitioner.Id}"));
-            vitalSignsList.Add(defaultObs);
-            obsIndex++;
-        }
+        // No fallback observations are created to enforce strictly dynamic data flow from the UI.
 
         // Add sections to Composition & resources to entries
         if (vitalSignsList.Count > 0)
@@ -2313,11 +2251,44 @@ public class FhirMapperService : IFhirMapperService
             Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
             DateElement = new FhirDateTime(authoredOn)
         };
-        invoice.LineItem.Add(new Hl7.Fhir.Model.Invoice.LineItemComponent
+        var lineItemsElement = GetProperty(root, "lineItems");
+        if (lineItemsElement.ValueKind == JsonValueKind.Array && lineItemsElement.GetArrayLength() > 0)
         {
-            Sequence = 1,
-            ChargeItem = new CodeableConcept { Text = "Consultation & Clinical Services" }
-        });
+            int seq = 1;
+            foreach (var item in lineItemsElement.EnumerateArray())
+            {
+                var itemName = GetString(item, "itemName") ?? GetString(item, "chargeItem") ?? "Consultation & Clinical Services";
+                var priceStr = GetString(item, "price") ?? "";
+                
+                var lineItem = new Hl7.Fhir.Model.Invoice.LineItemComponent
+                {
+                    Sequence = seq,
+                    ChargeItem = new CodeableConcept { Text = itemName }
+                };
+                
+                if (decimal.TryParse(priceStr, out decimal price))
+                {
+                    lineItem.PriceComponent = new List<Hl7.Fhir.Model.Invoice.PriceComponentComponent>
+                    {
+                        new Hl7.Fhir.Model.Invoice.PriceComponentComponent
+                        {
+                            Amount = new Money { Value = price, Currency = Hl7.Fhir.Model.Money.Currencies.INR }
+                        }
+                    };
+                }
+                
+                invoice.LineItem.Add(lineItem);
+                seq++;
+            }
+        }
+        else
+        {
+            invoice.LineItem.Add(new Hl7.Fhir.Model.Invoice.LineItemComponent
+            {
+                Sequence = 1,
+                ChargeItem = new CodeableConcept { Text = "Consultation & Clinical Services" }
+            });
+        }
 
         // 6. Create Composition for Invoice Record
         var composition = new Composition
