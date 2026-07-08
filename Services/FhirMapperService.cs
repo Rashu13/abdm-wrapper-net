@@ -2266,20 +2266,52 @@ public class FhirMapperService : IFhirMapperService
                 var lineItem = new Hl7.Fhir.Model.Invoice.LineItemComponent
                 {
                     Sequence = seq,
-                    ChargeItem = new CodeableConcept { Text = itemName }
+                    // Use CodeableConcept with proper coding so ABDM viewer renders item name
+                    ChargeItem = new CodeableConcept
+                    {
+                        Text = itemName,
+                        Coding = new List<Coding>
+                        {
+                            new Coding
+                            {
+                                System = "http://snomed.info/sct",
+                                Code = "266753000",
+                                Display = itemName
+                            }
+                        }
+                    }
                 };
-                
+
+                // Add quantity (1 unit by default) to avoid null null rendering
+                lineItem.PriceComponent = new List<Hl7.Fhir.Model.Invoice.PriceComponentComponent>();
+
                 if (decimal.TryParse(priceStr, out decimal price))
                 {
                     hasPrices = true;
                     totalNetVal += price;
-                    lineItem.PriceComponent = new List<Hl7.Fhir.Model.Invoice.PriceComponentComponent>
+                    lineItem.PriceComponent.Add(new Hl7.Fhir.Model.Invoice.PriceComponentComponent
                     {
-                        new Hl7.Fhir.Model.Invoice.PriceComponentComponent
+                        // "base" type is required by FHIR spec; ABDM viewer reads this as the net price
+                        Type = Hl7.Fhir.Model.InvoicePriceComponentType.Base,
+                        Code = new CodeableConcept
                         {
-                            Amount = new Money { Value = price, Currency = Hl7.Fhir.Model.Money.Currencies.INR }
-                        }
-                    };
+                            Text = itemName,
+                            Coding = new List<Coding>
+                            {
+                                new Coding("http://snomed.info/sct", "266753000", itemName)
+                            }
+                        },
+                        Factor = 1.0m,
+                        Amount = new Money { Value = price, Currency = Hl7.Fhir.Model.Money.Currencies.INR }
+                    });
+                }
+                else
+                {
+                    lineItem.PriceComponent.Add(new Hl7.Fhir.Model.Invoice.PriceComponentComponent
+                    {
+                        Type = Hl7.Fhir.Model.InvoicePriceComponentType.Base,
+                        Factor = 1.0m
+                    });
                 }
                 
                 invoice.LineItem.Add(lineItem);
@@ -2291,7 +2323,14 @@ public class FhirMapperService : IFhirMapperService
             invoice.LineItem.Add(new Hl7.Fhir.Model.Invoice.LineItemComponent
             {
                 Sequence = 1,
-                ChargeItem = new CodeableConcept { Text = "Consultation & Clinical Services" }
+                ChargeItem = new CodeableConcept
+                {
+                    Text = "Consultation & Clinical Services",
+                    Coding = new List<Coding>
+                    {
+                        new Coding("http://snomed.info/sct", "266753000", "Consultation & Clinical Services")
+                    }
+                }
             });
         }
 

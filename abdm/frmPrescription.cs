@@ -18,72 +18,7 @@ namespace HMS.abdm
         private byte[] _pdfBytes = null;
         private string _pdfFileName = string.Empty;
 
-        private TabControl tcRecordDetails;
-        private TabPage tpPrescription;
-        private TabPage tpOPConsultation;
-        private TabPage tpDiagnosticReport;
-        private TabPage tpDischargeSummary;
-        private TabPage tpHealthDocument;
 
-        // Prescription Controls
-        private TextBox txtMedicineName_Presc;
-        private TextBox txtDosage_Presc;
-        private TextBox txtTiming_Presc;
-        private TextBox txtRoute_Presc;
-        private TextBox txtMethod_Presc;
-        private TextBox txtInstructions_Presc;
-        private TextBox txtReason_Presc;
-        private ListView lvMedicines_Presc;
-
-        // OP Consultation Controls
-        private TextBox txtMedicineName_OP;
-        private TextBox txtDosage_OP;
-        private TextBox txtTiming_OP;
-        private TextBox txtRoute_OP;
-        private TextBox txtMethod_OP;
-        private TextBox txtInstructions_OP;
-        private TextBox txtReason_OP;
-        private ListView lvMedicines_OP;
-
-        // Diagnostic Report Controls
-        private TextBox txtTestName_Diag;
-        private TextBox txtSpecimen_Diag;
-        private TextBox txtResult_Diag;
-        private TextBox txtUnit_Diag;
-        private TextBox txtRefRange_Diag;
-        private TextBox txtRemarks_Diag;
-        private TextBox txtInterpretation_Diag;
-        private ListView lvMedicines_Diag;
-
-        // Discharge Summary Controls
-        private TextBox txtMedicineName_Disch;
-        private TextBox txtDosage_Disch;
-        private TextBox txtAdmDate_Disch;
-        private TextBox txtDischDate_Disch;
-        private TextBox txtCourse_Disch;
-        private TextBox txtAdvice_Disch;
-        private TextBox txtCondition_Disch;
-        private ListView lvMedicines_Disch;
-
-        // Immunization Controls
-        private TabPage tpImmunization;
-        private TextBox txtVaccineName_Imm;
-        private TextBox txtLotNumber_Imm;
-        private TextBox txtDoseNumber_Imm;
-        private ListView lvMedicines_Imm;
-
-        // Wellness Controls
-        private TabPage tpWellness;
-        private TextBox txtObservation_Well;
-        private TextBox txtResult_Well;
-        private TextBox txtUnit_Well;
-        private ListView lvObservations_Well;
-
-        // Invoice Controls
-        private TabPage tpInvoice;
-        private TextBox txtItemName_Inv;
-        private TextBox txtAmount_Inv;
-        private ListView lvItems_Inv;
 
         private bool _isSyncing = false;
 
@@ -91,7 +26,6 @@ namespace HMS.abdm
         {
             InitializeComponent();
             ApplyModernTheme();
-            SetupExtraMedicationFields();
             _client = GetAbdmClient();
             cmbRecordType.SelectedIndexChanged += cmbRecordType_SelectedIndexChanged;
             InitializeDefaultValues();
@@ -179,71 +113,6 @@ namespace HMS.abdm
             cmbRecordType.SelectedIndex = 0; // PrescriptionRecord
         }
 
-        private TextBox CreateInputRow(TabPage tp, string labelText, int xLabel, int yLabel, int xText, int yText, int wText, string defaultText = "")
-        {
-            var lbl = new Label { Text = labelText, Location = new Point(xLabel, yLabel), Size = new Size(xText - xLabel - 5, 21), Font = gbPrescribe.Font };
-            var txt = new TextBox { Location = new Point(xText, yText), Size = new Size(wText, 25), Text = defaultText, Font = gbPrescribe.Font };
-            tp.Controls.Add(lbl);
-            tp.Controls.Add(txt);
-            return txt;
-        }
-
-        private void CreateButtons(TabPage tp, EventHandler onAdd, EventHandler onRemove)
-        {
-            var btnAdd = new Button
-            {
-                Text = "Add Item",
-                Location = new Point(580, 5),
-                Size = new Size(110, 28),
-                BackColor = Color.FromArgb(41, 128, 185),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = gbPrescribe.Font,
-                Cursor = Cursors.Hand
-            };
-            btnAdd.FlatAppearance.BorderSize = 0;
-            btnAdd.Click += onAdd;
-
-            var btnRemove = new Button
-            {
-                Text = "Remove Selected",
-                Location = new Point(580, 35),
-                Size = new Size(110, 28),
-                BackColor = Color.FromArgb(192, 57, 43),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = gbPrescribe.Font,
-                Cursor = Cursors.Hand
-            };
-            btnRemove.FlatAppearance.BorderSize = 0;
-            btnRemove.Click += onRemove;
-
-            tp.Controls.Add(btnAdd);
-            tp.Controls.Add(btnRemove);
-        }
-
-        private ListView CreateListView(TabPage tp, string[] columns, int[] widths)
-        {
-            var lv = new ListView
-            {
-                Location = new Point(10, 125),
-                Size = new Size(680, 95),
-                FullRowSelect = true,
-                GridLines = true,
-                View = View.Details,
-                HideSelection = false,
-                Font = gbPrescribe.Font,
-                BorderStyle = BorderStyle.FixedSingle,
-                BackColor = Color.White
-            };
-            for (int i = 0; i < columns.Length; i++)
-            {
-                lv.Columns.Add(columns[i], widths[i]);
-            }
-            tp.Controls.Add(lv);
-            return lv;
-        }
-
         private ListView GetActiveListView()
         {
             string recordType = cmbRecordType.Text;
@@ -255,142 +124,6 @@ namespace HMS.abdm
             if (recordType == "WellnessRecord") return lvObservations_Well;
             if (recordType == "Invoice") return lvItems_Inv;
             return null;
-        }
-
-        private void SetupExtraMedicationFields()
-        {
-            // Remove the designer created medication controls from gbPrescribe
-            gbPrescribe.Controls.Clear();
-
-            // Create TabControl
-            tcRecordDetails = new TabControl
-            {
-                Location = new Point(10, 20),
-                Size = new Size(705, 260),
-                Font = gbPrescribe.Font
-            };
-            tcRecordDetails.SelectedIndexChanged += tcRecordDetails_SelectedIndexChanged;
-            gbPrescribe.Controls.Add(tcRecordDetails);
-
-            // Tab 1: Prescription
-            tpPrescription = new TabPage("Prescription");
-            tcRecordDetails.TabPages.Add(tpPrescription);
-
-            txtMedicineName_Presc = CreateInputRow(tpPrescription, "Medicine Name", 10, 8, 115, 5, 200);
-            txtDosage_Presc = CreateInputRow(tpPrescription, "Dosage", 330, 8, 415, 5, 150, "1-0-1");
-            txtTiming_Presc = CreateInputRow(tpPrescription, "Timing", 10, 38, 115, 35, 200, "1-1-D");
-            txtRoute_Presc = CreateInputRow(tpPrescription, "Route", 330, 38, 415, 35, 150, "Oral");
-            txtMethod_Presc = CreateInputRow(tpPrescription, "Method", 10, 68, 115, 65, 200, "swallow");
-            txtInstructions_Presc = CreateInputRow(tpPrescription, "Instructions", 330, 68, 415, 65, 150, "after food");
-            txtReason_Presc = CreateInputRow(tpPrescription, "Reason", 10, 98, 115, 95, 450, "Fever");
-
-            CreateButtons(tpPrescription, btnAddMedicine_Presc_Click, btnRemoveMedicine_Presc_Click);
-            lvMedicines_Presc = CreateListView(tpPrescription,
-                new[] { "Medicine", "Dosage", "Timing", "Route", "Method", "Instructions", "Reason" },
-                new[] { 170, 70, 80, 70, 70, 110, 110 });
-
-            // Tab 2: OP Consultation
-            tpOPConsultation = new TabPage("OP Consultation");
-            tcRecordDetails.TabPages.Add(tpOPConsultation);
-
-            txtMedicineName_OP = CreateInputRow(tpOPConsultation, "Prescribed Med", 10, 8, 115, 5, 200);
-            txtDosage_OP = CreateInputRow(tpOPConsultation, "Dosage", 330, 8, 415, 5, 150, "1-0-1");
-            txtTiming_OP = CreateInputRow(tpOPConsultation, "Timing", 10, 38, 115, 35, 200, "1-1-D");
-            txtRoute_OP = CreateInputRow(tpOPConsultation, "Route", 330, 38, 415, 35, 150, "Oral");
-            txtMethod_OP = CreateInputRow(tpOPConsultation, "Method", 10, 68, 115, 65, 200, "swallow");
-            txtInstructions_OP = CreateInputRow(tpOPConsultation, "Instructions", 330, 68, 415, 65, 150, "after food");
-            txtReason_OP = CreateInputRow(tpOPConsultation, "Chief Complaints", 10, 98, 115, 95, 450, "Fever");
-
-            CreateButtons(tpOPConsultation, btnAddMedicine_OP_Click, btnRemoveMedicine_OP_Click);
-            lvMedicines_OP = CreateListView(tpOPConsultation,
-                new[] { "Medicine", "Dosage", "Timing", "Route", "Method", "Instructions", "Complaints" },
-                new[] { 170, 70, 80, 70, 70, 110, 110 });
-
-            // Tab 3: Diagnostic Report
-            tpDiagnosticReport = new TabPage("Diagnostic Report");
-            tcRecordDetails.TabPages.Add(tpDiagnosticReport);
-
-            txtTestName_Diag = CreateInputRow(tpDiagnosticReport, "Test Name", 10, 8, 115, 5, 200);
-            txtSpecimen_Diag = CreateInputRow(tpDiagnosticReport, "Specimen", 330, 8, 415, 5, 150, "Blood");
-            txtResult_Diag = CreateInputRow(tpDiagnosticReport, "Result Value", 10, 38, 115, 35, 200);
-            txtUnit_Diag = CreateInputRow(tpDiagnosticReport, "Unit", 330, 38, 415, 35, 150, "mg/dL");
-            txtRefRange_Diag = CreateInputRow(tpDiagnosticReport, "Ref Range", 10, 68, 115, 65, 200, "70-100");
-            txtRemarks_Diag = CreateInputRow(tpDiagnosticReport, "Remarks", 330, 68, 415, 65, 150, "Normal");
-            txtInterpretation_Diag = CreateInputRow(tpDiagnosticReport, "Interpretation", 10, 98, 115, 95, 450, "Clinically stable");
-
-            CreateButtons(tpDiagnosticReport, btnAddMedicine_Diag_Click, btnRemoveMedicine_Diag_Click);
-            lvMedicines_Diag = CreateListView(tpDiagnosticReport,
-                new[] { "Test Name", "Specimen", "Result", "Unit", "Ref Range", "Remarks", "Interpretation" },
-                new[] { 170, 80, 80, 60, 90, 100, 100 });
-
-            // Tab 4: Discharge Summary
-            tpDischargeSummary = new TabPage("Discharge Summary");
-            tcRecordDetails.TabPages.Add(tpDischargeSummary);
-
-            txtMedicineName_Disch = CreateInputRow(tpDischargeSummary, "Discharge Med", 10, 8, 115, 5, 200);
-            txtDosage_Disch = CreateInputRow(tpDischargeSummary, "Dosage", 330, 8, 415, 5, 150, "1-0-1");
-            txtAdmDate_Disch = CreateInputRow(tpDischargeSummary, "Admission Date", 10, 38, 115, 35, 200, DateTime.Now.AddDays(-3).ToString("yyyy-MM-dd"));
-            txtDischDate_Disch = CreateInputRow(tpDischargeSummary, "Discharge Date", 330, 38, 415, 35, 150, DateTime.Now.ToString("yyyy-MM-dd"));
-            txtCourse_Disch = CreateInputRow(tpDischargeSummary, "Treatment Course", 10, 68, 115, 65, 200, "IV Fluids & Antibiotics");
-            txtAdvice_Disch = CreateInputRow(tpDischargeSummary, "Discharge Advice", 330, 68, 415, 65, 150, "Take rest");
-            txtCondition_Disch = CreateInputRow(tpDischargeSummary, "Condition on Disch", 10, 98, 115, 95, 450, "Stable");
-
-            CreateButtons(tpDischargeSummary, btnAddMedicine_Disch_Click, btnRemoveMedicine_Disch_Click);
-            lvMedicines_Disch = CreateListView(tpDischargeSummary,
-                new[] { "Discharge Med", "Dosage", "Adm Date", "Disch Date", "Course", "Advice", "Condition" },
-                new[] { 170, 70, 80, 80, 95, 95, 90 });
-
-            // Tab 5: Health Document (PDF Only)
-            tpHealthDocument = new TabPage("Health Document");
-            tcRecordDetails.TabPages.Add(tpHealthDocument);
-
-            var lblInfo = new Label
-            {
-                Text = "Attach the clinical document (PDF) in the panel below.\nNo structured medication/test entry is needed for this type.",
-                Location = new Point(20, 50),
-                Size = new Size(500, 100),
-                Font = gbPrescribe.Font,
-                ForeColor = Color.DarkBlue
-            };
-            tpHealthDocument.Controls.Add(lblInfo);
-
-            // Tab 6: Immunization
-            tpImmunization = new TabPage("Immunization");
-            tcRecordDetails.TabPages.Add(tpImmunization);
-
-            txtVaccineName_Imm = CreateInputRow(tpImmunization, "Vaccine Name", 10, 8, 115, 5, 200, "Covishield");
-            txtLotNumber_Imm = CreateInputRow(tpImmunization, "Lot Number", 330, 8, 415, 5, 150, "LOT-1234");
-            txtDoseNumber_Imm = CreateInputRow(tpImmunization, "Dose Number", 10, 38, 115, 35, 200, "1");
-
-            CreateButtons(tpImmunization, btnAddMedicine_Imm_Click, btnRemoveMedicine_Imm_Click);
-            lvMedicines_Imm = CreateListView(tpImmunization,
-                new[] { "Vaccine Name", "Lot Number", "Dose Number" },
-                new[] { 250, 150, 100 });
-
-            // Tab 7: Wellness
-            tpWellness = new TabPage("Wellness");
-            tcRecordDetails.TabPages.Add(tpWellness);
-
-            txtObservation_Well = CreateInputRow(tpWellness, "Observation", 10, 8, 115, 5, 200, "Heart rate");
-            txtResult_Well = CreateInputRow(tpWellness, "Result Value", 330, 8, 415, 5, 150, "72");
-            txtUnit_Well = CreateInputRow(tpWellness, "Unit", 10, 38, 115, 35, 200, "beats/minute");
-
-            CreateButtons(tpWellness, btnAddMedicine_Well_Click, btnRemoveMedicine_Well_Click);
-            lvObservations_Well = CreateListView(tpWellness,
-                new[] { "Observation", "Result Value", "Unit" },
-                new[] { 250, 150, 150 });
-
-            // Tab 8: Invoice
-            tpInvoice = new TabPage("Invoice");
-            tcRecordDetails.TabPages.Add(tpInvoice);
-
-            txtItemName_Inv = CreateInputRow(tpInvoice, "Item Name", 10, 8, 115, 5, 200, "Consultation & Clinical Services");
-            txtAmount_Inv = CreateInputRow(tpInvoice, "Amount", 330, 8, 415, 5, 150, "500");
-
-            CreateButtons(tpInvoice, btnAddMedicine_Inv_Click, btnRemoveMedicine_Inv_Click);
-            lvItems_Inv = CreateListView(tpInvoice,
-                new[] { "Item Name", "Amount" },
-                new[] { 350, 200 });
         }
 
         private void tcRecordDetails_SelectedIndexChanged(object sender, EventArgs e)
@@ -604,6 +337,116 @@ namespace HMS.abdm
             await SaveAndPushActionAsync();
         }
 
+        private async void btnInitiateLink_Click(object sender, EventArgs e)
+        {
+            await InitiateLinkingActionAsync();
+        }
+
+        private List<string[]> GetRecordItems(string recordType)
+        {
+            var items = new List<string[]>();
+            ListView lv = null;
+            if (recordType == "PrescriptionRecord") lv = lvMedicines_Presc;
+            else if (recordType == "OPConsultationRecord") lv = lvMedicines_OP;
+            else if (recordType == "DiagnosticReport") lv = lvMedicines_Diag;
+            else if (recordType == "DischargeSummary") lv = lvMedicines_Disch;
+            else if (recordType == "ImmunizationRecord") lv = lvMedicines_Imm;
+            else if (recordType == "WellnessRecord") lv = lvObservations_Well;
+            else if (recordType == "Invoice") lv = lvItems_Inv;
+
+            if (lv != null && lv.Items.Count > 0)
+            {
+                foreach (ListViewItem item in lv.Items)
+                {
+                    items.Add(new string[] {
+                        item.Text,
+                        item.SubItems.Count > 1 ? item.SubItems[1].Text : "",
+                        item.SubItems.Count > 2 ? item.SubItems[2].Text : "",
+                        item.SubItems.Count > 3 ? item.SubItems[3].Text : "",
+                        item.SubItems.Count > 4 ? item.SubItems[4].Text : "",
+                        item.SubItems.Count > 5 ? item.SubItems[5].Text : "",
+                        item.SubItems.Count > 6 ? item.SubItems[6].Text : ""
+                    });
+                }
+            }
+            else
+            {
+                // Fallback to text box values or hardcoded defaults so we always have sample data
+                if (recordType == "PrescriptionRecord")
+                {
+                    items.Add(new string[] {
+                        string.IsNullOrWhiteSpace(txtMedicineName_Presc.Text) ? "Paracetamol" : txtMedicineName_Presc.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtDosage_Presc.Text) ? "1-0-1" : txtDosage_Presc.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtTiming_Presc.Text) ? "1-1-D" : txtTiming_Presc.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtRoute_Presc.Text) ? "Oral" : txtRoute_Presc.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtMethod_Presc.Text) ? "swallow" : txtMethod_Presc.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtInstructions_Presc.Text) ? "after food" : txtInstructions_Presc.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtReason_Presc.Text) ? "Fever" : txtReason_Presc.Text.Trim()
+                    });
+                }
+                else if (recordType == "OPConsultationRecord")
+                {
+                    items.Add(new string[] {
+                        string.IsNullOrWhiteSpace(txtMedicineName_OP.Text) ? "Amoxicillin" : txtMedicineName_OP.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtDosage_OP.Text) ? "1-0-1" : txtDosage_OP.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtTiming_OP.Text) ? "1-1-D" : txtTiming_OP.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtRoute_OP.Text) ? "Oral" : txtRoute_OP.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtMethod_OP.Text) ? "swallow" : txtMethod_OP.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtInstructions_OP.Text) ? "after food" : txtInstructions_OP.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtReason_OP.Text) ? "Fever" : txtReason_OP.Text.Trim()
+                    });
+                }
+                else if (recordType == "DiagnosticReport")
+                {
+                    items.Add(new string[] {
+                        string.IsNullOrWhiteSpace(txtTestName_Diag.Text) ? "Hemoglobin" : txtTestName_Diag.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtSpecimen_Diag.Text) ? "Blood" : txtSpecimen_Diag.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtResult_Diag.Text) ? "14.5" : txtResult_Diag.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtUnit_Diag.Text) ? "mg/dL" : txtUnit_Diag.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtRefRange_Diag.Text) ? "13-17" : txtRefRange_Diag.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtRemarks_Diag.Text) ? "Normal" : txtRemarks_Diag.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtInterpretation_Diag.Text) ? "Clinically stable" : txtInterpretation_Diag.Text.Trim()
+                    });
+                }
+                else if (recordType == "DischargeSummary")
+                {
+                    items.Add(new string[] {
+                        string.IsNullOrWhiteSpace(txtMedicineName_Disch.Text) ? "Pantoprazole" : txtMedicineName_Disch.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtDosage_Disch.Text) ? "1-0-1" : txtDosage_Disch.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtAdmDate_Disch.Text) ? DateTime.Now.AddDays(-3).ToString("yyyy-MM-dd") : txtAdmDate_Disch.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtDischDate_Disch.Text) ? DateTime.Now.ToString("yyyy-MM-dd") : txtDischDate_Disch.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtCourse_Disch.Text) ? "IV Fluids & Antibiotics" : txtCourse_Disch.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtAdvice_Disch.Text) ? "Take rest" : txtAdvice_Disch.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtCondition_Disch.Text) ? "Stable" : txtCondition_Disch.Text.Trim()
+                    });
+                }
+                else if (recordType == "ImmunizationRecord")
+                {
+                    items.Add(new string[] {
+                        string.IsNullOrWhiteSpace(txtVaccineName_Imm.Text) ? "Covishield" : txtVaccineName_Imm.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtLotNumber_Imm.Text) ? "LOT-1234" : txtLotNumber_Imm.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtDoseNumber_Imm.Text) ? "1" : txtDoseNumber_Imm.Text.Trim()
+                    });
+                }
+                else if (recordType == "WellnessRecord")
+                {
+                    items.Add(new string[] {
+                        string.IsNullOrWhiteSpace(txtObservation_Well.Text) ? "Heart rate" : txtObservation_Well.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtResult_Well.Text) ? "72" : txtResult_Well.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtUnit_Well.Text) ? "beats/minute" : txtUnit_Well.Text.Trim()
+                    });
+                }
+                else if (recordType == "Invoice")
+                {
+                    items.Add(new string[] {
+                        string.IsNullOrWhiteSpace(txtItemName_Inv.Text) ? "Consultation & Clinical Services" : txtItemName_Inv.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtAmount_Inv.Text) ? "500" : txtAmount_Inv.Text.Trim()
+                    });
+                }
+            }
+            return items;
+        }
+
         private async Task<bool> SaveAndPushActionAsync()
         {
             if (string.IsNullOrWhiteSpace(txtAbhaAddress.Text) || string.IsNullOrWhiteSpace(txtPatientName.Text))
@@ -612,90 +455,57 @@ namespace HMS.abdm
                 return false;
             }
 
-            string recordType = cmbRecordType.Text;
-
-            // Auto-generate PDF clinical report if not manually attached
-            if (_pdfBytes == null)
+            try
             {
-                AppendLog($"No manual PDF uploaded. Auto-generating {recordType} PDF report...");
-                var itemsForPdf = new List<string[]>();
-                var activeLv = GetActiveListView();
-                if (activeLv != null)
+                var recordTypes = new[] {
+                    new { Type = "PrescriptionRecord", HiType = "Prescription", Suffix = "-Presc", Display = "Prescription" },
+                    new { Type = "OPConsultationRecord", HiType = "OPConsultation", Suffix = "-OP", Display = "OP Consultation" },
+                    new { Type = "DiagnosticReport", HiType = "DiagnosticReport", Suffix = "-Diag", Display = "Diagnostic Report" },
+                    new { Type = "DischargeSummary", HiType = "DischargeSummary", Suffix = "-Disch", Display = "Discharge Summary" },
+                    new { Type = "HealthDocumentRecord", HiType = "HealthDocumentRecord", Suffix = "-Doc", Display = "Health Document" },
+                    new { Type = "ImmunizationRecord", HiType = "ImmunizationRecord", Suffix = "-Imm", Display = "Immunization Record" },
+                    new { Type = "WellnessRecord", HiType = "WellnessRecord", Suffix = "-Well", Display = "Wellness Record" },
+                    new { Type = "Invoice", HiType = "Invoice", Suffix = "-Inv", Display = "Invoice" }
+                };
+
+                AppendLog("1. Registering Patient and Care Context in Wrapper DB...");
+
+                var careContexts = new List<Dictionary<string, object>>();
+                string baseRef = txtCareContextRef.Text.Trim();
+                string baseDisplay = txtCareContextDisplay.Text.Trim();
+
+                if (chkAllTypes.Checked)
                 {
-                    foreach (ListViewItem item in activeLv.Items)
+                    foreach (var rt in recordTypes)
                     {
-                        itemsForPdf.Add(new string[] {
-                            item.Text,
-                            item.SubItems.Count > 1 ? item.SubItems[1].Text : "",
-                            item.SubItems.Count > 2 ? item.SubItems[2].Text : "",
-                            item.SubItems.Count > 3 ? item.SubItems[3].Text : "",
-                            item.SubItems.Count > 4 ? item.SubItems[4].Text : "",
-                            item.SubItems.Count > 5 ? item.SubItems[5].Text : "",
-                            item.SubItems.Count > 6 ? item.SubItems[6].Text : ""
+                        careContexts.Add(new Dictionary<string, object>
+                        {
+                            ["referenceNumber"] = $"{baseRef}{rt.Suffix}",
+                            ["display"] = $"{baseDisplay} {rt.Display}",
+                            ["hiType"] = rt.HiType
                         });
                     }
                 }
+                else
+                {
+                    string recordType = cmbRecordType.Text;
+                    string hiType = "Prescription";
+                    if (recordType == "OPConsultationRecord") hiType = "OPConsultation";
+                    else if (recordType == "HealthDocumentRecord") hiType = "HealthDocumentRecord";
+                    else if (recordType == "DiagnosticReport") hiType = "DiagnosticReport";
+                    else if (recordType == "DischargeSummary") hiType = "DischargeSummary";
+                    else if (recordType == "ImmunizationRecord") hiType = "ImmunizationRecord";
+                    else if (recordType == "WellnessRecord") hiType = "WellnessRecord";
+                    else if (recordType == "Invoice") hiType = "Invoice";
 
-                _pdfBytes = GenerateClinicalDocumentPdf(
-                    recordType,
-                    txtPatientName.Text.Trim(),
-                    txtAbhaAddress.Text.Trim(),
-                    cmbGender.Text.Trim(),
-                    txtDob.Text.Trim(),
-                    txtCareContextRef.Text.Trim(),
-                    itemsForPdf,
-                    "Dr. Sudeep Munjal"
-                );
-                _pdfFileName = $"{recordType}_{txtCareContextRef.Text.Trim()}.pdf";
-                lblPdfStatus.Text = $"Auto-Generated: {_pdfFileName} ({(_pdfBytes.Length / 1024.0):F1} KB)";
-                lblPdfStatus.ForeColor = Color.DarkGreen;
-            }
-
-            try
-            {
-                AppendLog("1. Registering Patient and Care Context in Wrapper DB...");
-
-                string hiType = "Prescription";
-                if (recordType == "OPConsultationRecord")
-                {
-                    hiType = "OPConsultation";
-                }
-                else if (recordType == "HealthDocumentRecord")
-                {
-                    hiType = "HealthDocumentRecord";
-                }
-                else if (recordType == "DiagnosticReport")
-                {
-                    hiType = "DiagnosticReport";
-                }
-                else if (recordType == "DischargeSummary")
-                {
-                    hiType = "DischargeSummary";
-                }
-                else if (recordType == "ImmunizationRecord")
-                {
-                    hiType = "ImmunizationRecord";
-                }
-                else if (recordType == "WellnessRecord")
-                {
-                    hiType = "WellnessRecord";
-                }
-                else if (recordType == "Invoice")
-                {
-                    hiType = "Invoice";
-                }
-
-                var careContexts = new List<Dictionary<string, object>>
-                {
-                    new Dictionary<string, object>
+                    careContexts.Add(new Dictionary<string, object>
                     {
-                        ["referenceNumber"] = txtCareContextRef.Text.Trim(),
-                        ["display"] = txtCareContextDisplay.Text.Trim(),
+                        ["referenceNumber"] = baseRef,
+                        ["display"] = baseDisplay,
                         ["hiType"] = hiType
-                    }
-                };
+                    });
+                }
 
-                // Step A: Register Patient inside wrapper DB
                 var resp = await _client.AddPatientsToWrapperAsync(
                     txtAbhaAddress.Text.Trim(),
                     txtPatientName.Text.Trim(),
@@ -715,150 +525,172 @@ namespace HMS.abdm
 
                 AppendLog("[REGISTER SUCCESS] Patient registered successfully in Wrapper DB.");
 
-                // Step B: Build FHIR-mappable payload
-                var medicinesList = new List<object>();
-                var immunizationsList = new List<object>();
-                var vitalSignsList = new List<object>();
-                var lineItemsList = new List<object>();
-
-                var activeLv2 = GetActiveListView();
-                if (activeLv2 != null)
-                {
-                    if (recordType == "PrescriptionRecord" || recordType == "OPConsultationRecord" || recordType == "DischargeSummary")
-                    {
-                        foreach (ListViewItem item in activeLv2.Items)
-                        {
-                            medicinesList.Add(new
-                            {
-                                medicine = item.Text,
-                                dosage = item.SubItems.Count > 1 ? item.SubItems[1].Text : "",
-                                timing = item.SubItems.Count > 2 ? item.SubItems[2].Text : "",
-                                route = item.SubItems.Count > 3 ? item.SubItems[3].Text : "",
-                                method = item.SubItems.Count > 4 ? item.SubItems[4].Text : "",
-                                additionalInstructions = item.SubItems.Count > 5 ? item.SubItems[5].Text : "",
-                                reason = item.SubItems.Count > 6 ? item.SubItems[6].Text : ""
-                            });
-                        }
-                    }
-                    else if (recordType == "DiagnosticReport")
-                    {
-                        foreach (ListViewItem item in activeLv2.Items)
-                        {
-                            medicinesList.Add(new
-                            {
-                                name = item.Text,
-                                specimen = item.SubItems.Count > 1 ? item.SubItems[1].Text : "",
-                                result = item.SubItems.Count > 2 ? item.SubItems[2].Text : "",
-                                unit = item.SubItems.Count > 3 ? item.SubItems[3].Text : "",
-                                referenceRange = item.SubItems.Count > 4 ? item.SubItems[4].Text : "",
-                                remarks = item.SubItems.Count > 5 ? item.SubItems[5].Text : "",
-                                interpretation = item.SubItems.Count > 6 ? item.SubItems[6].Text : ""
-                            });
-                        }
-                    }
-                    else if (recordType == "ImmunizationRecord")
-                    {
-                        foreach (ListViewItem item in activeLv2.Items)
-                        {
-                            int doseVal = 1;
-                            int.TryParse(item.SubItems.Count > 2 ? item.SubItems[2].Text : "1", out doseVal);
-                            immunizationsList.Add(new
-                            {
-                                vaccineName = item.Text,
-                                lotNumber = item.SubItems.Count > 1 ? item.SubItems[1].Text : "LOT123",
-                                doseNumber = doseVal,
-                                date = DateTime.UtcNow.ToString("o")
-                            });
-                        }
-                    }
-                    else if (recordType == "WellnessRecord")
-                    {
-                        foreach (ListViewItem item in activeLv2.Items)
-                        {
-                            vitalSignsList.Add(new
-                            {
-                                codeText = item.Text,
-                                value = item.SubItems.Count > 1 ? item.SubItems[1].Text : "",
-                                unit = item.SubItems.Count > 2 ? item.SubItems[2].Text : ""
-                            });
-                        }
-                    }
-                    else if (recordType == "Invoice")
-                    {
-                        foreach (ListViewItem item in activeLv2.Items)
-                        {
-                            lineItemsList.Add(new
-                            {
-                                itemName = item.Text,
-                                price = item.SubItems.Count > 1 ? item.SubItems[1].Text : ""
-                            });
-                        }
-                    }
-                }
-
-                var documentsList = new List<object>();
-                if (_pdfBytes != null)
-                {
-                    documentsList.Add(new
-                    {
-                        contentType = "application/pdf",
-                        type = recordType,
-                        data = Convert.ToBase64String(_pdfBytes)
-                    });
-                }
-
-                var parchiJson = new
-                {
-                    bundleType = recordType,
-                    careContextReference = txtCareContextRef.Text.Trim(),
-                    authoredOn = DateTime.UtcNow.ToString("o"),
-                    patient = new
-                    {
-                        name = txtPatientName.Text.Trim(),
-                        patientReference = txtPatientRef.Text.Trim(),
-                        gender = cmbGender.Text.Trim().ToLower(),
-                        birthDate = txtDob.Text.Trim()
-                    },
-                    practitioners = new[] { new { name = "Dr. Sudeep Munjal", practitionerId = "DOC-01" } },
-                    organisation = new { facilityName = "MIDHA HOSPITAL", facilityId = "IN0610090658" },
-                    clinicalNotes = $"{recordType} Details",
-                    prescriptions = medicinesList.ToArray(),
-                    immunizations = immunizationsList.ToArray(),
-                    vitalSigns = vitalSignsList.ToArray(),
-                    lineItems = lineItemsList.ToArray(),
-                    documents = documentsList.ToArray()
-                };
-
-                var recordData = new
-                {
-                    AbhaAddress = txtAbhaAddress.Text.Trim(),
-                    CareContextReference = txtCareContextRef.Text.Trim(),
-                    RecordType = recordType,
-                    FhirJsonPayload = System.Text.Json.JsonSerializer.Serialize(parchiJson)
-                };
-
-                AppendLog("2. Pushing Health Data Record to Wrapper...");
-
                 using (var client = new HttpClient())
                 {
                     string wrapperBaseUrl = System.Configuration.ConfigurationManager.AppSettings["AbdmSettings:BaseUrl"] ?? "https://sbx.wati.digital";
                     string apiUrl = $"{wrapperBaseUrl.TrimEnd('/')}/v3/patient/health-data";
-                    var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(recordData), Encoding.UTF8, "application/json");
 
-                    var healthResp = await client.PostAsync(apiUrl, content);
-                    if (healthResp.IsSuccessStatusCode)
+                    var typesToPush = chkAllTypes.Checked 
+                        ? recordTypes.Select(x => new { x.Type, x.HiType, Suffix = x.Suffix, Display = x.Display }).ToArray()
+                        : new[] { new { Type = cmbRecordType.Text, HiType = careContexts[0]["hiType"].ToString(), Suffix = "", Display = cmbRecordType.Text } };
+
+                    foreach (var rt in typesToPush)
                     {
-                        AppendLog($"[DATA PUSH SUCCESS] {recordType} details & attachments saved to Wrapper DB.");
-                        return true;
-                    }
-                    else
-                    {
-                        var errorResponse = await healthResp.Content.ReadAsStringAsync();
-                        AppendLog($"[DATA PUSH ERROR] Status: {healthResp.StatusCode}, Response: {errorResponse}");
-                        MessageBox.Show("Failed to push Health Data: " + errorResponse, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return false;
+                        string refNo = chkAllTypes.Checked ? $"{baseRef}{rt.Suffix}" : baseRef;
+                        var items = GetRecordItems(rt.Type);
+
+                        // Auto-generate PDF clinical report if not manually attached
+                        byte[] pdfBytes = null;
+                        if (rt.Type == "HealthDocumentRecord" && _pdfBytes != null)
+                        {
+                            pdfBytes = _pdfBytes;
+                        }
+                        else
+                        {
+                            pdfBytes = GenerateClinicalDocumentPdf(
+                                rt.Type,
+                                txtPatientName.Text.Trim(),
+                                txtAbhaAddress.Text.Trim(),
+                                cmbGender.Text.Trim(),
+                                txtDob.Text.Trim(),
+                                refNo,
+                                items,
+                                "Dr. Sudeep Munjal"
+                            );
+                        }
+
+                        var medicinesList = new List<object>();
+                        var immunizationsList = new List<object>();
+                        var vitalSignsList = new List<object>();
+                        var lineItemsList = new List<object>();
+
+                        if (rt.Type == "PrescriptionRecord" || rt.Type == "OPConsultationRecord" || rt.Type == "DischargeSummary")
+                        {
+                            foreach (var item in items)
+                            {
+                                medicinesList.Add(new
+                                {
+                                    medicine = item[0],
+                                    dosage = item.Length > 1 ? item[1] : "",
+                                    timing = item.Length > 2 ? item[2] : "",
+                                    route = item.Length > 3 ? item[3] : "",
+                                    method = item.Length > 4 ? item[4] : "",
+                                    additionalInstructions = item.Length > 5 ? item[5] : "",
+                                    reason = item.Length > 6 ? item[6] : ""
+                                });
+                            }
+                        }
+                        else if (rt.Type == "DiagnosticReport")
+                        {
+                            foreach (var item in items)
+                            {
+                                medicinesList.Add(new
+                                {
+                                    name = item[0],
+                                    specimen = item.Length > 1 ? item[1] : "",
+                                    result = item.Length > 2 ? item[2] : "",
+                                    unit = item.Length > 3 ? item[3] : "",
+                                    referenceRange = item.Length > 4 ? item[4] : "",
+                                    remarks = item.Length > 5 ? item[5] : "",
+                                    interpretation = item.Length > 6 ? item[6] : ""
+                                });
+                            }
+                        }
+                        else if (rt.Type == "ImmunizationRecord")
+                        {
+                            foreach (var item in items)
+                            {
+                                int doseVal = 1;
+                                int.TryParse(item.Length > 2 ? item[2] : "1", out doseVal);
+                                immunizationsList.Add(new
+                                {
+                                    vaccineName = item[0],
+                                    lotNumber = item.Length > 1 ? item[1] : "LOT123",
+                                    doseNumber = doseVal,
+                                    date = DateTime.UtcNow.ToString("o")
+                                });
+                            }
+                        }
+                        else if (rt.Type == "WellnessRecord")
+                        {
+                            foreach (var item in items)
+                            {
+                                vitalSignsList.Add(new
+                                {
+                                    codeText = item[0],
+                                    value = item.Length > 1 ? item[1] : "",
+                                    unit = item.Length > 2 ? item[2] : ""
+                                });
+                            }
+                        }
+                        else if (rt.Type == "Invoice")
+                        {
+                            foreach (var item in items)
+                            {
+                                lineItemsList.Add(new
+                                {
+                                    itemName = item[0],
+                                    price = item.Length > 1 ? item[1] : ""
+                                });
+                            }
+                        }
+
+                        var documentsList = new List<object>();
+                        if (pdfBytes != null)
+                        {
+                            documentsList.Add(new
+                            {
+                                contentType = "application/pdf",
+                                type = rt.Type,
+                                data = Convert.ToBase64String(pdfBytes)
+                            });
+                        }
+
+                        var parchiJson = new
+                        {
+                            bundleType = rt.Type,
+                            careContextReference = refNo,
+                            authoredOn = DateTime.UtcNow.ToString("o"),
+                            patient = new
+                            {
+                                name = txtPatientName.Text.Trim(),
+                                patientReference = txtPatientRef.Text.Trim(),
+                                gender = cmbGender.Text.Trim().ToLower(),
+                                birthDate = txtDob.Text.Trim()
+                            },
+                            practitioners = new[] { new { name = "Dr. Sudeep Munjal", practitionerId = "DOC-01" } },
+                            organisation = new { facilityName = "MIDHA HOSPITAL", facilityId = "IN0610090658" },
+                            clinicalNotes = $"{rt.Display} Details",
+                            prescriptions = medicinesList.ToArray(),
+                            immunizations = immunizationsList.ToArray(),
+                            vitalSigns = vitalSignsList.ToArray(),
+                            lineItems = lineItemsList.ToArray(),
+                            documents = documentsList.ToArray()
+                        };
+
+                        var recordData = new
+                        {
+                            AbhaAddress = txtAbhaAddress.Text.Trim(),
+                            CareContextReference = refNo,
+                            RecordType = rt.Type,
+                            FhirJsonPayload = System.Text.Json.JsonSerializer.Serialize(parchiJson)
+                        };
+
+                        AppendLog($"2. Pushing Health Data Record ({rt.Display}) to Wrapper...");
+                        var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(recordData), Encoding.UTF8, "application/json");
+
+                        var healthResp = await client.PostAsync(apiUrl, content);
+                        if (!healthResp.IsSuccessStatusCode)
+                        {
+                            var errorResponse = await healthResp.Content.ReadAsStringAsync();
+                            AppendLog($"[DATA PUSH ERROR] {rt.Display} Status: {healthResp.StatusCode}, Response: {errorResponse}");
+                            MessageBox.Show($"Failed to push Health Data ({rt.Display}): " + errorResponse, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return false;
+                        }
+                        AppendLog($"[DATA PUSH SUCCESS] {rt.Display} details & attachments saved to Wrapper DB.");
                     }
                 }
+                return true;
             }
             catch (Exception ex)
             {
@@ -866,11 +698,6 @@ namespace HMS.abdm
                 MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
-        }
-
-        private async void btnInitiateLink_Click(object sender, EventArgs e)
-        {
-            await InitiateLinkingActionAsync();
         }
 
         private async Task<bool> InitiateLinkingActionAsync()
@@ -885,46 +712,52 @@ namespace HMS.abdm
             {
                 AppendLog("3. Initiating Care Context Linking on ABDM Gateway...");
 
-                string hiType = "Prescription";
-                string recordType = cmbRecordType.Text;
-                if (recordType == "OPConsultationRecord")
-                {
-                    hiType = "OPConsultation";
-                }
-                else if (recordType == "HealthDocumentRecord")
-                {
-                    hiType = "HealthDocumentRecord";
-                }
-                else if (recordType == "DiagnosticReport")
-                {
-                    hiType = "DiagnosticReport";
-                }
-                else if (recordType == "DischargeSummary")
-                {
-                    hiType = "DischargeSummary";
-                }
-                else if (recordType == "ImmunizationRecord")
-                {
-                    hiType = "ImmunizationRecord";
-                }
-                else if (recordType == "WellnessRecord")
-                {
-                    hiType = "WellnessRecord";
-                }
-                else if (recordType == "Invoice")
-                {
-                    hiType = "Invoice";
-                }
+                var careContexts = new List<Dictionary<string, object>>();
+                string baseRef = txtCareContextRef.Text.Trim();
+                string baseDisplay = txtCareContextDisplay.Text.Trim();
 
-                var careContexts = new List<Dictionary<string, object>>
+                if (chkAllTypes.Checked)
                 {
-                    new Dictionary<string, object>
+                    var recordTypes = new[] {
+                        new { HiType = "Prescription", Suffix = "-Presc", Display = "Prescription" },
+                        new { HiType = "OPConsultation", Suffix = "-OP", Display = "OP Consultation" },
+                        new { HiType = "DiagnosticReport", Suffix = "-Diag", Display = "Diagnostic Report" },
+                        new { HiType = "DischargeSummary", Suffix = "-Disch", Display = "Discharge Summary" },
+                        new { HiType = "HealthDocumentRecord", Suffix = "-Doc", Display = "Health Document" },
+                        new { HiType = "ImmunizationRecord", Suffix = "-Imm", Display = "Immunization Record" },
+                        new { HiType = "WellnessRecord", Suffix = "-Well", Display = "Wellness Record" },
+                        new { HiType = "Invoice", Suffix = "-Inv", Display = "Invoice" }
+                    };
+
+                    foreach (var rt in recordTypes)
                     {
-                        ["referenceNumber"] = txtCareContextRef.Text.Trim(),
-                        ["display"] = txtCareContextDisplay.Text.Trim(),
-                        ["hiType"] = hiType
+                        careContexts.Add(new Dictionary<string, object>
+                        {
+                            ["referenceNumber"] = $"{baseRef}{rt.Suffix}",
+                            ["display"] = $"{baseDisplay} {rt.Display}",
+                            ["hiType"] = rt.HiType
+                        });
                     }
-                };
+                }
+                else
+                {
+                    string recordType = cmbRecordType.Text;
+                    string hiType = "Prescription";
+                    if (recordType == "OPConsultationRecord") hiType = "OPConsultation";
+                    else if (recordType == "HealthDocumentRecord") hiType = "HealthDocumentRecord";
+                    else if (recordType == "DiagnosticReport") hiType = "DiagnosticReport";
+                    else if (recordType == "DischargeSummary") hiType = "DischargeSummary";
+                    else if (recordType == "ImmunizationRecord") hiType = "ImmunizationRecord";
+                    else if (recordType == "WellnessRecord") hiType = "WellnessRecord";
+                    else if (recordType == "Invoice") hiType = "Invoice";
+
+                    careContexts.Add(new Dictionary<string, object>
+                    {
+                        ["referenceNumber"] = baseRef,
+                        ["display"] = baseDisplay,
+                        ["hiType"] = hiType
+                    });
+                }
 
                 var resp = await _client.LinkCareContextsAsync(
                     txtAbhaAddress.Text.Trim(),
