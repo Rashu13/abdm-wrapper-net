@@ -2295,7 +2295,7 @@ namespace ABDM.Api
                     },
                     ["hiu"] = new Dictionary<string, object>
                     {
-                        ["id"] = _cfg.ClientId ?? "SBXID_008903",
+                        ["id"] = _cfg.HipId ?? "IN0610090658",
                         ["name"] = _cfg.HipName ?? "MIDHA HOSPITAL"
                     },
                     ["categories"] = categories,

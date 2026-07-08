@@ -34,8 +34,8 @@ namespace HMS.abdm
             // === Set dynamic dates for HIU Consent Request ===
             // DateFrom: 1 year back (to include all historical records)
             txtHiuDateFrom.Text = DateTime.UtcNow.AddYears(-1).ToString("yyyy-MM-ddT00:00:00.000Z");
-            // DateTo: tomorrow (ensures today's records are included in range)
-            txtHiuDateTo.Text = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-ddT23:59:59.000Z");
+            // DateTo: current time (present date) — ensures all records up to this second are included
+            txtHiuDateTo.Text = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
             // EraseAt: 6 months from now (consent data expiry)
             txtHiuEraseAt.Text = DateTime.UtcNow.AddMonths(6).ToString("yyyy-MM-ddT00:00:00.000Z");
 
