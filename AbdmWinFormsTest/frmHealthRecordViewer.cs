@@ -115,28 +115,38 @@ namespace HMS.abdm
 
             foreach (var rec in _records)
             {
-                string ccRef = rec.ContainsKey("careContextReference") ? rec["careContextReference"]?.ToString() ?? "Unknown CC" : "Unknown CC";
+                string ccRef = GetDictString(rec, "careContextReference");
+                if (string.IsNullOrEmpty(ccRef)) ccRef = "Unknown CC";
+                
                 string visitDate = "Unknown Date";
                 int resourceCount = 0;
                 
-                if (rec.ContainsKey("fhirBundle") && rec["fhirBundle"] is Dictionary<string, object> bundle)
+                var bundleObj = GetDictValue(rec, "fhirBundle");
+                if (bundleObj is Dictionary<string, object> bundle)
                 {
-                    if (bundle.ContainsKey("entry") && bundle["entry"] is List<object> entries)
+                    var entryObj = GetDictValue(bundle, "entry");
+                    if (entryObj is List<object> entries)
                     {
                         resourceCount = entries.Count;
                         foreach (var eObj in entries)
                         {
-                            if (eObj is Dictionary<string, object> entry && entry.ContainsKey("resource") && entry["resource"] is Dictionary<string, object> res)
+                            if (eObj is Dictionary<string, object> entry)
                             {
-                                string rType = res.ContainsKey("resourceType") ? res["resourceType"]?.ToString() ?? "" : "";
-                                if (rType == "Encounter")
+                                var rObj = GetDictValue(entry, "resource");
+                                if (rObj is Dictionary<string, object> res)
                                 {
-                                    if (res.ContainsKey("period") && res["period"] is Dictionary<string, object> pDict && pDict.ContainsKey("start"))
+                                    string rType = GetDictString(res, "resourceType");
+                                    if (rType.Equals("Encounter", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        DateTime dt;
-                                        if (DateTime.TryParse(pDict["start"].ToString(), out dt))
+                                        var periodObj = GetDictValue(res, "period");
+                                        if (periodObj is Dictionary<string, object> pDict)
                                         {
-                                            visitDate = dt.ToString("dd-MMM-yyyy");
+                                            string start = GetDictString(pDict, "start");
+                                            DateTime dt;
+                                            if (DateTime.TryParse(start, out dt))
+                                            {
+                                                visitDate = dt.ToString("dd-MMM-yyyy");
+                                            }
                                         }
                                     }
                                 }
@@ -173,7 +183,8 @@ namespace HMS.abdm
             pnlAttachments.Controls.Clear();
             pnlAttachments.Visible = false;
 
-            string ccRef = rec.ContainsKey("careContextReference") ? rec["careContextReference"]?.ToString() ?? "N/A" : "N/A";
+            string ccRef = GetDictString(rec, "careContextReference");
+            if (string.IsNullOrEmpty(ccRef)) ccRef = "N/A";
             
             string patientName = "N/A";
             string abhaAddress = "N/A";
@@ -187,164 +198,226 @@ namespace HMS.abdm
             List<string> sections = new List<string>();
             List<Dictionary<string, object>> attachments = new List<Dictionary<string, object>>();
 
-            if (rec.ContainsKey("fhirBundle") && rec["fhirBundle"] is Dictionary<string, object> bundle)
+            var fhirBundleObj = GetDictValue(rec, "fhirBundle");
+            if (fhirBundleObj is Dictionary<string, object> bundle)
             {
-                if (bundle.ContainsKey("entry") && bundle["entry"] is List<object> entries)
+                var entryObj = GetDictValue(bundle, "entry");
+                if (entryObj is List<object> entries)
                 {
                     foreach (var eObj in entries)
                     {
-                        if (eObj is Dictionary<string, object> entry && entry.ContainsKey("resource") && entry["resource"] is Dictionary<string, object> r)
+                        if (eObj is Dictionary<string, object> entry)
                         {
-                            string rType = r.ContainsKey("resourceType") ? r["resourceType"].ToString() : "";
-                            
-                            if (rType == "Patient")
+                            var rObj = GetDictValue(entry, "resource");
+                            if (rObj is Dictionary<string, object> r)
                             {
-                                if (r.ContainsKey("name") && r["name"] is List<object> nList && nList.Count > 0 && nList[0] is Dictionary<string, object> nDict && nDict.ContainsKey("text"))
-                                    patientName = nDict["text"].ToString();
+                                string rType = GetDictString(r, "resourceType");
                                 
-                                if (r.ContainsKey("gender")) 
+                                if (rType.Equals("Patient", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    string g = r["gender"].ToString();
-                                    if (!string.IsNullOrEmpty(g)) gender = g.Substring(0, 1).ToUpper(); 
-                                }
-                                
-                                if (r.ContainsKey("birthDate")) dob = r["birthDate"].ToString();
-                                
-                                if (r.ContainsKey("identifier") && r["identifier"] is List<object> idList)
-                                {
-                                    foreach (var idObj in idList)
+                                    var nameObj = GetDictValue(r, "name");
+                                    if (nameObj is List<object> nList && nList.Count > 0 && nList[0] is Dictionary<string, object> nDict)
                                     {
-                                        if (idObj is Dictionary<string, object> idDict && idDict.ContainsKey("value"))
-                                        {
-                                            string val = idDict["value"].ToString();
-                                            if (val.Contains("@")) abhaAddress = val;
-                                        }
+                                        patientName = GetDictString(nDict, "text");
                                     }
-                                }
-                            }
-                            else if (rType == "Encounter")
-                            {
-                                if (r.ContainsKey("period") && r["period"] is Dictionary<string, object> pDict && pDict.ContainsKey("start"))
-                                {
-                                    DateTime dt;
-                                    if (DateTime.TryParse(pDict["start"].ToString(), out dt))
-                                        visitDate = dt.ToString("dd-MMM-yyyy HH:mm");
-                                }
-                            }
-                            else if (rType == "MedicationRequest")
-                            {
-                                string medName = "Unknown Medicine";
-                                if (r.ContainsKey("medicationCodeableConcept") && r["medicationCodeableConcept"] is Dictionary<string, object> mDict && mDict.ContainsKey("text"))
-                                    medName = mDict["text"].ToString();
-                                else if (r.ContainsKey("medicationReference") && r["medicationReference"] is Dictionary<string, object> mrDict && mrDict.ContainsKey("display"))
-                                    medName = mrDict["display"].ToString();
-
-                                string dosage = "Not Specified";
-                                if (r.ContainsKey("dosageInstruction") && r["dosageInstruction"] is List<object> dList && dList.Count > 0 && dList[0] is Dictionary<string, object> dDict && dDict.ContainsKey("text"))
-                                {
-                                    dosage = dDict["text"].ToString();
-                                }
-                                
-                                medicines.Add($"- {medName} - Dosage: {dosage}");
-                            }
-                            else if (rType == "DiagnosticReport")
-                            {
-                                string repName = "Diagnostic Report";
-                                if (r.ContainsKey("code") && r["code"] is Dictionary<string, object> cDict && cDict.ContainsKey("text"))
-                                    repName = cDict["text"].ToString();
-
-                                string conclusion = "";
-                                if (r.ContainsKey("conclusion"))
-                                    conclusion = r["conclusion"].ToString();
-
-                                string status = r.ContainsKey("status") ? r["status"].ToString() : "";
-                                string diagStr = $"- {repName} (Status: {status})";
-                                if (!string.IsNullOrEmpty(conclusion))
-                                    diagStr += $" - Conclusion: {conclusion}";
-                                diagnostics.Add(diagStr);
-                            }
-                            else if (rType == "Observation")
-                            {
-                                string obsName = "Observation";
-                                if (r.ContainsKey("code") && r["code"] is Dictionary<string, object> cDict && cDict.ContainsKey("text"))
-                                    obsName = cDict["text"].ToString();
-
-                                string obsVal = "";
-                                if (r.ContainsKey("valueQuantity") && r["valueQuantity"] is Dictionary<string, object> vQ)
-                                {
-                                    string val = vQ.ContainsKey("value") ? vQ["value"].ToString() : "";
-                                    string unit = vQ.ContainsKey("unit") ? vQ["unit"].ToString() : "";
-                                    obsVal = $"{val} {unit}".Trim();
-                                }
-                                else if (r.ContainsKey("valueString"))
-                                {
-                                    obsVal = r["valueString"].ToString();
-                                }
-                                else if (r.ContainsKey("valueCodeableConcept") && r["valueCodeableConcept"] is Dictionary<string, object> vC && vC.ContainsKey("text"))
-                                {
-                                    obsVal = vC["text"].ToString();
-                                }
-
-                                string status = r.ContainsKey("status") ? r["status"].ToString() : "";
-                                string obsStr = $"- {obsName}: {obsVal}";
-                                if (!string.IsNullOrEmpty(status))
-                                    obsStr += $" ({status})";
-                                observations.Add(obsStr);
-                            }
-                            else if (rType == "Immunization")
-                            {
-                                string vaccine = "Unknown Vaccine";
-                                if (r.ContainsKey("vaccineCode") && r["vaccineCode"] is Dictionary<string, object> vCode && vCode.ContainsKey("text"))
-                                    vaccine = vCode["text"].ToString();
-
-                                string occDate = "";
-                                if (r.ContainsKey("occurrenceDateTime"))
-                                    occDate = r["occurrenceDateTime"].ToString();
-
-                                string dose = "";
-                                if (r.ContainsKey("protocolApplied") && r["protocolApplied"] is List<object> pList && pList.Count > 0)
-                                {
-                                    if (pList[0] is Dictionary<string, object> pDict && pDict.ContainsKey("doseNumberPositiveInt"))
-                                        dose = $" (Dose: {pDict["doseNumberPositiveInt"]})";
-                                }
-
-                                string status = r.ContainsKey("status") ? r["status"].ToString() : "";
-                                string immStr = $"- {vaccine}{dose}";
-                                if (!string.IsNullOrEmpty(occDate))
-                                    immStr += $" given on {occDate}";
-                                if (!string.IsNullOrEmpty(status))
-                                    immStr += $" [Status: {status}]";
-                                immunizations.Add(immStr);
-                            }
-                            else if (rType == "Composition")
-                            {
-                                if (r.ContainsKey("title"))
-                                {
-                                    string compTitle = r["title"].ToString();
-                                    string compStatus = r.ContainsKey("status") ? r["status"].ToString() : "";
-                                    sections.Add($"Document Type: {compTitle} (Status: {compStatus})");
-                                }
-                                if (r.ContainsKey("section") && r["section"] is List<object> sList)
-                                {
-                                    foreach (var sObj in sList)
+                                    
+                                    string g = GetDictString(r, "gender");
+                                    if (!string.IsNullOrEmpty(g)) 
                                     {
-                                        if (sObj is Dictionary<string, object> sDict)
+                                        gender = g.Substring(0, 1).ToUpper(); 
+                                    }
+                                    
+                                    dob = GetDictString(r, "birthDate");
+                                    
+                                    var idObj = GetDictValue(r, "identifier");
+                                    if (idObj is List<object> idList)
+                                    {
+                                        foreach (var idItem in idList)
                                         {
-                                            string sTitle = sDict.ContainsKey("title") ? sDict["title"].ToString() : "Section";
-                                            string sText = "";
-                                            if (sDict.ContainsKey("text") && sDict["text"] is Dictionary<string, object> tDict && tDict.ContainsKey("div"))
+                                            if (idItem is Dictionary<string, object> idDict)
                                             {
-                                                sText = tDict["div"].ToString();
-                                                sText = System.Text.RegularExpressions.Regex.Replace(sText, "<.*?>", string.Empty).Trim();
+                                                string val = GetDictString(idDict, "value");
+                                                if (val.Contains("@")) abhaAddress = val;
                                             }
-                                            sections.Add($"* {sTitle}: {sText}");
                                         }
                                     }
                                 }
-                            }
-                            else if (rType == "DocumentReference")
-                            {
-                                attachments.Add(r);
+                                else if (rType.Equals("Encounter", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    var periodObj = GetDictValue(r, "period");
+                                    if (periodObj is Dictionary<string, object> pDict)
+                                    {
+                                        string start = GetDictString(pDict, "start");
+                                        DateTime dt;
+                                        if (DateTime.TryParse(start, out dt))
+                                            visitDate = dt.ToString("dd-MMM-yyyy HH:mm");
+                                    }
+                                }
+                                else if (rType.Equals("MedicationRequest", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string medName = "";
+                                    
+                                    // Try medicationCodeableConcept
+                                    var mccObj = GetDictValue(r, "medicationCodeableConcept");
+                                    if (mccObj is Dictionary<string, object> mccDict)
+                                    {
+                                        medName = GetDictString(mccDict, "text");
+                                    }
+                                    
+                                    // Try medicationReference
+                                    if (string.IsNullOrEmpty(medName))
+                                    {
+                                        var mrObj = GetDictValue(r, "medicationReference");
+                                        if (mrObj is Dictionary<string, object> mrDict)
+                                        {
+                                            medName = GetDictString(mrDict, "display");
+                                        }
+                                    }
+
+                                    // Fallback to "medication" string or property
+                                    if (string.IsNullOrEmpty(medName))
+                                    {
+                                        var medDirect = GetDictValue(r, "medication");
+                                        if (medDirect is string sMed) medName = sMed;
+                                    }
+
+                                    if (string.IsNullOrEmpty(medName)) medName = "Unknown Medicine";
+
+                                    string dosage = "Not Specified";
+                                    var diObj = GetDictValue(r, "dosageInstruction");
+                                    if (diObj is List<object> dList && dList.Count > 0 && dList[0] is Dictionary<string, object> dDict)
+                                    {
+                                        dosage = GetDictString(dDict, "text");
+                                    }
+                                    
+                                    medicines.Add($"- {medName} - Dosage: {dosage}");
+                                }
+                                else if (rType.Equals("DiagnosticReport", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string repName = "Diagnostic Report";
+                                    var codeObj = GetDictValue(r, "code");
+                                    if (codeObj is Dictionary<string, object> codeDict)
+                                    {
+                                        repName = GetDictString(codeDict, "text");
+                                    }
+
+                                    string conclusion = GetDictString(r, "conclusion");
+                                    string status = GetDictString(r, "status");
+                                    string diagStr = $"- {repName} (Status: {status})";
+                                    if (!string.IsNullOrEmpty(conclusion))
+                                        diagStr += $" - Conclusion: {conclusion}";
+                                    diagnostics.Add(diagStr);
+                                }
+                                else if (rType.Equals("Observation", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string obsName = "Observation";
+                                    var codeObj = GetDictValue(r, "code");
+                                    if (codeObj is Dictionary<string, object> codeDict)
+                                    {
+                                        obsName = GetDictString(codeDict, "text");
+                                    }
+
+                                    string obsVal = "";
+                                    var vqObj = GetDictValue(r, "valueQuantity");
+                                    if (vqObj is Dictionary<string, object> vQ)
+                                    {
+                                        string val = GetDictString(vQ, "value");
+                                        string unit = GetDictString(vQ, "unit");
+                                        obsVal = $"{val} {unit}".Trim();
+                                    }
+                                    else
+                                    {
+                                        obsVal = GetDictString(r, "valueString");
+                                        if (string.IsNullOrEmpty(obsVal))
+                                        {
+                                            var vcObj = GetDictValue(r, "valueCodeableConcept");
+                                            if (vcObj is Dictionary<string, object> vC)
+                                            {
+                                                obsVal = GetDictString(vC, "text");
+                                            }
+                                        }
+                                    }
+
+                                    string status = GetDictString(r, "status");
+                                    string obsStr = $"- {obsName}: {obsVal}";
+                                    if (!string.IsNullOrEmpty(status))
+                                        obsStr += $" ({status})";
+                                    observations.Add(obsStr);
+                                }
+                                else if (rType.Equals("Immunization", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string vaccine = "Unknown Vaccine";
+                                    var vcObj = GetDictValue(r, "vaccineCode");
+                                    if (vcObj is Dictionary<string, object> vCode)
+                                    {
+                                        vaccine = GetDictString(vCode, "text");
+                                    }
+
+                                    string occDate = GetDictString(r, "occurrenceDateTime");
+                                    string dose = "";
+                                    var paObj = GetDictValue(r, "protocolApplied");
+                                    if (paObj is List<object> pList && pList.Count > 0 && pList[0] is Dictionary<string, object> pDict)
+                                    {
+                                        string doseNum = GetDictString(pDict, "doseNumberPositiveInt");
+                                        if (!string.IsNullOrEmpty(doseNum))
+                                            dose = $" (Dose: {doseNum})";
+                                    }
+
+                                    string status = GetDictString(r, "status");
+                                    string immStr = $"- {vaccine}{dose}";
+                                    if (!string.IsNullOrEmpty(occDate))
+                                        immStr += $" given on {occDate}";
+                                    if (!string.IsNullOrEmpty(status))
+                                        immStr += $" [Status: {status}]";
+                                    immunizations.Add(immStr);
+                                }
+                                else if (rType.Equals("Composition", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string compTitle = GetDictString(r, "title");
+                                    string compStatus = GetDictString(r, "status");
+                                    if (!string.IsNullOrEmpty(compTitle))
+                                    {
+                                        sections.Add($"Document Type: {compTitle} (Status: {compStatus})");
+                                    }
+                                    
+                                    var secObj = GetDictValue(r, "section");
+                                    if (secObj is List<object> sList)
+                                    {
+                                        foreach (var sObj in sList)
+                                        {
+                                            if (sObj is Dictionary<string, object> sDict)
+                                            {
+                                                string sTitle = GetDictString(sDict, "title");
+                                                if (string.IsNullOrEmpty(sTitle)) sTitle = "Section";
+                                                
+                                                // If sTitle is "Medications" or "Prescription", we skip it in general sections 
+                                                // because it's already displayed in a separate, dedicated medicines block.
+                                                if (sTitle.Equals("Medications", StringComparison.OrdinalIgnoreCase) || 
+                                                    sTitle.Equals("Prescription", StringComparison.OrdinalIgnoreCase))
+                                                {
+                                                    continue;
+                                                }
+
+                                                string sText = "";
+                                                var textObj = GetDictValue(sDict, "text");
+                                                if (textObj is Dictionary<string, object> tDict)
+                                                {
+                                                    sText = GetDictString(tDict, "div");
+                                                    sText = System.Text.RegularExpressions.Regex.Replace(sText, "<.*?>", string.Empty).Trim();
+                                                }
+
+                                                if (!string.IsNullOrEmpty(sText))
+                                                {
+                                                    sections.Add($"* {sTitle}: {sText}");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                else if (rType.Equals("DocumentReference", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    attachments.Add(r);
+                                }
                             }
                         }
                     }
@@ -471,59 +544,61 @@ namespace HMS.abdm
                 {
                     try
                     {
-                        if (attRes.ContainsKey("content") && attRes["content"] is List<object> cList && cList.Count > 0)
+                        var contentObj = GetDictValue(attRes, "content");
+                        if (contentObj is List<object> cList && cList.Count > 0)
                         {
-                            if (cList[0] is Dictionary<string, object> cDict && cDict.ContainsKey("attachment") && cDict["attachment"] is Dictionary<string, object> att)
+                            if (cList[0] is Dictionary<string, object> cDict)
                             {
-                                if (att.ContainsKey("data") && att["data"] != null)
+                                var attObj = GetDictValue(cDict, "attachment");
+                                if (attObj is Dictionary<string, object> att)
                                 {
-                                    string base64 = att["data"].ToString();
-                                    string ext = ".pdf";
-                                    if (att.ContainsKey("contentType") && att["contentType"] != null)
+                                    string base64 = GetDictString(att, "data");
+                                    if (!string.IsNullOrEmpty(base64))
                                     {
-                                        string cType = att["contentType"].ToString().ToLower();
-                                        if (cType.Contains("jpeg") || cType.Contains("jpg")) ext = ".jpg";
-                                        else if (cType.Contains("png")) ext = ".png";
-                                    }
+                                        string ext = ".pdf";
+                                        string contentType = GetDictString(att, "contentType").ToLower();
+                                        if (contentType.Contains("jpeg") || contentType.Contains("jpg")) ext = ".jpg";
+                                        else if (contentType.Contains("png")) ext = ".png";
 
-                                    var btnOpen = new Button
-                                    {
-                                        Text = $"View Document {attIndex} ({ext})",
-                                        Width = 180,
-                                        Height = 40,
-                                        BackColor = Color.FromArgb(46, 204, 113),
-                                        ForeColor = Color.White,
-                                        FlatStyle = FlatStyle.Flat,
-                                        Cursor = Cursors.Hand,
-                                        Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                                        Margin = new Padding(0, 0, 10, 10)
-                                    };
-                                    btnOpen.FlatAppearance.BorderSize = 0;
-                                    
-                                    Action openPdfAction = () => 
-                                    {
-                                        try
+                                        var btnOpen = new Button
                                         {
-                                            byte[] fileBytes = Convert.FromBase64String(base64);
-                                            string tempFile = Path.Combine(Path.GetTempPath(), $"ABDM_Doc_{Guid.NewGuid().ToString().Substring(0, 8)}{ext}");
-                                            File.WriteAllBytes(tempFile, fileBytes);
-                                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                                            Text = $"View Document {attIndex} ({ext})",
+                                            Width = 180,
+                                            Height = 40,
+                                            BackColor = Color.FromArgb(46, 204, 113),
+                                            ForeColor = Color.White,
+                                            FlatStyle = FlatStyle.Flat,
+                                            Cursor = Cursors.Hand,
+                                            Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                                            Margin = new Padding(0, 0, 10, 10)
+                                        };
+                                        btnOpen.FlatAppearance.BorderSize = 0;
+                                        
+                                        Action openPdfAction = () => 
+                                        {
+                                            try
                                             {
-                                                FileName = tempFile,
-                                                UseShellExecute = true
-                                            });
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            MessageBox.Show($"Failed to open: {ex.Message}");
-                                        }
-                                    };
-                                    
-                                    btnOpen.Click += (s, args) => openPdfAction();
-                                    pnlAttachments.Controls.Add(btnOpen);
-                                    
-                                    // Auto open the very first attachment when they click the row
-                                    if (attIndex == 1) openPdfAction();
+                                                byte[] fileBytes = Convert.FromBase64String(base64);
+                                                string tempFile = Path.Combine(Path.GetTempPath(), $"ABDM_Doc_{Guid.NewGuid().ToString().Substring(0, 8)}{ext}");
+                                                File.WriteAllBytes(tempFile, fileBytes);
+                                                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                                                {
+                                                    FileName = tempFile,
+                                                    UseShellExecute = true
+                                                });
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                MessageBox.Show($"Failed to open: {ex.Message}");
+                                            }
+                                        };
+                                        
+                                        btnOpen.Click += (s, args) => openPdfAction();
+                                        pnlAttachments.Controls.Add(btnOpen);
+                                        
+                                        // Auto open the very first attachment when they click the row
+                                        if (attIndex == 1) openPdfAction();
+                                    }
                                 }
                             }
                         }
@@ -537,6 +612,23 @@ namespace HMS.abdm
                     pnlAttachments.Visible = true;
                 }
             }
+        }
+
+        private static object GetDictValue(Dictionary<string, object> dict, string key)
+        {
+            if (dict == null) return null;
+            foreach (var k in dict.Keys)
+            {
+                if (k.Equals(key, StringComparison.OrdinalIgnoreCase))
+                    return dict[k];
+            }
+            return null;
+        }
+
+        private static string GetDictString(Dictionary<string, object> dict, string key)
+        {
+            var val = GetDictValue(dict, key);
+            return val?.ToString() ?? "";
         }
     }
 }
