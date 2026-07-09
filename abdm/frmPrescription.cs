@@ -20,6 +20,8 @@ namespace HMS.abdm
         private ListView lvItems_Inv => ucInvoice.lvItems_Inv;
         private TextBox txtItemName_Inv => ucInvoice.txtItemName_Inv;
         private TextBox txtAmount_Inv => ucInvoice.txtAmount_Inv;
+        private TextBox txtQuantity_Inv => ucInvoice.txtQuantity_Inv;
+        private TextBox txtUnit_Inv => ucInvoice.txtUnit_Inv;
         private ListView lvMedicines_Imm => ucImmunization.lvMedicines_Imm;
         private TextBox txtVaccineName_Imm => ucImmunization.txtVaccineName_Imm;
         private TextBox txtLotNumber_Imm => ucImmunization.txtLotNumber_Imm;
@@ -412,7 +414,9 @@ namespace HMS.abdm
                 {
                     items.Add(new string[] {
                         string.IsNullOrWhiteSpace(txtItemName_Inv.Text) ? "Consultation & Clinical Services" : txtItemName_Inv.Text.Trim(),
-                        string.IsNullOrWhiteSpace(txtAmount_Inv.Text) ? "500" : txtAmount_Inv.Text.Trim()
+                        string.IsNullOrWhiteSpace(txtAmount_Inv.Text) ? "500" : txtAmount_Inv.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtQuantity_Inv.Text) ? "1" : txtQuantity_Inv.Text.Trim(),
+                        string.IsNullOrWhiteSpace(txtUnit_Inv.Text) ? "unit" : txtUnit_Inv.Text.Trim()
                     });
                 }
             }
@@ -602,7 +606,9 @@ namespace HMS.abdm
                                 lineItemsList.Add(new
                                 {
                                     itemName = item[0],
-                                    price = item.Length > 1 ? item[1] : ""
+                                    price = item.Length > 1 ? item[1] : "",
+                                    quantity = item.Length > 2 ? item[2] : "1",
+                                    unit = item.Length > 3 ? item[3] : "unit"
                                 });
                             }
                         }

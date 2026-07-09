@@ -17,6 +17,8 @@ namespace HMS.abdm
         public ListView lvItems_Inv => lvItems;
         public TextBox txtItemName_Inv => txtItemName;
         public TextBox txtAmount_Inv => txtAmount;
+        public TextBox txtQuantity_Inv => txtQuantity;
+        public TextBox txtUnit_Inv => txtUnit;
 
         private void StyleControls()
         {
@@ -39,6 +41,8 @@ namespace HMS.abdm
             // Styling inputs
             txtItemName.BorderStyle = BorderStyle.FixedSingle;
             txtAmount.BorderStyle = BorderStyle.FixedSingle;
+            txtQuantity.BorderStyle = BorderStyle.FixedSingle;
+            txtUnit.BorderStyle = BorderStyle.FixedSingle;
 
             // Styling ListView
             lvItems.GridLines = true;
@@ -63,13 +67,30 @@ namespace HMS.abdm
                 return;
             }
 
+            string qty = txtQuantity.Text.Trim();
+            if (string.IsNullOrEmpty(qty) || !decimal.TryParse(qty, out _))
+            {
+                MessageBox.Show("Please enter a valid numeric quantity.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string unit = txtUnit.Text.Trim();
+            if (string.IsNullOrEmpty(unit))
+            {
+                unit = "unit";
+            }
+
             var item = new ListViewItem(name);
             item.SubItems.Add(amount);
+            item.SubItems.Add(qty);
+            item.SubItems.Add(unit);
             lvItems.Items.Add(item);
 
             // Clear inputs and reset focus
             txtItemName.Text = "Consultation & Clinical Services";
             txtAmount.Text = "500";
+            txtQuantity.Text = "1";
+            txtUnit.Text = "unit";
             txtItemName.Focus();
         }
 

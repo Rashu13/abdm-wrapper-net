@@ -21,11 +21,17 @@ namespace HMS.abdm
             this.txtItemName = new System.Windows.Forms.TextBox();
             this.lblAmount = new System.Windows.Forms.Label();
             this.txtAmount = new System.Windows.Forms.TextBox();
+            this.lblQuantity = new System.Windows.Forms.Label();
+            this.txtQuantity = new System.Windows.Forms.TextBox();
+            this.lblUnit = new System.Windows.Forms.Label();
+            this.txtUnit = new System.Windows.Forms.TextBox();
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnRemove = new System.Windows.Forms.Button();
             this.lvItems = new System.Windows.Forms.ListView();
             this.colItemName = new System.Windows.Forms.ColumnHeader();
             this.colAmount = new System.Windows.Forms.ColumnHeader();
+            this.colQuantity = new System.Windows.Forms.ColumnHeader();
+            this.colUnit = new System.Windows.Forms.ColumnHeader();
             this.SuspendLayout();
             // 
             // lblItemName
@@ -44,7 +50,7 @@ namespace HMS.abdm
             this.txtItemName.Font = new System.Drawing.Font("Segoe UI", 10F);
             this.txtItemName.Location = new System.Drawing.Point(10, 32);
             this.txtItemName.Name = "txtItemName";
-            this.txtItemName.Size = new System.Drawing.Size(320, 25);
+            this.txtItemName.Size = new System.Drawing.Size(200, 25);
             this.txtItemName.TabIndex = 1;
             this.txtItemName.Text = "Consultation & Clinical Services";
             // 
@@ -53,7 +59,7 @@ namespace HMS.abdm
             this.lblAmount.AutoSize = true;
             this.lblAmount.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
             this.lblAmount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
-            this.lblAmount.Location = new System.Drawing.Point(345, 10);
+            this.lblAmount.Location = new System.Drawing.Point(220, 10);
             this.lblAmount.Name = "lblAmount";
             this.lblAmount.Size = new System.Drawing.Size(92, 17);
             this.lblAmount.TabIndex = 2;
@@ -62,11 +68,51 @@ namespace HMS.abdm
             // txtAmount
             // 
             this.txtAmount.Font = new System.Drawing.Font("Segoe UI", 10F);
-            this.txtAmount.Location = new System.Drawing.Point(345, 32);
+            this.txtAmount.Location = new System.Drawing.Point(220, 32);
             this.txtAmount.Name = "txtAmount";
-            this.txtAmount.Size = new System.Drawing.Size(120, 25);
+            this.txtAmount.Size = new System.Drawing.Size(80, 25);
             this.txtAmount.TabIndex = 3;
             this.txtAmount.Text = "500";
+            // 
+            // lblQuantity
+            // 
+            this.lblQuantity.AutoSize = true;
+            this.lblQuantity.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
+            this.lblQuantity.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
+            this.lblQuantity.Location = new System.Drawing.Point(310, 10);
+            this.lblQuantity.Name = "lblQuantity";
+            this.lblQuantity.Size = new System.Drawing.Size(30, 17);
+            this.lblQuantity.TabIndex = 20;
+            this.lblQuantity.Text = "Qty";
+            // 
+            // txtQuantity
+            // 
+            this.txtQuantity.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.txtQuantity.Location = new System.Drawing.Point(310, 32);
+            this.txtQuantity.Name = "txtQuantity";
+            this.txtQuantity.Size = new System.Drawing.Size(70, 25);
+            this.txtQuantity.TabIndex = 21;
+            this.txtQuantity.Text = "1";
+            // 
+            // lblUnit
+            // 
+            this.lblUnit.AutoSize = true;
+            this.lblUnit.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
+            this.lblUnit.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(44)))), ((int)(((byte)(62)))), ((int)(((byte)(80)))));
+            this.lblUnit.Location = new System.Drawing.Point(390, 10);
+            this.lblUnit.Name = "lblUnit";
+            this.lblUnit.Size = new System.Drawing.Size(34, 17);
+            this.lblUnit.TabIndex = 22;
+            this.lblUnit.Text = "Unit";
+            // 
+            // txtUnit
+            // 
+            this.txtUnit.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.txtUnit.Location = new System.Drawing.Point(390, 32);
+            this.txtUnit.Name = "txtUnit";
+            this.txtUnit.Size = new System.Drawing.Size(80, 25);
+            this.txtUnit.TabIndex = 23;
+            this.txtUnit.Text = "unit";
             // 
             // btnAdd
             // 
@@ -97,7 +143,9 @@ namespace HMS.abdm
             | System.Windows.Forms.AnchorStyles.Right)));
             this.lvItems.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.colItemName,
-            this.colAmount});
+            this.colAmount,
+            this.colQuantity,
+            this.colUnit});
             this.lvItems.Font = new System.Drawing.Font("Segoe UI", 9.5F);
             this.lvItems.HideSelection = false;
             this.lvItems.Location = new System.Drawing.Point(10, 72);
@@ -110,12 +158,22 @@ namespace HMS.abdm
             // colItemName
             // 
             this.colItemName.Text = "Item / Service Description";
-            this.colItemName.Width = 460;
+            this.colItemName.Width = 300;
             // 
             // colAmount
             // 
             this.colAmount.Text = "Amount (INR)";
-            this.colAmount.Width = 180;
+            this.colAmount.Width = 120;
+            // 
+            // colQuantity
+            // 
+            this.colQuantity.Text = "Qty";
+            this.colQuantity.Width = 80;
+            // 
+            // colUnit
+            // 
+            this.colUnit.Text = "Unit";
+            this.colUnit.Width = 120;
             // 
             // ucInvoiceRecord
             // 
@@ -124,6 +182,10 @@ namespace HMS.abdm
             this.Controls.Add(this.lvItems);
             this.Controls.Add(this.btnRemove);
             this.Controls.Add(this.btnAdd);
+            this.Controls.Add(this.txtUnit);
+            this.Controls.Add(this.lblUnit);
+            this.Controls.Add(this.txtQuantity);
+            this.Controls.Add(this.lblQuantity);
             this.Controls.Add(this.txtAmount);
             this.Controls.Add(this.lblAmount);
             this.Controls.Add(this.txtItemName);
@@ -141,10 +203,16 @@ namespace HMS.abdm
         private System.Windows.Forms.TextBox txtItemName;
         private System.Windows.Forms.Label lblAmount;
         private System.Windows.Forms.TextBox txtAmount;
+        private System.Windows.Forms.Label lblQuantity;
+        private System.Windows.Forms.TextBox txtQuantity;
+        private System.Windows.Forms.Label lblUnit;
+        private System.Windows.Forms.TextBox txtUnit;
         private System.Windows.Forms.Button btnAdd;
         private System.Windows.Forms.Button btnRemove;
         private System.Windows.Forms.ListView lvItems;
         private System.Windows.Forms.ColumnHeader colItemName;
         private System.Windows.Forms.ColumnHeader colAmount;
+        private System.Windows.Forms.ColumnHeader colQuantity;
+        private System.Windows.Forms.ColumnHeader colUnit;
     }
 }

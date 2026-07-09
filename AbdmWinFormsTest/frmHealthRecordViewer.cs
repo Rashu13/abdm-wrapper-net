@@ -441,11 +441,37 @@ namespace HMS.abdm
                                 }
                                 else if (rType.Equals("ChargeItem", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    string itemName = "Billing Item";
-                                    var codeObj = GetDictValue(r, "code");
-                                    if (codeObj is Dictionary<string, object> codeDict)
+                                    string itemName = "";
+                                    var prodObj = GetDictValue(r, "productCodeableConcept");
+                                    if (prodObj is Dictionary<string, object> prodDict)
                                     {
-                                        itemName = GetDictString(codeDict, "text");
+                                        itemName = GetDictString(prodDict, "text");
+                                    }
+                                    if (string.IsNullOrEmpty(itemName))
+                                    {
+                                        var codeObj = GetDictValue(r, "code");
+                                        if (codeObj is Dictionary<string, object> codeDict)
+                                        {
+                                            itemName = GetDictString(codeDict, "text");
+                                        }
+                                    }
+                                    if (string.IsNullOrEmpty(itemName))
+                                    {
+                                        itemName = "Billing Item";
+                                    }
+
+                                    string qtyStr = "";
+                                    var qtyObj = GetDictValue(r, "quantity");
+                                    if (qtyObj is Dictionary<string, object> qtyDict)
+                                    {
+                                        string qVal = GetDictString(qtyDict, "value");
+                                        string qUnit = GetDictString(qtyDict, "unit");
+                                        if (!string.IsNullOrEmpty(qVal))
+                                        {
+                                            qtyStr = qVal;
+                                            if (!string.IsNullOrEmpty(qUnit))
+                                                qtyStr += $" {qUnit}";
+                                        }
                                     }
 
                                     string priceStr = "";
@@ -459,6 +485,8 @@ namespace HMS.abdm
 
                                     string status = GetDictString(r, "status");
                                     string billStr = $"- {itemName}";
+                                    if (!string.IsNullOrEmpty(qtyStr))
+                                        billStr += $" (Qty: {qtyStr})";
                                     if (!string.IsNullOrEmpty(priceStr))
                                         billStr += $": {priceStr}";
                                     if (!string.IsNullOrEmpty(status))
