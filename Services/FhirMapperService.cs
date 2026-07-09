@@ -2348,12 +2348,76 @@ public class FhirMapperService : IFhirMapperService
                     var chargeItemGuid = Guid.NewGuid().ToString();
                     var chargeItemUuid = "urn:uuid:" + chargeItemGuid;
                     
+                    string catCode = "99";
+                    string catDisplay = "Others";
+                    string lowerName = itemName.ToLower();
+                    if (lowerName.Contains("consult"))
+                    {
+                        catCode = "00";
+                        catDisplay = "Consultation";
+                    }
+                    else if (lowerName.Contains("pharmacy") || lowerName.Contains("medicine") || lowerName.Contains("drug"))
+                    {
+                        catCode = "01";
+                        catDisplay = "Pharmacy";
+                    }
+                    else if (lowerName.Contains("ipd") || lowerName.Contains("room") || lowerName.Contains("bed") || lowerName.Contains("rent") || lowerName.Contains("ward"))
+                    {
+                        catCode = "02";
+                        catDisplay = "IPD";
+                    }
+                    else if (lowerName.Contains("opd"))
+                    {
+                        catCode = "03";
+                        catDisplay = "OPD";
+                    }
+                    else if (lowerName.Contains("pathology") || lowerName.Contains("lab") || lowerName.Contains("test") || lowerName.Contains("investigation"))
+                    {
+                        catCode = "04";
+                        catDisplay = "Pathology";
+                    }
+                    else if (lowerName.Contains("nurs"))
+                    {
+                        catCode = "06";
+                        catDisplay = "Nursing Charges";
+                    }
+
+                    decimal quantityVal = 1.0m;
+                    string quantityUnit = "unit";
+                    
+                    if (item.ValueKind == JsonValueKind.Object)
+                    {
+                        if (item.TryGetProperty("quantity", out var qtyElem))
+                        {
+                            if (qtyElem.ValueKind == JsonValueKind.Number && qtyElem.TryGetDecimal(out decimal qVal))
+                            {
+                                quantityVal = qVal;
+                            }
+                            else if (qtyElem.ValueKind == JsonValueKind.String && decimal.TryParse(qtyElem.GetString(), out decimal qStrVal))
+                            {
+                                quantityVal = qStrVal;
+                            }
+                        }
+                        if (item.TryGetProperty("unit", out var unitElem) && unitElem.ValueKind == JsonValueKind.String)
+                        {
+                            quantityUnit = unitElem.GetString() ?? "unit";
+                        }
+                    }
+
                     var chargeItem = new Hl7.Fhir.Model.ChargeItem
                     {
                         Id = chargeItemGuid,
                         Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/ChargeItem"),
                         Status = Hl7.Fhir.Model.ChargeItem.ChargeItemStatus.Billed,
                         Code = new CodeableConcept
+                        {
+                            Text = catDisplay,
+                            Coding = new List<Coding>
+                            {
+                                new Coding("https://nrces.in/ndhm/fhir/r4/CodeSystem/ndhm-billing-codes", catCode, catDisplay)
+                            }
+                        },
+                        Product = new CodeableConcept
                         {
                             Text = itemName,
                             Coding = new List<Coding>
@@ -2364,10 +2428,10 @@ public class FhirMapperService : IFhirMapperService
                         Subject = new ResourceReference(patientUuid) { Display = patientName },
                         Quantity = new Quantity
                         {
-                            Value = 1.0m,
-                            Unit = "unit",
+                            Value = quantityVal,
+                            Unit = quantityUnit,
                             System = "http://unitsofmeasure.org",
-                            Code = "{unit}"
+                            Code = quantityUnit == "unit" ? "{unit}" : quantityUnit
                         }
                     };
 
@@ -2425,6 +2489,14 @@ public class FhirMapperService : IFhirMapperService
                     Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/ChargeItem"),
                     Status = Hl7.Fhir.Model.ChargeItem.ChargeItemStatus.Billed,
                     Code = new CodeableConcept
+                    {
+                        Text = "Consultation",
+                        Coding = new List<Coding>
+                        {
+                            new Coding("https://nrces.in/ndhm/fhir/r4/CodeSystem/ndhm-billing-codes", "00", "Consultation")
+                        }
+                    },
+                    Product = new CodeableConcept
                     {
                         Text = "Consultation & Clinical Services",
                         Coding = new List<Coding>

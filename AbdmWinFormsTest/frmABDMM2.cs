@@ -85,6 +85,14 @@ namespace HMS.abdm
                     hiType = "OPConsultation";
                     recordType = "OPConsultationRecord";
                 }
+                else if (txtHipCareContextDisplay.Text.IndexOf("Invoice", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                         txtHipCareContextDisplay.Text.IndexOf("Bill", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                         txtHipCareContextDisplay.Text.IndexOf("Receipt", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                         txtHipCareContextRef.Text.StartsWith("INV", StringComparison.OrdinalIgnoreCase))
+                {
+                    hiType = "Invoice";
+                    recordType = "InvoiceRecord";
+                }
 
                 var careContexts = new List<Dictionary<string, object>>
                 {
@@ -116,26 +124,54 @@ namespace HMS.abdm
                 {
                     try
                     {
-                        var parchiJson = new
+                        object parchiJson;
+                        if (hiType == "Invoice")
                         {
-                            bundleType = recordType,
-                            careContextReference = txtHipCareContextRef.Text.Trim(),
-                            authoredOn = DateTime.UtcNow.ToString("o"),
-                            patient = new
+                            parchiJson = new
                             {
-                                name = txtHipPatientName.Text.Trim(),
-                                patientReference = txtHipPatientRef.Text.Trim(),
-                                gender = cmbHipGender.Text.Trim(),
-                                birthDate = txtHipDob.Text.Trim()
-                            },
-                            practitioners = new[] { new { name = "Doctor", practitionerId = "DOC-01" } },
-                            organisation = new { facilityName = "MIDHA HOSPITAL", facilityId = "IN0610090658" },
-                            clinicalNotes = hiType == "OPConsultation" ? "OPD Consultation - Patient complained of headache and body pain." : null,
-                            prescriptions = new[]
+                                bundleType = recordType,
+                                careContextReference = txtHipCareContextRef.Text.Trim(),
+                                authoredOn = DateTime.UtcNow.ToString("o"),
+                                patient = new
+                                {
+                                    name = txtHipPatientName.Text.Trim(),
+                                    patientReference = txtHipPatientRef.Text.Trim(),
+                                    gender = cmbHipGender.Text.Trim(),
+                                    birthDate = txtHipDob.Text.Trim()
+                                },
+                                practitioners = new[] { new { name = "Doctor", practitionerId = "DOC-01" } },
+                                organisation = new { facilityName = "MIDHA HOSPITAL", facilityId = "IN0610090658" },
+                                invoiceType = "Consultation",
+                                lineItems = new[]
+                                {
+                                    new { itemName = "Consultation Fee", price = "500", quantity = 1, unit = "visit" },
+                                    new { itemName = "Pharmacy Charges", price = "350", quantity = 2, unit = "box" }
+                                }
+                            };
+                        }
+                        else
+                        {
+                            parchiJson = new
                             {
-                                new { medicine = "Dummy Original Medicine 500mg", dosage = "1-0-1" }
-                            }
-                        };
+                                bundleType = recordType,
+                                careContextReference = txtHipCareContextRef.Text.Trim(),
+                                authoredOn = DateTime.UtcNow.ToString("o"),
+                                patient = new
+                                {
+                                    name = txtHipPatientName.Text.Trim(),
+                                    patientReference = txtHipPatientRef.Text.Trim(),
+                                    gender = cmbHipGender.Text.Trim(),
+                                    birthDate = txtHipDob.Text.Trim()
+                                },
+                                practitioners = new[] { new { name = "Doctor", practitionerId = "DOC-01" } },
+                                organisation = new { facilityName = "MIDHA HOSPITAL", facilityId = "IN0610090658" },
+                                clinicalNotes = hiType == "OPConsultation" ? "OPD Consultation - Patient complained of headache and body pain." : null,
+                                prescriptions = new[]
+                                {
+                                    new { medicine = "Dummy Original Medicine 500mg", dosage = "1-0-1" }
+                                }
+                            };
+                        }
 
                         var recordData = new
                         {

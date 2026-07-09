@@ -196,6 +196,10 @@ namespace HMS.abdm
             List<string> observations = new List<string>();
             List<string> immunizations = new List<string>();
             List<string> sections = new List<string>();
+            List<string> billingItems = new List<string>();
+            string invoiceTotal = "";
+            string invoiceStatus = "";
+            string invoiceType = "";
             List<Dictionary<string, object>> attachments = new List<Dictionary<string, object>>();
 
             var fhirBundleObj = GetDictValue(rec, "fhirBundle");
@@ -418,6 +422,50 @@ namespace HMS.abdm
                                 {
                                     attachments.Add(r);
                                 }
+                                else if (rType.Equals("Invoice", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    invoiceStatus = GetDictString(r, "status");
+                                    var typeObj = GetDictValue(r, "type");
+                                    if (typeObj is Dictionary<string, object> tDict)
+                                    {
+                                        invoiceType = GetDictString(tDict, "text");
+                                    }
+
+                                    var netObj = GetDictValue(r, "totalNet");
+                                    if (netObj is Dictionary<string, object> nDict)
+                                    {
+                                        string val = GetDictString(nDict, "value");
+                                        string currency = GetDictString(nDict, "currency");
+                                        invoiceTotal = $"{val} {currency}".Trim();
+                                    }
+                                }
+                                else if (rType.Equals("ChargeItem", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    string itemName = "Billing Item";
+                                    var codeObj = GetDictValue(r, "code");
+                                    if (codeObj is Dictionary<string, object> codeDict)
+                                    {
+                                        itemName = GetDictString(codeDict, "text");
+                                    }
+
+                                    string priceStr = "";
+                                    var priceObj = GetDictValue(r, "priceOverride");
+                                    if (priceObj is Dictionary<string, object> pDict)
+                                    {
+                                        string val = GetDictString(pDict, "value");
+                                        string currency = GetDictString(pDict, "currency");
+                                        priceStr = $"{val} {currency}".Trim();
+                                    }
+
+                                    string status = GetDictString(r, "status");
+                                    string billStr = $"- {itemName}";
+                                    if (!string.IsNullOrEmpty(priceStr))
+                                        billStr += $": {priceStr}";
+                                    if (!string.IsNullOrEmpty(status))
+                                        billStr += $" (Status: {status})";
+                                    
+                                    billingItems.Add(billStr);
+                                }
                             }
                         }
                     }
@@ -517,6 +565,55 @@ namespace HMS.abdm
                 foreach(var imm in immunizations)
                 {
                     txtDetails.AppendText($"{imm}\n");
+                }
+                txtDetails.AppendText("\n");
+            }
+
+            if (billingItems.Count > 0 || !string.IsNullOrEmpty(invoiceTotal))
+            {
+                txtDetails.SelectionFont = new Font("Segoe UI", 14F, FontStyle.Bold);
+                txtDetails.SelectionColor = Color.FromArgb(142, 68, 173);
+                txtDetails.AppendText("Billing & Invoice:\n");
+
+                if (!string.IsNullOrEmpty(invoiceType))
+                {
+                    txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Bold);
+                    txtDetails.SelectionColor = Color.FromArgb(52, 73, 94);
+                    txtDetails.AppendText("Invoice Type: ");
+                    txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Regular);
+                    txtDetails.SelectionColor = Color.Black;
+                    txtDetails.AppendText($"{invoiceType}\n");
+                }
+
+                if (!string.IsNullOrEmpty(invoiceStatus))
+                {
+                    txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Bold);
+                    txtDetails.SelectionColor = Color.FromArgb(52, 73, 94);
+                    txtDetails.AppendText("Status: ");
+                    txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Regular);
+                    txtDetails.SelectionColor = Color.Black;
+                    txtDetails.AppendText($"{invoiceStatus}\n");
+                }
+
+                if (billingItems.Count > 0)
+                {
+                    txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Bold);
+                    txtDetails.SelectionColor = Color.FromArgb(52, 73, 94);
+                    txtDetails.AppendText("Itemized Charges:\n");
+                    
+                    txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Regular);
+                    txtDetails.SelectionColor = Color.Black;
+                    foreach(var item in billingItems)
+                    {
+                        txtDetails.AppendText($"{item}\n");
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(invoiceTotal))
+                {
+                    txtDetails.SelectionFont = new Font("Segoe UI", 12F, FontStyle.Bold);
+                    txtDetails.SelectionColor = Color.FromArgb(142, 68, 173);
+                    txtDetails.AppendText($"Total Amount: {invoiceTotal}\n");
                 }
                 txtDetails.AppendText("\n");
             }
