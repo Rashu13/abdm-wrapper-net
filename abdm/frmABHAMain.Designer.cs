@@ -51,6 +51,7 @@ namespace HMS.abdm
             this.btnViewRequests = new System.Windows.Forms.Button();
             this.btnAccountOps = new System.Windows.Forms.Button();
             this.btnM2Testing = new System.Windows.Forms.Button();
+            this.btnM3Testing = new System.Windows.Forms.Button();
 
             this.pnlHeader.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -148,7 +149,7 @@ namespace HMS.abdm
             this.gbCreation.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(100)))), ((int)(((byte)(50)))));
             this.gbCreation.Location = new System.Drawing.Point(20, 140);
             this.gbCreation.Name = "gbCreation";
-            this.gbCreation.Size = new System.Drawing.Size(260, 370);
+            this.gbCreation.Size = new System.Drawing.Size(260, 480);
             this.gbCreation.TabIndex = 18;
             this.gbCreation.TabStop = false;
             this.gbCreation.Text = "ABHA Creation & Download";
@@ -241,11 +242,12 @@ namespace HMS.abdm
             this.gbVerification.Controls.Add(this.btnViewRequests);
             this.gbVerification.Controls.Add(this.btnAccountOps);
             this.gbVerification.Controls.Add(this.btnM2Testing);
+            this.gbVerification.Controls.Add(this.btnM3Testing);
             this.gbVerification.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, FontStyle.Bold);
             this.gbVerification.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
             this.gbVerification.Location = new System.Drawing.Point(300, 140);
             this.gbVerification.Name = "gbVerification";
-            this.gbVerification.Size = new System.Drawing.Size(600, 370);
+            this.gbVerification.Size = new System.Drawing.Size(600, 480);
             this.gbVerification.TabIndex = 19;
             this.gbVerification.TabStop = false;
             this.gbVerification.Text = "ABHA Address Verification & Management";
@@ -346,12 +348,28 @@ namespace HMS.abdm
             this.btnM2Testing.UseVisualStyleBackColor = false;
             this.btnM2Testing.Click += new System.EventHandler(this.btnM2Testing_Click);
             // 
+            // btnM3Testing
+            // 
+            this.btnM3Testing.BackColor = System.Drawing.Color.White;
+            this.btnM3Testing.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
+            this.btnM3Testing.FlatAppearance.BorderSize = 2;
+            this.btnM3Testing.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnM3Testing.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.btnM3Testing.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(115)))), ((int)(((byte)(200)))));
+            this.btnM3Testing.Location = new System.Drawing.Point(305, 365);
+            this.btnM3Testing.Name = "btnM3Testing";
+            this.btnM3Testing.Size = new System.Drawing.Size(275, 95);
+            this.btnM3Testing.TabIndex = 12;
+            this.btnM3Testing.Text = "Milestone 3 (M3)\r\nConsent & Subscription";
+            this.btnM3Testing.UseVisualStyleBackColor = false;
+            this.btnM3Testing.Click += new System.EventHandler(this.btnM3Testing_Click);
+            // 
             // frmABHAMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(920, 530);
+            this.ClientSize = new System.Drawing.Size(920, 650);
             this.Controls.Add(this.gbVerification);
             this.Controls.Add(this.gbCreation);
             this.Controls.Add(this.btnBridgeConfig);
@@ -394,5 +412,6 @@ namespace HMS.abdm
         private System.Windows.Forms.Button btnViewRequests;
         private System.Windows.Forms.Button btnAccountOps;
         private System.Windows.Forms.Button btnM2Testing;
+        private System.Windows.Forms.Button btnM3Testing;
     }
 }

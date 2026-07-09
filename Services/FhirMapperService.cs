@@ -2151,10 +2151,26 @@ public class FhirMapperService : IFhirMapperService
         var practitionersElement = GetProperty(root, "practitioners");
         var orgElement = GetProperty(root, "organisation");
 
+        // Generate UUIDs for all resources to ensure robust reference resolution in ABDM viewer
+        var patientGuid = Guid.NewGuid().ToString();
+        var patientUuid = "urn:uuid:" + patientGuid;
+
+        var practitionerGuid = Guid.NewGuid().ToString();
+        var practitionerUuid = "urn:uuid:" + practitionerGuid;
+
+        var orgGuid = Guid.NewGuid().ToString();
+        var orgUuid = "urn:uuid:" + orgGuid;
+
+        var encounterGuid = Guid.NewGuid().ToString();
+        var encounterUuid = "urn:uuid:" + encounterGuid;
+
+        var compositionGuid = Guid.NewGuid().ToString();
+        var compositionUuid = "urn:uuid:" + compositionGuid;
+
         // 1. Create Patient
         var patient = new Patient
         {
-            Id = patientRef,
+            Id = patientGuid,
             Meta = CreateMeta(PROFILE_PATIENT),
             Name = new List<HumanName> { new HumanName { Text = patientName } },
             Gender = ParseGender(GetString(patientElement, "gender"))
@@ -2190,7 +2206,7 @@ public class FhirMapperService : IFhirMapperService
         }
         var practitioner = new Practitioner
         {
-            Id = practitionerId,
+            Id = practitionerGuid,
             Meta = CreateMeta(PROFILE_PRACTITIONER),
             Name = new List<HumanName> { new HumanName { Text = practitionerName } }
         };
@@ -2213,7 +2229,7 @@ public class FhirMapperService : IFhirMapperService
         var orgId = GetString(orgElement, "facilityId") ?? "IN-1";
         var organization = new Organization
         {
-            Id = orgId,
+            Id = orgGuid,
             Meta = CreateMeta(PROFILE_ORGANIZATION),
             Name = orgName
         };
@@ -2234,65 +2250,109 @@ public class FhirMapperService : IFhirMapperService
         // 4. Create Encounter
         var encounter = new Encounter
         {
-            Id = "Encounter-1",
+            Id = encounterGuid,
             Meta = CreateMeta(PROFILE_ENCOUNTER),
             Status = Encounter.EncounterStatus.InProgress,
             Class = new Coding("http://terminology.hl7.org/CodeSystem/v3-Confidentiality", "AMB", "Ambulatory"),
-            Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
+            Subject = new ResourceReference(patientUuid) { Display = patientName },
             Period = new Period { Start = authoredOn }
         };
 
-        // 5. Create Invoice resource
-        var invoice = new Hl7.Fhir.Model.Invoice
+        var entries = new List<Bundle.EntryComponent>
         {
-            Id = "Invoice-1",
-            Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/Invoice"),
-            Status = Hl7.Fhir.Model.Invoice.InvoiceStatus.Issued,
-            Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
-            DateElement = new FhirDateTime(authoredOn)
+            new Bundle.EntryComponent { FullUrl = patientUuid, Resource = patient },
+            new Bundle.EntryComponent { FullUrl = practitionerUuid, Resource = practitioner },
+            new Bundle.EntryComponent { FullUrl = orgUuid, Resource = organization },
+            new Bundle.EntryComponent { FullUrl = encounterUuid, Resource = encounter }
         };
-        var lineItemsElement = GetProperty(root, "lineItems");
-        decimal totalNetVal = 0;
-        bool hasPrices = false;
 
-        if (lineItemsElement.ValueKind == JsonValueKind.Array && lineItemsElement.GetArrayLength() > 0)
+        // Determine if this is structured (has lineItems) or unstructured (documents only)
+        var lineItemsElement = GetProperty(root, "lineItems");
+        var documentsElement = GetProperty(root, "documents");
+
+        bool isStructured = lineItemsElement.ValueKind == JsonValueKind.Array && lineItemsElement.GetArrayLength() > 0;
+        bool hasDocuments = documentsElement.ValueKind == JsonValueKind.Array && documentsElement.GetArrayLength() > 0;
+
+        // If neither is present, default to structured (with default mock item) so we always have some invoice content.
+        if (!isStructured && !hasDocuments)
         {
-            int seq = 1;
-            foreach (var item in lineItemsElement.EnumerateArray())
+            isStructured = true;
+        }
+
+        Hl7.Fhir.Model.Invoice? invoice = null;
+        var chargeItems = new List<(string Uuid, Hl7.Fhir.Model.ChargeItem Resource)>();
+        string? invoiceUuid = null;
+
+        if (isStructured)
+        {
+            var invoiceGuid = Guid.NewGuid().ToString();
+            invoiceUuid = "urn:uuid:" + invoiceGuid;
+
+            invoice = new Hl7.Fhir.Model.Invoice
             {
-                var itemName = GetString(item, "itemName") ?? GetString(item, "chargeItem") ?? "Consultation & Clinical Services";
-                var priceStr = GetString(item, "price") ?? "";
-                
-                var lineItem = new Hl7.Fhir.Model.Invoice.LineItemComponent
+                Id = invoiceGuid,
+                Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/Invoice"),
+                Status = Hl7.Fhir.Model.Invoice.InvoiceStatus.Issued,
+                Subject = new ResourceReference(patientUuid) { Display = patientName },
+                DateElement = new FhirDateTime(authoredOn)
+            };
+
+            // Set Invoice Type (Consultation, Pharmacy, IPD, OPD, Others)
+            var invoiceTypeStr = GetString(root, "invoiceType") ?? GetString(root, "type") ?? "";
+            if (!string.IsNullOrEmpty(invoiceTypeStr))
+            {
+                string code = "99";
+                string display = "Others";
+                if (invoiceTypeStr.Equals("Consultation", StringComparison.OrdinalIgnoreCase) || invoiceTypeStr.Equals("00"))
                 {
-                    Sequence = seq,
-                    // Use CodeableConcept with proper coding so ABDM viewer renders item name
-                    ChargeItem = new CodeableConcept
+                    code = "00";
+                    display = "Consultation";
+                }
+                else if (invoiceTypeStr.Equals("Pharmacy", StringComparison.OrdinalIgnoreCase) || invoiceTypeStr.Equals("01"))
+                {
+                    code = "01";
+                    display = "Pharmacy";
+                }
+                else if (invoiceTypeStr.Equals("IPD", StringComparison.OrdinalIgnoreCase) || invoiceTypeStr.Equals("02"))
+                {
+                    code = "02";
+                    display = "IPD";
+                }
+                else if (invoiceTypeStr.Equals("OPD", StringComparison.OrdinalIgnoreCase) || invoiceTypeStr.Equals("03"))
+                {
+                    code = "03";
+                    display = "OPD";
+                }
+
+                invoice.Type = new CodeableConcept
+                {
+                    Text = display,
+                    Coding = new List<Coding>
                     {
-                        Text = itemName,
-                        Coding = new List<Coding>
-                        {
-                            new Coding
-                            {
-                                System = "http://snomed.info/sct",
-                                Code = "266753000",
-                                Display = itemName
-                            }
-                        }
+                        new Coding("https://nrces.in/ndhm/fhir/r4/CodeSystem/ndhm-billing-codes", code, display)
                     }
                 };
+            }
 
-                // Add quantity (1 unit by default) to avoid null null rendering
-                lineItem.PriceComponent = new List<Hl7.Fhir.Model.Invoice.PriceComponentComponent>();
+            decimal totalNetVal = 0;
+            bool hasPrices = false;
 
-                if (decimal.TryParse(priceStr, out decimal price))
+            if (lineItemsElement.ValueKind == JsonValueKind.Array && lineItemsElement.GetArrayLength() > 0)
+            {
+                int seq = 1;
+                foreach (var item in lineItemsElement.EnumerateArray())
                 {
-                    hasPrices = true;
-                    totalNetVal += price;
-                    lineItem.PriceComponent.Add(new Hl7.Fhir.Model.Invoice.PriceComponentComponent
+                    var itemName = GetString(item, "itemName") ?? GetString(item, "chargeItem") ?? "Consultation & Clinical Services";
+                    var priceStr = GetString(item, "price") ?? "";
+                    
+                    var chargeItemGuid = Guid.NewGuid().ToString();
+                    var chargeItemUuid = "urn:uuid:" + chargeItemGuid;
+                    
+                    var chargeItem = new Hl7.Fhir.Model.ChargeItem
                     {
-                        // "base" type is required by FHIR spec; ABDM viewer reads this as the net price
-                        Type = Hl7.Fhir.Model.InvoicePriceComponentType.Base,
+                        Id = chargeItemGuid,
+                        Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/ChargeItem"),
+                        Status = Hl7.Fhir.Model.ChargeItem.ChargeItemStatus.Billed,
                         Code = new CodeableConcept
                         {
                             Text = itemName,
@@ -2301,49 +2361,106 @@ public class FhirMapperService : IFhirMapperService
                                 new Coding("http://snomed.info/sct", "266753000", itemName)
                             }
                         },
-                        Factor = 1.0m,
-                        Amount = new Money { Value = price, Currency = Hl7.Fhir.Model.Money.Currencies.INR }
-                    });
-                }
-                else
-                {
-                    lineItem.PriceComponent.Add(new Hl7.Fhir.Model.Invoice.PriceComponentComponent
+                        Subject = new ResourceReference(patientUuid) { Display = patientName },
+                        Quantity = new Quantity
+                        {
+                            Value = 1.0m,
+                            Unit = "unit",
+                            System = "http://unitsofmeasure.org",
+                            Code = "{unit}"
+                        }
+                    };
+
+                    var lineItem = new Hl7.Fhir.Model.Invoice.LineItemComponent
                     {
-                        Type = Hl7.Fhir.Model.InvoicePriceComponentType.Base,
-                        Factor = 1.0m
-                    });
+                        Sequence = seq,
+                        ChargeItem = new ResourceReference(chargeItemUuid) { Display = itemName }
+                    };
+
+                    lineItem.PriceComponent = new List<Hl7.Fhir.Model.Invoice.PriceComponentComponent>();
+
+                    if (decimal.TryParse(priceStr, out decimal price))
+                    {
+                        hasPrices = true;
+                        totalNetVal += price;
+                        chargeItem.PriceOverride = new Money { Value = price, Currency = Hl7.Fhir.Model.Money.Currencies.INR };
+                        
+                        lineItem.PriceComponent.Add(new Hl7.Fhir.Model.Invoice.PriceComponentComponent
+                        {
+                            Type = Hl7.Fhir.Model.InvoicePriceComponentType.Base,
+                            Code = new CodeableConcept
+                            {
+                                Text = itemName,
+                                Coding = new List<Coding>
+                                {
+                                    new Coding("http://snomed.info/sct", "266753000", itemName)
+                                }
+                            },
+                            Factor = 1.0m,
+                            Amount = new Money { Value = price, Currency = Hl7.Fhir.Model.Money.Currencies.INR }
+                        });
+                    }
+                    else
+                    {
+                        lineItem.PriceComponent.Add(new Hl7.Fhir.Model.Invoice.PriceComponentComponent
+                        {
+                            Type = Hl7.Fhir.Model.InvoicePriceComponentType.Base,
+                            Factor = 1.0m
+                        });
+                    }
+                    
+                    chargeItems.Add((chargeItemUuid, chargeItem));
+                    invoice.LineItem.Add(lineItem);
+                    seq++;
                 }
+            }
+            else
+            {
+                var chargeItemGuid = Guid.NewGuid().ToString();
+                var chargeItemUuid = "urn:uuid:" + chargeItemGuid;
                 
-                invoice.LineItem.Add(lineItem);
-                seq++;
+                var chargeItem = new Hl7.Fhir.Model.ChargeItem
+                {
+                    Id = chargeItemGuid,
+                    Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/ChargeItem"),
+                    Status = Hl7.Fhir.Model.ChargeItem.ChargeItemStatus.Billed,
+                    Code = new CodeableConcept
+                    {
+                        Text = "Consultation & Clinical Services",
+                        Coding = new List<Coding>
+                        {
+                            new Coding("http://snomed.info/sct", "266753000", "Consultation & Clinical Services")
+                        }
+                    },
+                    Subject = new ResourceReference(patientUuid) { Display = patientName },
+                    Quantity = new Quantity
+                    {
+                        Value = 1.0m,
+                        Unit = "unit",
+                        System = "http://unitsofmeasure.org",
+                        Code = "{unit}"
+                    }
+                };
+                chargeItems.Add((chargeItemUuid, chargeItem));
+
+                invoice.LineItem.Add(new Hl7.Fhir.Model.Invoice.LineItemComponent
+                {
+                    Sequence = 1,
+                    ChargeItem = new ResourceReference(chargeItemUuid) { Display = "Consultation & Clinical Services" }
+                });
+            }
+
+            if (hasPrices)
+            {
+                invoice.TotalNet = new Money { Value = totalNetVal, Currency = Hl7.Fhir.Model.Money.Currencies.INR };
+                invoice.TotalGross = new Money { Value = totalNetVal, Currency = Hl7.Fhir.Model.Money.Currencies.INR };
             }
         }
-        else
-        {
-            invoice.LineItem.Add(new Hl7.Fhir.Model.Invoice.LineItemComponent
-            {
-                Sequence = 1,
-                ChargeItem = new CodeableConcept
-                {
-                    Text = "Consultation & Clinical Services",
-                    Coding = new List<Coding>
-                    {
-                        new Coding("http://snomed.info/sct", "266753000", "Consultation & Clinical Services")
-                    }
-                }
-            });
-        }
 
-        if (hasPrices)
-        {
-            invoice.TotalNet = new Money { Value = totalNetVal, Currency = Hl7.Fhir.Model.Money.Currencies.INR };
-            invoice.TotalGross = new Money { Value = totalNetVal, Currency = Hl7.Fhir.Model.Money.Currencies.INR };
-        }
-
-        // 6. Create Composition for Invoice Record
+        // 5. Create Composition for Invoice Record
         var composition = new Composition
         {
-            Id = "Composition-1",
+            Id = compositionGuid,
             Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/InvoiceRecord"),
             Identifier = new Identifier { System = "https://ABDM_WRAPPER/bundle", Value = Guid.NewGuid().ToString() },
             Status = CompositionStatus.Final,
@@ -2355,43 +2472,55 @@ public class FhirMapperService : IFhirMapperService
                     new Coding(SNOMED_URL, "423876004", "Invoice Document")
                 }
             },
-            Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
-            Encounter = new ResourceReference($"Encounter/{encounter.Id}") { Display = "Ambulatory" },
+            Subject = new ResourceReference(patientUuid) { Display = patientName },
+            Encounter = new ResourceReference(encounterUuid) { Display = "Ambulatory" },
             DateElement = new FhirDateTime(authoredOn),
-            Custodian = new ResourceReference($"Organisation/{organization.Id}") { Display = orgName },
+            Custodian = new ResourceReference(orgUuid) { Display = orgName },
             Title = "Invoice"
         };
-        composition.Author.Add(new ResourceReference($"Practitioner/{practitioner.Id}") { Display = practitionerName });
+        composition.Author.Add(new ResourceReference(practitionerUuid) { Display = practitionerName });
 
-        var invoiceSection = new Composition.SectionComponent
+        // Add structured Invoice if present
+        if (invoice != null && invoiceUuid != null)
         {
-            Title = "Invoice",
-            Code = new CodeableConcept
+            var invoiceSection = new Composition.SectionComponent
             {
-                Text = "Invoice",
-                Coding = new List<Coding>
+                Title = "Invoice",
+                Code = new CodeableConcept
                 {
-                    new Coding(SNOMED_URL, "423876004", "Invoice Document")
+                    Text = "Invoice",
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "423876004", "Invoice Document")
+                    }
                 }
+            };
+            invoiceSection.Entry.Add(new ResourceReference(invoiceUuid));
+            composition.Section.Add(invoiceSection);
+
+            entries.Add(new Bundle.EntryComponent { FullUrl = invoiceUuid, Resource = invoice });
+            foreach (var ci in chargeItems)
+            {
+                entries.Add(new Bundle.EntryComponent { FullUrl = ci.Uuid, Resource = ci.Resource });
             }
-        };
-        invoiceSection.Entry.Add(new ResourceReference($"Invoice/{invoice.Id}"));
+        }
 
-        var entries = new List<Bundle.EntryComponent>
+        // Add unstructured Documents if present
+        if (hasDocuments)
         {
-            new Bundle.EntryComponent { FullUrl = $"Composition/{composition.Id}", Resource = composition },
-            new Bundle.EntryComponent { FullUrl = $"Patient/{patient.Id}", Resource = patient },
-            new Bundle.EntryComponent { FullUrl = $"Practitioner/{practitioner.Id}", Resource = practitioner },
-            new Bundle.EntryComponent { FullUrl = $"Organisation/{organization.Id}", Resource = organization },
-            new Bundle.EntryComponent { FullUrl = $"Encounter/{encounter.Id}", Resource = encounter },
-            new Bundle.EntryComponent { FullUrl = $"Invoice/{invoice.Id}", Resource = invoice }
-        };
+            var docSection = new Composition.SectionComponent
+            {
+                Title = "Invoice Document",
+                Code = new CodeableConcept
+                {
+                    Text = "Invoice Document",
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "423876004", "Invoice Document")
+                    }
+                }
+            };
 
-        // 7. Create DocumentReference entries if present
-        var documentsElement = GetProperty(root, "documents");
-        int docIndex = 1;
-        if (documentsElement.ValueKind == JsonValueKind.Array)
-        {
             foreach (var d in documentsElement.EnumerateArray())
             {
                 var contentType = GetString(d, "contentType") ?? "application/pdf";
@@ -2401,11 +2530,14 @@ public class FhirMapperService : IFhirMapperService
                 byte[]? rawData = null;
                 if (!string.IsNullOrEmpty(dataBase64))
                 {
-                    try { rawData = Convert.FromBase64String(dataBase64); } catch { }
+                    try { rawData = Convert.FromBase64String(dataBase64); } catch {}
                 }
 
                 if (rawData != null)
                 {
+                    var docRefGuid = Guid.NewGuid().ToString();
+                    var docRefUuid = "urn:uuid:" + docRefGuid;
+
                     var attachment = new Attachment
                     {
                         ContentType = contentType,
@@ -2416,11 +2548,11 @@ public class FhirMapperService : IFhirMapperService
 
                     var docRef = new DocumentReference
                     {
-                        Id = $"DocumentReference-{docIndex}",
+                        Id = docRefGuid,
                         Meta = CreateMeta(PROFILE_DOCUMENT_REFERENCE),
                         Status = DocumentReferenceStatus.Current,
                         DocStatus = CompositionStatus.Final,
-                        Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
+                        Subject = new ResourceReference(patientUuid) { Display = patientName },
                         Content = new List<DocumentReference.ContentComponent>
                         {
                             new DocumentReference.ContentComponent { Attachment = attachment }
@@ -2436,19 +2568,20 @@ public class FhirMapperService : IFhirMapperService
                             Text = typeStr,
                             Coding = new List<Coding>
                             {
-                                new Coding(SNOMED_URL, "423876004", "Health Document")
+                                new Coding(SNOMED_URL, "423876004", "Invoice Document")
                             }
                         }
                     });
 
-                    invoiceSection.Entry.Add(new ResourceReference($"DocumentReference/{docRef.Id}"));
-                    entries.Add(new Bundle.EntryComponent { FullUrl = $"DocumentReference/{docRef.Id}", Resource = docRef });
-                    docIndex++;
+                    docSection.Entry.Add(new ResourceReference(docRefUuid));
+                    entries.Add(new Bundle.EntryComponent { FullUrl = docRefUuid, Resource = docRef });
                 }
             }
+            composition.Section.Add(docSection);
         }
 
-        composition.Section.Add(invoiceSection);
+        // Insert Composition at the beginning of the entries list
+        entries.Insert(0, new Bundle.EntryComponent { FullUrl = compositionUuid, Resource = composition });
 
         // 8. Assemble Bundle with Meta/Security
         var bundle = new Bundle

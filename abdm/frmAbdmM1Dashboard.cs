@@ -288,6 +288,14 @@ namespace HMS.abdm
             frm.Show();
         }
 
+        private void btnAbhaPortal_Click(object sender, EventArgs e)
+        {
+            using (var frm = new frmABHAMain())
+            {
+                frm.ShowDialog();
+            }
+        }
+
         private string PromptDialog(string text, string caption)
         {
             Form prompt = new Form()

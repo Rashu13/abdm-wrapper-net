@@ -219,6 +219,14 @@ namespace HMS.abdm
             }
         }
 
+        private void btnM3Testing_Click(object sender, EventArgs e)
+        {
+            using (var frm = new frmABDMM3())
+            {
+                frm.ShowDialog();
+            }
+        }
+
         private void btnBridgeConfig_Click(object sender, EventArgs e)
         {
             using (var frm = new frmBridgeConfig())

@@ -21,8 +21,11 @@
   <ItemGroup>
     <Compile Remove="abdm\BaseForm.cs" />
     <Compile Remove="abdm\frm*" />
+    <Compile Remove="abdm\uc*" />
     <EmbeddedResource Remove="abdm\frm*" />
+    <EmbeddedResource Remove="abdm\uc*" />
     <None Remove="abdm\frm*" />
+    <None Remove="abdm\uc*" />
     <Compile Remove="AbdmWinFormsTest\**" />
     <EmbeddedResource Remove="AbdmWinFormsTest\**" />
     <None Remove="AbdmWinFormsTest\**" />

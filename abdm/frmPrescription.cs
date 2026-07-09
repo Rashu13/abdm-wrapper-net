@@ -15,10 +15,15 @@ namespace HMS.abdm
     public partial class frmPrescription : Form
     {
         private readonly AbdmApiClient _client;
-        private byte[] _pdfBytes = null;
+        private byte[]? _pdfBytes = null;
         private string _pdfFileName = string.Empty;
-
-
+        private ListView lvItems_Inv => ucInvoice.lvItems_Inv;
+        private TextBox txtItemName_Inv => ucInvoice.txtItemName_Inv;
+        private TextBox txtAmount_Inv => ucInvoice.txtAmount_Inv;
+        private ListView lvMedicines_Imm => ucImmunization.lvMedicines_Imm;
+        private TextBox txtVaccineName_Imm => ucImmunization.txtVaccineName_Imm;
+        private TextBox txtLotNumber_Imm => ucImmunization.txtLotNumber_Imm;
+        private TextBox txtDoseNumber_Imm => ucImmunization.txtDoseNumber_Imm;
 
         private bool _isSyncing = false;
 
@@ -157,24 +162,6 @@ namespace HMS.abdm
             }
         }
 
-        private void btnAddMedicine_Imm_Click(object sender, EventArgs e)
-        {
-            string name = txtVaccineName_Imm.Text.Trim();
-            if (string.IsNullOrEmpty(name)) return;
-            var item = new ListViewItem(name);
-            item.SubItems.Add(txtLotNumber_Imm.Text.Trim());
-            item.SubItems.Add(txtDoseNumber_Imm.Text.Trim());
-            lvMedicines_Imm.Items.Add(item);
-            txtVaccineName_Imm.Clear();
-            txtVaccineName_Imm.Focus();
-        }
-
-        private void btnRemoveMedicine_Imm_Click(object sender, EventArgs e)
-        {
-            if (lvMedicines_Imm.SelectedItems.Count > 0)
-                lvMedicines_Imm.Items.Remove(lvMedicines_Imm.SelectedItems[0]);
-        }
-
         private void btnAddMedicine_Well_Click(object sender, EventArgs e)
         {
             string name = txtObservation_Well.Text.Trim();
@@ -193,22 +180,7 @@ namespace HMS.abdm
                 lvObservations_Well.Items.Remove(lvObservations_Well.SelectedItems[0]);
         }
 
-        private void btnAddMedicine_Inv_Click(object sender, EventArgs e)
-        {
-            string name = txtItemName_Inv.Text.Trim();
-            if (string.IsNullOrEmpty(name)) return;
-            var item = new ListViewItem(name);
-            item.SubItems.Add(txtAmount_Inv.Text.Trim());
-            lvItems_Inv.Items.Add(item);
-            txtItemName_Inv.Clear();
-            txtItemName_Inv.Focus();
-        }
 
-        private void btnRemoveMedicine_Inv_Click(object sender, EventArgs e)
-        {
-            if (lvItems_Inv.SelectedItems.Count > 0)
-                lvItems_Inv.Items.Remove(lvItems_Inv.SelectedItems[0]);
-        }
 
         private void btnAddMedicine_Presc_Click(object sender, EventArgs e)
         {

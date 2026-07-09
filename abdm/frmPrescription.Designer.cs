@@ -41,24 +41,6 @@ namespace HMS.abdm
             txtAbhaAddress = new TextBox();
             gbPrescribe = new GroupBox();
             tcRecordDetails = new TabControl();
-            tpPrescription = new TabPage();
-            txtMedicineName_Presc = new TextBox();
-            txtDosage_Presc = new TextBox();
-            txtTiming_Presc = new TextBox();
-            txtRoute_Presc = new TextBox();
-            txtMethod_Presc = new TextBox();
-            txtInstructions_Presc = new TextBox();
-            txtReason_Presc = new TextBox();
-            btnAddMedicine_Presc = new Button();
-            btnRemoveMedicine_Presc = new Button();
-            lvMedicines_Presc = new ListView();
-            lblMedicine_Presc = new Label();
-            lblDosage_Presc = new Label();
-            lblTiming_Presc = new Label();
-            lblRoute_Presc = new Label();
-            lblMethod_Presc = new Label();
-            lblInstructions_Presc = new Label();
-            lblReason_Presc = new Label();
             tpOPConsultation = new TabPage();
             txtMedicineName_OP = new TextBox();
             txtDosage_OP = new TextBox();
@@ -116,15 +98,7 @@ namespace HMS.abdm
             tpHealthDocument = new TabPage();
             lblInfo = new Label();
             tpImmunization = new TabPage();
-            txtVaccineName_Imm = new TextBox();
-            txtLotNumber_Imm = new TextBox();
-            txtDoseNumber_Imm = new TextBox();
-            btnAddMedicine_Imm = new Button();
-            btnRemoveMedicine_Imm = new Button();
-            lvMedicines_Imm = new ListView();
-            lblVaccineName_Imm = new Label();
-            lblLotNumber_Imm = new Label();
-            lblDoseNumber_Imm = new Label();
+            ucImmunization = new ucImmunizationRecord();
             tpWellness = new TabPage();
             txtObservation_Well = new TextBox();
             txtResult_Well = new TextBox();
@@ -136,28 +110,39 @@ namespace HMS.abdm
             lblResult_Well = new Label();
             lblUnit_Well = new Label();
             tpInvoice = new TabPage();
-            txtItemName_Inv = new TextBox();
-            txtAmount_Inv = new TextBox();
-            btnAddMedicine_Inv = new Button();
-            btnRemoveMedicine_Inv = new Button();
-            lvItems_Inv = new ListView();
-            lblAmount_Inv = new Label();
-            lblItemName_Inv = new Label();
+            ucInvoice = new ucInvoiceRecord();
+            tpPrescription = new TabPage();
+            txtMedicineName_Presc = new TextBox();
+            txtDosage_Presc = new TextBox();
+            txtTiming_Presc = new TextBox();
+            txtRoute_Presc = new TextBox();
+            txtMethod_Presc = new TextBox();
+            txtInstructions_Presc = new TextBox();
+            txtReason_Presc = new TextBox();
+            btnAddMedicine_Presc = new Button();
+            btnRemoveMedicine_Presc = new Button();
+            lvMedicines_Presc = new ListView();
+            lblMedicine_Presc = new Label();
+            lblDosage_Presc = new Label();
+            lblTiming_Presc = new Label();
+            lblRoute_Presc = new Label();
+            lblMethod_Presc = new Label();
+            lblInstructions_Presc = new Label();
+            lblReason_Presc = new Label();
             gbPdf = new GroupBox();
             lblPdfStatus = new Label();
             btnUploadPdf = new Button();
             gbActions = new GroupBox();
+            chkAllTypes = new CheckBox();
             btnAutoFlow = new Button();
             btnInitiateLink = new Button();
             btnSaveAndPush = new Button();
-            chkAllTypes = new CheckBox();
             txtLogs = new TextBox();
             lblLogs = new Label();
             pnlHeader.SuspendLayout();
             gbPatient.SuspendLayout();
             gbPrescribe.SuspendLayout();
             tcRecordDetails.SuspendLayout();
-            tpPrescription.SuspendLayout();
             tpOPConsultation.SuspendLayout();
             tpDiagnosticReport.SuspendLayout();
             tpDischargeSummary.SuspendLayout();
@@ -165,6 +150,7 @@ namespace HMS.abdm
             tpImmunization.SuspendLayout();
             tpWellness.SuspendLayout();
             tpInvoice.SuspendLayout();
+            tpPrescription.SuspendLayout();
             gbPdf.SuspendLayout();
             gbActions.SuspendLayout();
             SuspendLayout();
@@ -178,7 +164,7 @@ namespace HMS.abdm
             pnlHeader.Location = new Point(0, 0);
             pnlHeader.Margin = new Padding(3, 4, 3, 4);
             pnlHeader.Name = "pnlHeader";
-            pnlHeader.Size = new Size(1319, 62);
+            pnlHeader.Size = new Size(1182, 62);
             pnlHeader.TabIndex = 0;
             // 
             // btnClose
@@ -188,7 +174,7 @@ namespace HMS.abdm
             btnClose.FlatStyle = FlatStyle.Flat;
             btnClose.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             btnClose.ForeColor = Color.White;
-            btnClose.Location = new Point(1268, 1);
+            btnClose.Location = new Point(1131, 1);
             btnClose.Margin = new Padding(3, 4, 3, 4);
             btnClose.Name = "btnClose";
             btnClose.Size = new Size(50, 62);
@@ -407,14 +393,13 @@ namespace HMS.abdm
             gbPrescribe.Margin = new Padding(3, 4, 3, 4);
             gbPrescribe.Name = "gbPrescribe";
             gbPrescribe.Padding = new Padding(3, 4, 3, 4);
-            gbPrescribe.Size = new Size(847, 362);
+            gbPrescribe.Size = new Size(710, 362);
             gbPrescribe.TabIndex = 2;
             gbPrescribe.TabStop = false;
             gbPrescribe.Text = "Write Medicine (Dwai)";
             // 
             // tcRecordDetails
             // 
-            tcRecordDetails.Controls.Add(tpPrescription);
             tcRecordDetails.Controls.Add(tpOPConsultation);
             tcRecordDetails.Controls.Add(tpDiagnosticReport);
             tcRecordDetails.Controls.Add(tpDischargeSummary);
@@ -422,178 +407,13 @@ namespace HMS.abdm
             tcRecordDetails.Controls.Add(tpImmunization);
             tcRecordDetails.Controls.Add(tpWellness);
             tcRecordDetails.Controls.Add(tpInvoice);
-            tcRecordDetails.Location = new Point(10, 20);
+            tcRecordDetails.Controls.Add(tpPrescription);
+            tcRecordDetails.Location = new Point(6, 25);
             tcRecordDetails.Name = "tcRecordDetails";
             tcRecordDetails.SelectedIndex = 0;
-            tcRecordDetails.Size = new Size(831, 330);
+            tcRecordDetails.Size = new Size(704, 330);
             tcRecordDetails.TabIndex = 0;
             tcRecordDetails.SelectedIndexChanged += tcRecordDetails_SelectedIndexChanged;
-            // 
-            // tpPrescription
-            // 
-            tpPrescription.Controls.Add(txtMedicineName_Presc);
-            tpPrescription.Controls.Add(txtDosage_Presc);
-            tpPrescription.Controls.Add(txtTiming_Presc);
-            tpPrescription.Controls.Add(txtRoute_Presc);
-            tpPrescription.Controls.Add(txtMethod_Presc);
-            tpPrescription.Controls.Add(txtInstructions_Presc);
-            tpPrescription.Controls.Add(txtReason_Presc);
-            tpPrescription.Controls.Add(btnAddMedicine_Presc);
-            tpPrescription.Controls.Add(btnRemoveMedicine_Presc);
-            tpPrescription.Controls.Add(lvMedicines_Presc);
-            tpPrescription.Controls.Add(lblMedicine_Presc);
-            tpPrescription.Controls.Add(lblDosage_Presc);
-            tpPrescription.Controls.Add(lblTiming_Presc);
-            tpPrescription.Controls.Add(lblRoute_Presc);
-            tpPrescription.Controls.Add(lblMethod_Presc);
-            tpPrescription.Controls.Add(lblInstructions_Presc);
-            tpPrescription.Controls.Add(lblReason_Presc);
-            tpPrescription.Location = new Point(4, 30);
-            tpPrescription.Name = "tpPrescription";
-            tpPrescription.Size = new Size(823, 296);
-            tpPrescription.TabIndex = 0;
-            tpPrescription.Text = "Prescription";
-            // 
-            // txtMedicineName_Presc
-            // 
-            txtMedicineName_Presc.Location = new Point(115, 5);
-            txtMedicineName_Presc.Name = "txtMedicineName_Presc";
-            txtMedicineName_Presc.Size = new Size(200, 29);
-            txtMedicineName_Presc.TabIndex = 0;
-            // 
-            // txtDosage_Presc
-            // 
-            txtDosage_Presc.Location = new Point(415, 5);
-            txtDosage_Presc.Name = "txtDosage_Presc";
-            txtDosage_Presc.Size = new Size(150, 29);
-            txtDosage_Presc.TabIndex = 1;
-            txtDosage_Presc.Text = "1-0-1";
-            // 
-            // txtTiming_Presc
-            // 
-            txtTiming_Presc.Location = new Point(115, 35);
-            txtTiming_Presc.Name = "txtTiming_Presc";
-            txtTiming_Presc.Size = new Size(200, 29);
-            txtTiming_Presc.TabIndex = 2;
-            txtTiming_Presc.Text = "1-1-D";
-            // 
-            // txtRoute_Presc
-            // 
-            txtRoute_Presc.Location = new Point(415, 35);
-            txtRoute_Presc.Name = "txtRoute_Presc";
-            txtRoute_Presc.Size = new Size(150, 29);
-            txtRoute_Presc.TabIndex = 3;
-            txtRoute_Presc.Text = "Oral";
-            // 
-            // txtMethod_Presc
-            // 
-            txtMethod_Presc.Location = new Point(115, 65);
-            txtMethod_Presc.Name = "txtMethod_Presc";
-            txtMethod_Presc.Size = new Size(200, 29);
-            txtMethod_Presc.TabIndex = 4;
-            txtMethod_Presc.Text = "swallow";
-            // 
-            // txtInstructions_Presc
-            // 
-            txtInstructions_Presc.Location = new Point(415, 65);
-            txtInstructions_Presc.Name = "txtInstructions_Presc";
-            txtInstructions_Presc.Size = new Size(150, 29);
-            txtInstructions_Presc.TabIndex = 5;
-            txtInstructions_Presc.Text = "after food";
-            // 
-            // txtReason_Presc
-            // 
-            txtReason_Presc.Location = new Point(115, 95);
-            txtReason_Presc.Name = "txtReason_Presc";
-            txtReason_Presc.Size = new Size(450, 29);
-            txtReason_Presc.TabIndex = 6;
-            txtReason_Presc.Text = "Fever";
-            // 
-            // btnAddMedicine_Presc
-            // 
-            btnAddMedicine_Presc.BackColor = Color.FromArgb(41, 128, 185);
-            btnAddMedicine_Presc.FlatStyle = FlatStyle.Flat;
-            btnAddMedicine_Presc.ForeColor = Color.White;
-            btnAddMedicine_Presc.Location = new Point(580, 5);
-            btnAddMedicine_Presc.Name = "btnAddMedicine_Presc";
-            btnAddMedicine_Presc.Size = new Size(110, 28);
-            btnAddMedicine_Presc.TabIndex = 7;
-            btnAddMedicine_Presc.Text = "Add Item";
-            btnAddMedicine_Presc.UseVisualStyleBackColor = false;
-            btnAddMedicine_Presc.Click += btnAddMedicine_Presc_Click;
-            // 
-            // btnRemoveMedicine_Presc
-            // 
-            btnRemoveMedicine_Presc.BackColor = Color.FromArgb(192, 57, 43);
-            btnRemoveMedicine_Presc.FlatStyle = FlatStyle.Flat;
-            btnRemoveMedicine_Presc.ForeColor = Color.White;
-            btnRemoveMedicine_Presc.Location = new Point(580, 38);
-            btnRemoveMedicine_Presc.Name = "btnRemoveMedicine_Presc";
-            btnRemoveMedicine_Presc.Size = new Size(110, 28);
-            btnRemoveMedicine_Presc.TabIndex = 8;
-            btnRemoveMedicine_Presc.Text = "Remove";
-            btnRemoveMedicine_Presc.UseVisualStyleBackColor = false;
-            btnRemoveMedicine_Presc.Click += btnRemoveMedicine_Presc_Click;
-            // 
-            // lvMedicines_Presc
-            // 
-            lvMedicines_Presc.FullRowSelect = true;
-            lvMedicines_Presc.GridLines = true;
-            lvMedicines_Presc.Location = new Point(10, 130);
-            lvMedicines_Presc.Name = "lvMedicines_Presc";
-            lvMedicines_Presc.Size = new Size(680, 160);
-            lvMedicines_Presc.TabIndex = 9;
-            lvMedicines_Presc.UseCompatibleStateImageBehavior = false;
-            lvMedicines_Presc.View = View.Details;
-            // 
-            // lblMedicine_Presc
-            // 
-            lblMedicine_Presc.Location = new Point(0, 0);
-            lblMedicine_Presc.Name = "lblMedicine_Presc";
-            lblMedicine_Presc.Size = new Size(100, 23);
-            lblMedicine_Presc.TabIndex = 10;
-            // 
-            // lblDosage_Presc
-            // 
-            lblDosage_Presc.Location = new Point(0, 0);
-            lblDosage_Presc.Name = "lblDosage_Presc";
-            lblDosage_Presc.Size = new Size(100, 23);
-            lblDosage_Presc.TabIndex = 11;
-            // 
-            // lblTiming_Presc
-            // 
-            lblTiming_Presc.Location = new Point(0, 0);
-            lblTiming_Presc.Name = "lblTiming_Presc";
-            lblTiming_Presc.Size = new Size(100, 23);
-            lblTiming_Presc.TabIndex = 12;
-            // 
-            // lblRoute_Presc
-            // 
-            lblRoute_Presc.Location = new Point(0, 0);
-            lblRoute_Presc.Name = "lblRoute_Presc";
-            lblRoute_Presc.Size = new Size(100, 23);
-            lblRoute_Presc.TabIndex = 13;
-            // 
-            // lblMethod_Presc
-            // 
-            lblMethod_Presc.Location = new Point(0, 0);
-            lblMethod_Presc.Name = "lblMethod_Presc";
-            lblMethod_Presc.Size = new Size(100, 23);
-            lblMethod_Presc.TabIndex = 14;
-            // 
-            // lblInstructions_Presc
-            // 
-            lblInstructions_Presc.Location = new Point(0, 0);
-            lblInstructions_Presc.Name = "lblInstructions_Presc";
-            lblInstructions_Presc.Size = new Size(100, 23);
-            lblInstructions_Presc.TabIndex = 15;
-            // 
-            // lblReason_Presc
-            // 
-            lblReason_Presc.Location = new Point(0, 0);
-            lblReason_Presc.Name = "lblReason_Presc";
-            lblReason_Presc.Size = new Size(100, 23);
-            lblReason_Presc.TabIndex = 16;
             // 
             // tpOPConsultation
             // 
@@ -616,7 +436,7 @@ namespace HMS.abdm
             tpOPConsultation.Controls.Add(lblReason_OP);
             tpOPConsultation.Location = new Point(4, 30);
             tpOPConsultation.Name = "tpOPConsultation";
-            tpOPConsultation.Size = new Size(823, 296);
+            tpOPConsultation.Size = new Size(696, 296);
             tpOPConsultation.TabIndex = 1;
             tpOPConsultation.Text = "OP Consultation";
             // 
@@ -682,7 +502,7 @@ namespace HMS.abdm
             btnAddMedicine_OP.ForeColor = Color.White;
             btnAddMedicine_OP.Location = new Point(580, 5);
             btnAddMedicine_OP.Name = "btnAddMedicine_OP";
-            btnAddMedicine_OP.Size = new Size(140, 40);
+            btnAddMedicine_OP.Size = new Size(91, 40);
             btnAddMedicine_OP.TabIndex = 7;
             btnAddMedicine_OP.Text = "Add Item";
             btnAddMedicine_OP.UseVisualStyleBackColor = false;
@@ -695,7 +515,7 @@ namespace HMS.abdm
             btnRemoveMedicine_OP.ForeColor = Color.White;
             btnRemoveMedicine_OP.Location = new Point(580, 51);
             btnRemoveMedicine_OP.Name = "btnRemoveMedicine_OP";
-            btnRemoveMedicine_OP.Size = new Size(140, 43);
+            btnRemoveMedicine_OP.Size = new Size(91, 43);
             btnRemoveMedicine_OP.TabIndex = 8;
             btnRemoveMedicine_OP.Text = "Remove";
             btnRemoveMedicine_OP.UseVisualStyleBackColor = false;
@@ -782,7 +602,7 @@ namespace HMS.abdm
             tpDiagnosticReport.Controls.Add(lblInterpretation_Diag);
             tpDiagnosticReport.Location = new Point(4, 30);
             tpDiagnosticReport.Name = "tpDiagnosticReport";
-            tpDiagnosticReport.Size = new Size(823, 296);
+            tpDiagnosticReport.Size = new Size(696, 296);
             tpDiagnosticReport.TabIndex = 2;
             tpDiagnosticReport.Text = "Diagnostic Report";
             // 
@@ -947,7 +767,7 @@ namespace HMS.abdm
             tpDischargeSummary.Controls.Add(lblCondition_Disch);
             tpDischargeSummary.Location = new Point(4, 30);
             tpDischargeSummary.Name = "tpDischargeSummary";
-            tpDischargeSummary.Size = new Size(823, 296);
+            tpDischargeSummary.Size = new Size(696, 296);
             tpDischargeSummary.TabIndex = 3;
             tpDischargeSummary.Text = "Discharge Summary";
             // 
@@ -1097,7 +917,7 @@ namespace HMS.abdm
             tpHealthDocument.Controls.Add(lblInfo);
             tpHealthDocument.Location = new Point(4, 30);
             tpHealthDocument.Name = "tpHealthDocument";
-            tpHealthDocument.Size = new Size(823, 296);
+            tpHealthDocument.Size = new Size(696, 296);
             tpHealthDocument.TabIndex = 4;
             tpHealthDocument.Text = "Health Document";
             // 
@@ -1110,102 +930,20 @@ namespace HMS.abdm
             // 
             // tpImmunization
             // 
-            tpImmunization.Controls.Add(txtVaccineName_Imm);
-            tpImmunization.Controls.Add(txtLotNumber_Imm);
-            tpImmunization.Controls.Add(txtDoseNumber_Imm);
-            tpImmunization.Controls.Add(btnAddMedicine_Imm);
-            tpImmunization.Controls.Add(btnRemoveMedicine_Imm);
-            tpImmunization.Controls.Add(lvMedicines_Imm);
-            tpImmunization.Controls.Add(lblVaccineName_Imm);
-            tpImmunization.Controls.Add(lblLotNumber_Imm);
-            tpImmunization.Controls.Add(lblDoseNumber_Imm);
+            tpImmunization.Controls.Add(ucImmunization);
             tpImmunization.Location = new Point(4, 30);
             tpImmunization.Name = "tpImmunization";
-            tpImmunization.Size = new Size(823, 296);
+            tpImmunization.Size = new Size(696, 296);
             tpImmunization.TabIndex = 5;
             tpImmunization.Text = "Immunization";
             // 
-            // txtVaccineName_Imm
+            // ucImmunization
             // 
-            txtVaccineName_Imm.Location = new Point(115, 5);
-            txtVaccineName_Imm.Name = "txtVaccineName_Imm";
-            txtVaccineName_Imm.Size = new Size(200, 29);
-            txtVaccineName_Imm.TabIndex = 0;
-            txtVaccineName_Imm.Text = "Covishield";
-            // 
-            // txtLotNumber_Imm
-            // 
-            txtLotNumber_Imm.Location = new Point(415, 5);
-            txtLotNumber_Imm.Name = "txtLotNumber_Imm";
-            txtLotNumber_Imm.Size = new Size(150, 29);
-            txtLotNumber_Imm.TabIndex = 1;
-            txtLotNumber_Imm.Text = "LOT-1234";
-            // 
-            // txtDoseNumber_Imm
-            // 
-            txtDoseNumber_Imm.Location = new Point(115, 35);
-            txtDoseNumber_Imm.Name = "txtDoseNumber_Imm";
-            txtDoseNumber_Imm.Size = new Size(200, 29);
-            txtDoseNumber_Imm.TabIndex = 2;
-            txtDoseNumber_Imm.Text = "1";
-            // 
-            // btnAddMedicine_Imm
-            // 
-            btnAddMedicine_Imm.BackColor = Color.FromArgb(41, 128, 185);
-            btnAddMedicine_Imm.FlatStyle = FlatStyle.Flat;
-            btnAddMedicine_Imm.ForeColor = Color.White;
-            btnAddMedicine_Imm.Location = new Point(580, 5);
-            btnAddMedicine_Imm.Name = "btnAddMedicine_Imm";
-            btnAddMedicine_Imm.Size = new Size(110, 28);
-            btnAddMedicine_Imm.TabIndex = 3;
-            btnAddMedicine_Imm.Text = "Add Item";
-            btnAddMedicine_Imm.UseVisualStyleBackColor = false;
-            btnAddMedicine_Imm.Click += btnAddMedicine_Imm_Click;
-            // 
-            // btnRemoveMedicine_Imm
-            // 
-            btnRemoveMedicine_Imm.BackColor = Color.FromArgb(192, 57, 43);
-            btnRemoveMedicine_Imm.FlatStyle = FlatStyle.Flat;
-            btnRemoveMedicine_Imm.ForeColor = Color.White;
-            btnRemoveMedicine_Imm.Location = new Point(580, 38);
-            btnRemoveMedicine_Imm.Name = "btnRemoveMedicine_Imm";
-            btnRemoveMedicine_Imm.Size = new Size(110, 28);
-            btnRemoveMedicine_Imm.TabIndex = 4;
-            btnRemoveMedicine_Imm.Text = "Remove";
-            btnRemoveMedicine_Imm.UseVisualStyleBackColor = false;
-            btnRemoveMedicine_Imm.Click += btnRemoveMedicine_Imm_Click;
-            // 
-            // lvMedicines_Imm
-            // 
-            lvMedicines_Imm.FullRowSelect = true;
-            lvMedicines_Imm.GridLines = true;
-            lvMedicines_Imm.Location = new Point(10, 130);
-            lvMedicines_Imm.Name = "lvMedicines_Imm";
-            lvMedicines_Imm.Size = new Size(680, 160);
-            lvMedicines_Imm.TabIndex = 5;
-            lvMedicines_Imm.UseCompatibleStateImageBehavior = false;
-            lvMedicines_Imm.View = View.Details;
-            // 
-            // lblVaccineName_Imm
-            // 
-            lblVaccineName_Imm.Location = new Point(0, 0);
-            lblVaccineName_Imm.Name = "lblVaccineName_Imm";
-            lblVaccineName_Imm.Size = new Size(100, 23);
-            lblVaccineName_Imm.TabIndex = 6;
-            // 
-            // lblLotNumber_Imm
-            // 
-            lblLotNumber_Imm.Location = new Point(0, 0);
-            lblLotNumber_Imm.Name = "lblLotNumber_Imm";
-            lblLotNumber_Imm.Size = new Size(100, 23);
-            lblLotNumber_Imm.TabIndex = 7;
-            // 
-            // lblDoseNumber_Imm
-            // 
-            lblDoseNumber_Imm.Location = new Point(0, 0);
-            lblDoseNumber_Imm.Name = "lblDoseNumber_Imm";
-            lblDoseNumber_Imm.Size = new Size(100, 23);
-            lblDoseNumber_Imm.TabIndex = 8;
+            ucImmunization.Dock = System.Windows.Forms.DockStyle.Fill;
+            ucImmunization.Location = new Point(0, 0);
+            ucImmunization.Name = "ucImmunization";
+            ucImmunization.Size = new Size(696, 296);
+            ucImmunization.TabIndex = 0;
             // 
             // tpWellness
             // 
@@ -1220,7 +958,7 @@ namespace HMS.abdm
             tpWellness.Controls.Add(lblUnit_Well);
             tpWellness.Location = new Point(4, 30);
             tpWellness.Name = "tpWellness";
-            tpWellness.Size = new Size(823, 296);
+            tpWellness.Size = new Size(696, 296);
             tpWellness.TabIndex = 6;
             tpWellness.Text = "Wellness";
             // 
@@ -1308,85 +1046,186 @@ namespace HMS.abdm
             // 
             // tpInvoice
             // 
-            tpInvoice.Controls.Add(txtItemName_Inv);
-            tpInvoice.Controls.Add(txtAmount_Inv);
-            tpInvoice.Controls.Add(btnAddMedicine_Inv);
-            tpInvoice.Controls.Add(btnRemoveMedicine_Inv);
-            tpInvoice.Controls.Add(lvItems_Inv);
-            tpInvoice.Controls.Add(lblAmount_Inv);
-            tpInvoice.Controls.Add(lblItemName_Inv);
+            tpInvoice.Controls.Add(ucInvoice);
             tpInvoice.Location = new Point(4, 30);
             tpInvoice.Name = "tpInvoice";
-            tpInvoice.Size = new Size(823, 296);
+            tpInvoice.Size = new Size(696, 296);
             tpInvoice.TabIndex = 7;
             tpInvoice.Text = "Invoice";
             // 
-            // txtItemName_Inv
+            // ucInvoice
             // 
-            txtItemName_Inv.Location = new Point(115, 5);
-            txtItemName_Inv.Name = "txtItemName_Inv";
-            txtItemName_Inv.Size = new Size(294, 29);
-            txtItemName_Inv.TabIndex = 0;
-            txtItemName_Inv.Text = "Consultation & Clinical Services";
+            ucInvoice.Dock = System.Windows.Forms.DockStyle.Fill;
+            ucInvoice.Location = new Point(0, 0);
+            ucInvoice.Name = "ucInvoice";
+            ucInvoice.Size = new Size(696, 296);
+            ucInvoice.TabIndex = 0;
             // 
-            // txtAmount_Inv
+            // tpPrescription
             // 
-            txtAmount_Inv.Location = new Point(415, 5);
-            txtAmount_Inv.Name = "txtAmount_Inv";
-            txtAmount_Inv.Size = new Size(150, 29);
-            txtAmount_Inv.TabIndex = 1;
-            txtAmount_Inv.Text = "500";
+            tpPrescription.Controls.Add(txtMedicineName_Presc);
+            tpPrescription.Controls.Add(txtDosage_Presc);
+            tpPrescription.Controls.Add(txtTiming_Presc);
+            tpPrescription.Controls.Add(txtRoute_Presc);
+            tpPrescription.Controls.Add(txtMethod_Presc);
+            tpPrescription.Controls.Add(txtInstructions_Presc);
+            tpPrescription.Controls.Add(txtReason_Presc);
+            tpPrescription.Controls.Add(btnAddMedicine_Presc);
+            tpPrescription.Controls.Add(btnRemoveMedicine_Presc);
+            tpPrescription.Controls.Add(lvMedicines_Presc);
+            tpPrescription.Controls.Add(lblMedicine_Presc);
+            tpPrescription.Controls.Add(lblDosage_Presc);
+            tpPrescription.Controls.Add(lblTiming_Presc);
+            tpPrescription.Controls.Add(lblRoute_Presc);
+            tpPrescription.Controls.Add(lblMethod_Presc);
+            tpPrescription.Controls.Add(lblInstructions_Presc);
+            tpPrescription.Controls.Add(lblReason_Presc);
+            tpPrescription.Location = new Point(4, 30);
+            tpPrescription.Name = "tpPrescription";
+            tpPrescription.Size = new Size(696, 296);
+            tpPrescription.TabIndex = 0;
+            tpPrescription.Text = "Prescription";
             // 
-            // btnAddMedicine_Inv
+            // txtMedicineName_Presc
             // 
-            btnAddMedicine_Inv.BackColor = Color.FromArgb(41, 128, 185);
-            btnAddMedicine_Inv.FlatStyle = FlatStyle.Flat;
-            btnAddMedicine_Inv.ForeColor = Color.White;
-            btnAddMedicine_Inv.Location = new Point(580, 5);
-            btnAddMedicine_Inv.Name = "btnAddMedicine_Inv";
-            btnAddMedicine_Inv.Size = new Size(110, 28);
-            btnAddMedicine_Inv.TabIndex = 2;
-            btnAddMedicine_Inv.Text = "Add Item";
-            btnAddMedicine_Inv.UseVisualStyleBackColor = false;
-            btnAddMedicine_Inv.Click += btnAddMedicine_Inv_Click;
+            txtMedicineName_Presc.Location = new Point(115, 5);
+            txtMedicineName_Presc.Name = "txtMedicineName_Presc";
+            txtMedicineName_Presc.Size = new Size(200, 29);
+            txtMedicineName_Presc.TabIndex = 0;
             // 
-            // btnRemoveMedicine_Inv
+            // txtDosage_Presc
             // 
-            btnRemoveMedicine_Inv.BackColor = Color.FromArgb(192, 57, 43);
-            btnRemoveMedicine_Inv.FlatStyle = FlatStyle.Flat;
-            btnRemoveMedicine_Inv.ForeColor = Color.White;
-            btnRemoveMedicine_Inv.Location = new Point(580, 38);
-            btnRemoveMedicine_Inv.Name = "btnRemoveMedicine_Inv";
-            btnRemoveMedicine_Inv.Size = new Size(110, 28);
-            btnRemoveMedicine_Inv.TabIndex = 3;
-            btnRemoveMedicine_Inv.Text = "Remove";
-            btnRemoveMedicine_Inv.UseVisualStyleBackColor = false;
-            btnRemoveMedicine_Inv.Click += btnRemoveMedicine_Inv_Click;
+            txtDosage_Presc.Location = new Point(415, 5);
+            txtDosage_Presc.Name = "txtDosage_Presc";
+            txtDosage_Presc.Size = new Size(150, 29);
+            txtDosage_Presc.TabIndex = 1;
+            txtDosage_Presc.Text = "1-0-1";
             // 
-            // lvItems_Inv
+            // txtTiming_Presc
             // 
-            lvItems_Inv.FullRowSelect = true;
-            lvItems_Inv.GridLines = true;
-            lvItems_Inv.Location = new Point(10, 72);
-            lvItems_Inv.Name = "lvItems_Inv";
-            lvItems_Inv.Size = new Size(810, 218);
-            lvItems_Inv.TabIndex = 4;
-            lvItems_Inv.UseCompatibleStateImageBehavior = false;
-            lvItems_Inv.View = View.Details;
+            txtTiming_Presc.Location = new Point(115, 35);
+            txtTiming_Presc.Name = "txtTiming_Presc";
+            txtTiming_Presc.Size = new Size(200, 29);
+            txtTiming_Presc.TabIndex = 2;
+            txtTiming_Presc.Text = "1-1-D";
             // 
-            // lblAmount_Inv
+            // txtRoute_Presc
             // 
-            lblAmount_Inv.Location = new Point(465, 38);
-            lblAmount_Inv.Name = "lblAmount_Inv";
-            lblAmount_Inv.Size = new Size(100, 23);
-            lblAmount_Inv.TabIndex = 6;
+            txtRoute_Presc.Location = new Point(415, 35);
+            txtRoute_Presc.Name = "txtRoute_Presc";
+            txtRoute_Presc.Size = new Size(150, 29);
+            txtRoute_Presc.TabIndex = 3;
+            txtRoute_Presc.Text = "Oral";
             // 
-            // lblItemName_Inv
+            // txtMethod_Presc
             // 
-            lblItemName_Inv.Location = new Point(6, 0);
-            lblItemName_Inv.Name = "lblItemName_Inv";
-            lblItemName_Inv.Size = new Size(100, 23);
-            lblItemName_Inv.TabIndex = 5;
+            txtMethod_Presc.Location = new Point(115, 65);
+            txtMethod_Presc.Name = "txtMethod_Presc";
+            txtMethod_Presc.Size = new Size(200, 29);
+            txtMethod_Presc.TabIndex = 4;
+            txtMethod_Presc.Text = "swallow";
+            // 
+            // txtInstructions_Presc
+            // 
+            txtInstructions_Presc.Location = new Point(415, 65);
+            txtInstructions_Presc.Name = "txtInstructions_Presc";
+            txtInstructions_Presc.Size = new Size(150, 29);
+            txtInstructions_Presc.TabIndex = 5;
+            txtInstructions_Presc.Text = "after food";
+            // 
+            // txtReason_Presc
+            // 
+            txtReason_Presc.Location = new Point(115, 95);
+            txtReason_Presc.Name = "txtReason_Presc";
+            txtReason_Presc.Size = new Size(450, 29);
+            txtReason_Presc.TabIndex = 6;
+            txtReason_Presc.Text = "Fever";
+            // 
+            // btnAddMedicine_Presc
+            // 
+            btnAddMedicine_Presc.BackColor = Color.FromArgb(41, 128, 185);
+            btnAddMedicine_Presc.FlatStyle = FlatStyle.Flat;
+            btnAddMedicine_Presc.ForeColor = Color.White;
+            btnAddMedicine_Presc.Location = new Point(580, 5);
+            btnAddMedicine_Presc.Name = "btnAddMedicine_Presc";
+            btnAddMedicine_Presc.Size = new Size(110, 28);
+            btnAddMedicine_Presc.TabIndex = 7;
+            btnAddMedicine_Presc.Text = "Add Item";
+            btnAddMedicine_Presc.UseVisualStyleBackColor = false;
+            btnAddMedicine_Presc.Click += btnAddMedicine_Presc_Click;
+            // 
+            // btnRemoveMedicine_Presc
+            // 
+            btnRemoveMedicine_Presc.BackColor = Color.FromArgb(192, 57, 43);
+            btnRemoveMedicine_Presc.FlatStyle = FlatStyle.Flat;
+            btnRemoveMedicine_Presc.ForeColor = Color.White;
+            btnRemoveMedicine_Presc.Location = new Point(580, 38);
+            btnRemoveMedicine_Presc.Name = "btnRemoveMedicine_Presc";
+            btnRemoveMedicine_Presc.Size = new Size(110, 28);
+            btnRemoveMedicine_Presc.TabIndex = 8;
+            btnRemoveMedicine_Presc.Text = "Remove";
+            btnRemoveMedicine_Presc.UseVisualStyleBackColor = false;
+            btnRemoveMedicine_Presc.Click += btnRemoveMedicine_Presc_Click;
+            // 
+            // lvMedicines_Presc
+            // 
+            lvMedicines_Presc.FullRowSelect = true;
+            lvMedicines_Presc.GridLines = true;
+            lvMedicines_Presc.Location = new Point(10, 154);
+            lvMedicines_Presc.Name = "lvMedicines_Presc";
+            lvMedicines_Presc.Size = new Size(680, 136);
+            lvMedicines_Presc.TabIndex = 9;
+            lvMedicines_Presc.UseCompatibleStateImageBehavior = false;
+            lvMedicines_Presc.View = View.Details;
+            // 
+            // lblMedicine_Presc
+            // 
+            lblMedicine_Presc.Location = new Point(0, 0);
+            lblMedicine_Presc.Name = "lblMedicine_Presc";
+            lblMedicine_Presc.Size = new Size(100, 23);
+            lblMedicine_Presc.TabIndex = 10;
+            // 
+            // lblDosage_Presc
+            // 
+            lblDosage_Presc.Location = new Point(0, 0);
+            lblDosage_Presc.Name = "lblDosage_Presc";
+            lblDosage_Presc.Size = new Size(100, 23);
+            lblDosage_Presc.TabIndex = 11;
+            // 
+            // lblTiming_Presc
+            // 
+            lblTiming_Presc.Location = new Point(0, 0);
+            lblTiming_Presc.Name = "lblTiming_Presc";
+            lblTiming_Presc.Size = new Size(100, 23);
+            lblTiming_Presc.TabIndex = 12;
+            // 
+            // lblRoute_Presc
+            // 
+            lblRoute_Presc.Location = new Point(0, 0);
+            lblRoute_Presc.Name = "lblRoute_Presc";
+            lblRoute_Presc.Size = new Size(100, 23);
+            lblRoute_Presc.TabIndex = 13;
+            // 
+            // lblMethod_Presc
+            // 
+            lblMethod_Presc.Location = new Point(0, 0);
+            lblMethod_Presc.Name = "lblMethod_Presc";
+            lblMethod_Presc.Size = new Size(100, 23);
+            lblMethod_Presc.TabIndex = 14;
+            // 
+            // lblInstructions_Presc
+            // 
+            lblInstructions_Presc.Location = new Point(0, 0);
+            lblInstructions_Presc.Name = "lblInstructions_Presc";
+            lblInstructions_Presc.Size = new Size(100, 23);
+            lblInstructions_Presc.TabIndex = 15;
+            // 
+            // lblReason_Presc
+            // 
+            lblReason_Presc.Location = new Point(0, 0);
+            lblReason_Presc.Name = "lblReason_Presc";
+            lblReason_Presc.Size = new Size(100, 23);
+            lblReason_Presc.TabIndex = 16;
             // 
             // gbPdf
             // 
@@ -1397,7 +1236,7 @@ namespace HMS.abdm
             gbPdf.Margin = new Padding(3, 4, 3, 4);
             gbPdf.Name = "gbPdf";
             gbPdf.Padding = new Padding(3, 4, 3, 4);
-            gbPdf.Size = new Size(847, 125);
+            gbPdf.Size = new Size(710, 125);
             gbPdf.TabIndex = 3;
             gbPdf.TabStop = false;
             gbPdf.Text = "Attach Prescription PDF File";
@@ -1428,7 +1267,6 @@ namespace HMS.abdm
             btnUploadPdf.UseVisualStyleBackColor = false;
             btnUploadPdf.Click += btnUploadPdf_Click;
             // 
-            // 
             // gbActions
             // 
             gbActions.Controls.Add(chkAllTypes);
@@ -1450,7 +1288,7 @@ namespace HMS.abdm
             chkAllTypes.AutoSize = true;
             chkAllTypes.Location = new Point(15, 28);
             chkAllTypes.Name = "chkAllTypes";
-            chkAllTypes.Size = new Size(205, 25);
+            chkAllTypes.Size = new Size(198, 25);
             chkAllTypes.TabIndex = 3;
             chkAllTypes.Text = "Apply to All 8 HI Types";
             chkAllTypes.UseVisualStyleBackColor = true;
@@ -1513,7 +1351,7 @@ namespace HMS.abdm
             txtLogs.Name = "txtLogs";
             txtLogs.ReadOnly = true;
             txtLogs.ScrollBars = ScrollBars.Vertical;
-            txtLogs.Size = new Size(847, 224);
+            txtLogs.Size = new Size(710, 224);
             txtLogs.TabIndex = 5;
             // 
             // lblLogs
@@ -1531,7 +1369,7 @@ namespace HMS.abdm
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.White;
-            ClientSize = new Size(1319, 875);
+            ClientSize = new Size(1182, 875);
             Controls.Add(lblLogs);
             Controls.Add(txtLogs);
             Controls.Add(gbActions);
@@ -1544,15 +1382,12 @@ namespace HMS.abdm
             Name = "frmPrescription";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Write Prescription & Upload Document";
-            WindowState = FormWindowState.Maximized;
             pnlHeader.ResumeLayout(false);
             pnlHeader.PerformLayout();
             gbPatient.ResumeLayout(false);
             gbPatient.PerformLayout();
             gbPrescribe.ResumeLayout(false);
             tcRecordDetails.ResumeLayout(false);
-            tpPrescription.ResumeLayout(false);
-            tpPrescription.PerformLayout();
             tpOPConsultation.ResumeLayout(false);
             tpOPConsultation.PerformLayout();
             tpDiagnosticReport.ResumeLayout(false);
@@ -1566,9 +1401,12 @@ namespace HMS.abdm
             tpWellness.PerformLayout();
             tpInvoice.ResumeLayout(false);
             tpInvoice.PerformLayout();
+            tpPrescription.ResumeLayout(false);
+            tpPrescription.PerformLayout();
             gbPdf.ResumeLayout(false);
             gbPdf.PerformLayout();
             gbActions.ResumeLayout(false);
+            gbActions.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
 
@@ -1653,12 +1491,7 @@ namespace HMS.abdm
         private System.Windows.Forms.Button btnRemoveMedicine_Disch;
         private System.Windows.Forms.ListView lvMedicines_Disch;
 
-        private System.Windows.Forms.TextBox txtVaccineName_Imm;
-        private System.Windows.Forms.TextBox txtLotNumber_Imm;
-        private System.Windows.Forms.TextBox txtDoseNumber_Imm;
-        private System.Windows.Forms.Button btnAddMedicine_Imm;
-        private System.Windows.Forms.Button btnRemoveMedicine_Imm;
-        private System.Windows.Forms.ListView lvMedicines_Imm;
+        private ucImmunizationRecord ucImmunization;
 
         private System.Windows.Forms.TextBox txtObservation_Well;
         private System.Windows.Forms.TextBox txtResult_Well;
@@ -1667,11 +1500,7 @@ namespace HMS.abdm
         private System.Windows.Forms.Button btnRemoveMedicine_Well;
         private System.Windows.Forms.ListView lvObservations_Well;
 
-        private System.Windows.Forms.TextBox txtItemName_Inv;
-        private System.Windows.Forms.TextBox txtAmount_Inv;
-        private System.Windows.Forms.Button btnAddMedicine_Inv;
-        private System.Windows.Forms.Button btnRemoveMedicine_Inv;
-        private System.Windows.Forms.ListView lvItems_Inv;
+        private HMS.abdm.ucInvoiceRecord ucInvoice;
         private System.Windows.Forms.GroupBox gbPdf;
         private System.Windows.Forms.Button btnUploadPdf;
         private System.Windows.Forms.Label lblPdfStatus;
@@ -1711,13 +1540,9 @@ namespace HMS.abdm
         private Label lblAdvice_Disch;
         private Label lblCondition_Disch;
         private Label lblInfo;
-        private Label lblVaccineName_Imm;
-        private Label lblLotNumber_Imm;
-        private Label lblDoseNumber_Imm;
         private Label lblObservation_Well;
         private Label lblResult_Well;
         private Label lblUnit_Well;
-        private Label lblAmount_Inv;
-        private Label lblItemName_Inv;
+
     }
 }

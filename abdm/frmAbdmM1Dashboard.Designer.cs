@@ -42,6 +42,7 @@ namespace HMS.abdm
             this.btnM3Dashboard = new System.Windows.Forms.Button();
             this.btnCreateRecord = new System.Windows.Forms.Button();
             this.btnBridgeConfig = new System.Windows.Forms.Button();
+            this.btnAbhaPortal = new System.Windows.Forms.Button();
             this.btnDownloadCard = new System.Windows.Forms.Button();
             this.btnClose = new System.Windows.Forms.Button();
             this.lblNameTitle = new System.Windows.Forms.Label();
@@ -77,10 +78,11 @@ namespace HMS.abdm
             this.grpActions.Controls.Add(this.btnM3Dashboard);
             this.grpActions.Controls.Add(this.btnCreateRecord);
             this.grpActions.Controls.Add(this.btnBridgeConfig);
+            this.grpActions.Controls.Add(this.btnAbhaPortal);
             this.grpActions.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold);
             this.grpActions.Location = new System.Drawing.Point(15, 15);
             this.grpActions.Name = "grpActions";
-            this.grpActions.Size = new System.Drawing.Size(250, 580);
+            this.grpActions.Size = new System.Drawing.Size(250, 640);
             this.grpActions.TabIndex = 0;
             this.grpActions.TabStop = false;
             this.grpActions.Text = "ABHA Actions (M1)";
@@ -212,6 +214,20 @@ namespace HMS.abdm
             this.btnBridgeConfig.UseVisualStyleBackColor = false;
             this.btnBridgeConfig.Click += new System.EventHandler(this.btnBridgeConfig_Click);
             // 
+            // btnAbhaPortal
+            // 
+            this.btnAbhaPortal.BackColor = System.Drawing.Color.FromArgb(142, 68, 173);
+            this.btnAbhaPortal.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnAbhaPortal.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold);
+            this.btnAbhaPortal.ForeColor = System.Drawing.Color.White;
+            this.btnAbhaPortal.Location = new System.Drawing.Point(20, 575);
+            this.btnAbhaPortal.Name = "btnAbhaPortal";
+            this.btnAbhaPortal.Size = new System.Drawing.Size(210, 45);
+            this.btnAbhaPortal.TabIndex = 9;
+            this.btnAbhaPortal.Text = "ABHA Portal Dashboard";
+            this.btnAbhaPortal.UseVisualStyleBackColor = false;
+            this.btnAbhaPortal.Click += new System.EventHandler(this.btnAbhaPortal_Click);
+            // 
             // grpProfile
             // 
             this.grpProfile.Controls.Add(this.picPhoto);
@@ -231,7 +247,7 @@ namespace HMS.abdm
             this.grpProfile.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold);
             this.grpProfile.Location = new System.Drawing.Point(280, 15);
             this.grpProfile.Name = "grpProfile";
-            this.grpProfile.Size = new System.Drawing.Size(380, 580);
+            this.grpProfile.Size = new System.Drawing.Size(380, 640);
             this.grpProfile.TabIndex = 1;
             this.grpProfile.TabStop = false;
             this.grpProfile.Text = "Active Patient Profile";
@@ -370,7 +386,7 @@ namespace HMS.abdm
             this.grpCardPreview.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold);
             this.grpCardPreview.Location = new System.Drawing.Point(675, 15);
             this.grpCardPreview.Name = "grpCardPreview";
-            this.grpCardPreview.Size = new System.Drawing.Size(245, 580);
+            this.grpCardPreview.Size = new System.Drawing.Size(245, 640);
             this.grpCardPreview.TabIndex = 2;
             this.grpCardPreview.TabStop = false;
             this.grpCardPreview.Text = "ABHA Physical Card Preview";
@@ -391,7 +407,7 @@ namespace HMS.abdm
             // 
             this.lblStatus.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Italic);
             this.lblStatus.ForeColor = System.Drawing.Color.FromArgb(127, 140, 141);
-            this.lblStatus.Location = new System.Drawing.Point(15, 615);
+            this.lblStatus.Location = new System.Drawing.Point(15, 675);
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(740, 30);
             this.lblStatus.TabIndex = 3;
@@ -403,7 +419,7 @@ namespace HMS.abdm
             this.btnClose.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnClose.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold);
             this.btnClose.ForeColor = System.Drawing.Color.White;
-            this.btnClose.Location = new System.Drawing.Point(770, 610);
+            this.btnClose.Location = new System.Drawing.Point(770, 670);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(150, 40);
             this.btnClose.TabIndex = 4;
@@ -413,7 +429,7 @@ namespace HMS.abdm
             // frmAbdmM1Dashboard
             // 
             this.BackColor = System.Drawing.Color.FromArgb(245, 246, 250);
-            this.ClientSize = new System.Drawing.Size(950, 670);
+            this.ClientSize = new System.Drawing.Size(950, 730);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.lblStatus);
             this.Controls.Add(this.grpCardPreview);
@@ -447,6 +463,7 @@ namespace HMS.abdm
         private System.Windows.Forms.Button btnM3Dashboard;
         private System.Windows.Forms.Button btnCreateRecord;
         private System.Windows.Forms.Button btnBridgeConfig;
+        private System.Windows.Forms.Button btnAbhaPortal;
         private System.Windows.Forms.Button btnDownloadCard;
         private System.Windows.Forms.Button btnClose;
         private System.Windows.Forms.Label lblNameTitle;
