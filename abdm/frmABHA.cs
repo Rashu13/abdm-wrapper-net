@@ -14,7 +14,7 @@ using ABDM.Models;
 
 namespace HMS.abdm
 {
-    public partial class frmABHA : BaseForm
+    public partial class frmABHA : Form
     {
         private bool isOtpMode = false;
         private int otpSeconds = 60;
@@ -67,7 +67,7 @@ namespace HMS.abdm
                 string aadhaar = (txtAadhaar1.Text + txtAadhaar2.Text + txtAadhaar3.Text).Trim();
                 if (aadhaar.Length != 12 || !aadhaar.All(char.IsDigit))
                 {
-                    ShowWarning("Aadhaar Number is not valid.");
+                    MessageBox.Show("Aadhaar Number is not valid.");
                     return;
                 }
 
@@ -104,12 +104,12 @@ namespace HMS.abdm
                             }
                             else
                             {
-                                ShowWarning(resp.Message ?? "Failed to send OTP. Please try again.");
+                                MessageBox.Show(resp.Message ?? "Failed to send OTP. Please try again.");
                             }
                         }
                         catch (Exception ex)
                         {
-                            ShowWarning("Error: " + ex.Message);
+                            MessageBox.Show("Error: " + ex.Message);
                         }
                         finally
                         {
@@ -126,13 +126,13 @@ namespace HMS.abdm
 
                 if (string.IsNullOrEmpty(otp) || otp.Length != 6)
                 {
-                    ShowWarning("Please enter the 6-digit OTP received on your mobile.");
+                    MessageBox.Show("Please enter the 6-digit OTP received on your mobile.");
                     return;
                 }
                 
                 if (string.IsNullOrEmpty(mobile) || mobile.Length != 10)
                 {
-                    ShowWarning("Please enter a valid 10-digit Mobile number.");
+                    MessageBox.Show("Please enter a valid 10-digit Mobile number.");
                     return;
                 }
 
@@ -185,12 +185,12 @@ namespace HMS.abdm
                     }
                     else
                     {
-                        ShowWarning(resp.Message ?? "OTP verification failed.");
+                        MessageBox.Show(resp.Message ?? "OTP verification failed.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
                 catch (Exception ex)
                 {
-                    ShowWarning("Error: " + ex.Message);
+                    MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 finally
                 {
@@ -267,17 +267,17 @@ namespace HMS.abdm
                     }
                     else
                     {
-                        ShowWarning(resp.Message ?? "Failed to resend OTP.");
+                        MessageBox.Show(resp.Message ?? "Failed to resend OTP.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
                 catch (Exception ex)
                 {
-                    ShowWarning("Error: " + ex.Message);
+                    MessageBox.Show("Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             else
             {
-                ShowWarning("Maximum resend attempts reached.");
+                MessageBox.Show("Maximum resend attempts reached.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 

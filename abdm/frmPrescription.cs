@@ -517,7 +517,7 @@ namespace HMS.abdm
 
                         // Auto-generate PDF clinical report if not manually attached
                         byte[] pdfBytes = null;
-                        if (rt.Type == "HealthDocumentRecord" && _pdfBytes != null)
+                        if (_pdfBytes != null)
                         {
                             pdfBytes = _pdfBytes;
                         }
@@ -976,9 +976,12 @@ namespace HMS.abdm
                         y = 560;
                         foreach (var item in items)
                         {
-                            string itemName = item[0];
-                            string price = item.Length > 1 ? item[1] : "";
-                            sb.Append($"BT\n/F1 10 Tf\n50 {y} Td\n(- {itemName}: Rs. {price}) Tj\nET\n");
+                            string itemName = item[0].Replace("(", "[").Replace(")", "]");
+                            string price = (item.Length > 1 ? item[1] : "").Replace("(", "[").Replace(")", "]");
+                            string quantity = (item.Length > 2 && !string.IsNullOrEmpty(item[2]) ? item[2] : "1").Replace("(", "[").Replace(")", "]");
+                            string unit = (item.Length > 3 && !string.IsNullOrEmpty(item[3]) ? item[3] : "unit").Replace("(", "[").Replace(")", "]");
+
+                            sb.Append($"BT\n/F1 10 Tf\n50 {y} Td\n(- {itemName} - Rs. {price} [Qty: {quantity} {unit}]) Tj\nET\n");
                             y -= 20;
                         }
                     }

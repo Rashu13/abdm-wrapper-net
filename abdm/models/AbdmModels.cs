@@ -9,8 +9,8 @@ namespace ABDM.Models
 
     public class AbdmGenerateOtpRequest
     {
-        public string? LoginId   { get; set; }   // Mobile (10 digits) or Aadhaar (12 digits)
-        public string? LoginType { get; set; }   // "MOBILE" | "AADHAAR"
+        public string LoginId   { get; set; }   // Mobile (10 digits) or Aadhaar (12 digits)
+        public string LoginType { get; set; }   // "MOBILE" | "AADHAAR"
 
         // Nudge Consent Logging details
         public bool? Chk1 { get; set; }
@@ -20,43 +20,43 @@ namespace ABDM.Models
         public bool? Chk5 { get; set; }
         public bool? Chk6 { get; set; }
         public bool? Chk7 { get; set; }
-        public string? OperatorName { get; set; }
-        public string? BeneficiaryName { get; set; }
+        public string OperatorName { get; set; }
+        public string BeneficiaryName { get; set; }
         public DateTime? ConsentTimestamp { get; set; }
     }
 
     public class AbdmVerifyOtpRequest
     {
-        public string? Otp           { get; set; }
-        public string? TransactionId { get; set; }
-        public string? LoginType     { get; set; }   // "MOBILE" | "AADHAAR"
-        public string? Mobile        { get; set; }   // required for Aadhaar flow
+        public string Otp           { get; set; }
+        public string TransactionId { get; set; }
+        public string LoginType     { get; set; }   // "MOBILE" | "AADHAAR"
+        public string Mobile        { get; set; }   // required for Aadhaar flow
     }
 
     public class AbdmCreateAbhaAddressRequest
     {
-        public string? TransactionId { get; set; }
-        public string? AbhaAddress   { get; set; }
+        public string TransactionId { get; set; }
+        public string AbhaAddress   { get; set; }
     }
 
     public class MobileUpdateOtpRequest
     {
-        public string? TransactionId { get; set; }
-        public string? Mobile    { get; set; }   // New 10-digit mobile number
-        public string? UserToken { get; set; }   // X-Token (user's bearer token)
+        public string TransactionId { get; set; }
+        public string Mobile    { get; set; }   // New 10-digit mobile number
+        public string UserToken { get; set; }   // X-Token (user's bearer token)
     }
 
     public class MobileUpdateVerifyRequest
     {
-        public string? Otp           { get; set; }
-        public string? TransactionId { get; set; }
-        public string? UserToken     { get; set; }   // X-Token
+        public string Otp           { get; set; }
+        public string TransactionId { get; set; }
+        public string UserToken     { get; set; }   // X-Token
     }
 
     public class EmailVerificationLinkRequest
     {
-        public string? Email     { get; set; }
-        public string? UserToken { get; set; }
+        public string Email     { get; set; }
+        public string UserToken { get; set; }
     }
 
     // --- Response Models ----------------------------------------------------------
@@ -101,6 +101,7 @@ namespace ABDM.Models
         public string TxnId          { get; set; }
         public bool   IsNew          { get; set; }
         public string AbhaNumber { get; internal set; }
+        public string AadharNo       { get; set; }
 
         public SavedSession ToSession(string token = null)
         {
@@ -124,7 +125,11 @@ namespace ABDM.Models
                 Photo = this.Photo ?? "",
                 ProfilePhoto = this.ProfilePhoto ?? "",
                 TxnId = this.TxnId ?? "",
-                SavedAtUtc = DateTime.UtcNow
+                SavedAtUtc = DateTime.UtcNow,
+                AadharNo = this.AadharNo ?? "",
+                City = this.City ?? "",
+                State = this.State ?? "",
+                FatherName = this.FatherName ?? ""
             };
         }
     }
@@ -191,6 +196,10 @@ namespace ABDM.Models
         public string ProfilePhoto { get; set; }
         public string TxnId { get; set; }
         public DateTime SavedAtUtc { get; set; }
+        public string AadharNo { get; set; }
+        public string City { get; set; }
+        public string State { get; set; }
+        public string FatherName { get; set; }
 
         public AbhaProfile ToProfile()
         {
@@ -213,7 +222,11 @@ namespace ABDM.Models
                 Photo = Photo,
                 ProfilePhoto = ProfilePhoto,
                 TxnId = TxnId,
-                Token = UserToken
+                Token = UserToken,
+                AadharNo = AadharNo,
+                City = City,
+                State = State,
+                FatherName = FatherName
             };
         }
     }
@@ -253,7 +266,11 @@ namespace ABDM.Models
                 Photo = profile.Photo ?? "",
                 ProfilePhoto = profile.ProfilePhoto ?? "",
                 TxnId = profile.TxnId ?? "",
-                SavedAtUtc = DateTime.UtcNow
+                SavedAtUtc = DateTime.UtcNow,
+                AadharNo = profile.AadharNo ?? "",
+                City = profile.City ?? "",
+                State = profile.State ?? "",
+                FatherName = profile.FatherName ?? ""
             };
         }
 
@@ -281,7 +298,11 @@ namespace ABDM.Models
                 ToLine(session.Photo),
                 ToLine(session.ProfilePhoto),
                 ToLine(session.TxnId),
-                ToLine(session.SavedAtUtc.ToString("o"))
+                ToLine(session.SavedAtUtc.ToString("o")),
+                ToLine(session.AadharNo ?? ""),
+                ToLine(session.City ?? ""),
+                ToLine(session.State ?? ""),
+                ToLine(session.FatherName ?? "")
             });
 
             File.WriteAllText(SessionFilePath, Convert.ToBase64String(Encoding.UTF8.GetBytes(plain)), Encoding.UTF8);
@@ -320,7 +341,11 @@ namespace ABDM.Models
                     Photo = FromLine(lines[15]),
                     ProfilePhoto = FromLine(lines[16]),
                     TxnId = FromLine(lines[17]),
-                    SavedAtUtc = savedAtUtc == DateTime.MinValue ? DateTime.UtcNow : savedAtUtc
+                    SavedAtUtc = savedAtUtc == DateTime.MinValue ? DateTime.UtcNow : savedAtUtc,
+                    AadharNo = lines.Length >= 20 ? FromLine(lines[19]) : "",
+                    City = lines.Length >= 21 ? FromLine(lines[20]) : "",
+                    State = lines.Length >= 22 ? FromLine(lines[21]) : "",
+                    FatherName = lines.Length >= 23 ? FromLine(lines[22]) : ""
                 };
             }
             catch

@@ -120,6 +120,7 @@ namespace HMS.abdm
             txtAadhaar1.Location = new Point(210, 135);
             txtAadhaar1.MaxLength = 4;
             txtAadhaar1.Name = "txtAadhaar1";
+            txtAadhaar1.PasswordChar = 'X';
             txtAadhaar1.Size = new Size(80, 34);
             txtAadhaar1.TabIndex = 3;
             txtAadhaar1.TextAlign = HorizontalAlignment.Center;
@@ -131,6 +132,7 @@ namespace HMS.abdm
             txtAadhaar2.Location = new Point(305, 135);
             txtAadhaar2.MaxLength = 4;
             txtAadhaar2.Name = "txtAadhaar2";
+            txtAadhaar2.PasswordChar = 'X';
             txtAadhaar2.Size = new Size(80, 34);
             txtAadhaar2.TabIndex = 4;
             txtAadhaar2.TextAlign = HorizontalAlignment.Center;
@@ -142,6 +144,7 @@ namespace HMS.abdm
             txtAadhaar3.Location = new Point(400, 135);
             txtAadhaar3.MaxLength = 4;
             txtAadhaar3.Name = "txtAadhaar3";
+            txtAadhaar3.PasswordChar = 'X';
             txtAadhaar3.Size = new Size(80, 34);
             txtAadhaar3.TabIndex = 5;
             txtAadhaar3.TextAlign = HorizontalAlignment.Center;

@@ -89,7 +89,23 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi("v1");
+
+builder.Services.AddOpenApi("facade", options =>
+{
+    options.ShouldInclude = (description) =>
+    {
+        if (description.ActionDescriptor is Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor controllerActionDescriptor)
+        {
+            string controllerName = controllerActionDescriptor.ControllerName;
+            if (controllerName.Contains("GatewayCallback", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+        }
+        return true;
+    };
+});
 
 var app = builder.Build();
 
@@ -109,7 +125,8 @@ if (isEfCore)
 app.MapOpenApi();
 app.UseSwaggerUI(options =>
 {
-    options.SwaggerEndpoint("/openapi/v1.json", "ABDM Wrapper API V1");
+    options.SwaggerEndpoint("/openapi/facade.json", "ABDM Facade APIs (HIS Client)");
+    options.SwaggerEndpoint("/openapi/v1.json", "All ABDM APIs (incl. Callbacks)");
     options.RoutePrefix = "swagger";
 });
 

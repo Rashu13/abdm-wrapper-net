@@ -48,6 +48,39 @@ namespace HMS.abdm
             if (dgvRequests.CurrentRow != null)
             {
                 var row = dgvRequests.CurrentRow;
+                string rawCity = dgvRequests.Columns.Contains("City") ? (row.Cells["City"].Value?.ToString() ?? "") : "";
+                string rawState = dgvRequests.Columns.Contains("State") ? (row.Cells["State"].Value?.ToString() ?? "") : "";
+                string rawFather = dgvRequests.Columns.Contains("FatherName") ? (row.Cells["FatherName"].Value?.ToString() ?? "") : "";
+                string rawAddress = row.Cells["Address"].Value?.ToString() ?? "";
+
+                // Smart Fallback Parsing for City and State from Address if they are empty
+                if (string.IsNullOrEmpty(rawCity) || string.IsNullOrEmpty(rawState))
+                {
+                    if (!string.IsNullOrEmpty(rawAddress))
+                    {
+                        string[] parts = rawAddress.Split(',');
+                        if (parts.Length >= 2)
+                        {
+                            if (string.IsNullOrEmpty(rawState))
+                            {
+                                rawState = parts[parts.Length - 1].Trim();
+                                if (rawState.Contains("-"))
+                                {
+                                    rawState = rawState.Split('-')[0].Trim();
+                                }
+                            }
+                            if (string.IsNullOrEmpty(rawCity))
+                            {
+                                rawCity = parts[parts.Length - 2].Trim();
+                            }
+                        }
+                        else if (parts.Length == 1 && string.IsNullOrEmpty(rawState))
+                        {
+                            rawState = parts[0].Trim();
+                        }
+                    }
+                }
+
                 SelectedProfile = new AbhaProfile
                 {
                     HealthIdNumber = row.Cells["AbhaNumber"].Value.ToString(),
@@ -56,10 +89,10 @@ namespace HMS.abdm
                     Gender = row.Cells["Gender"].Value.ToString() == "Male" ? "M" : "F",
                     YearOfBirth = row.Cells["DOB"].Value.ToString(),
                     Mobile = row.Cells["Mobile"].Value.ToString(),
-                    Address = row.Cells["Address"].Value.ToString(),
-                    City = dgvRequests.Columns.Contains("City") ? (row.Cells["City"].Value?.ToString() ?? "") : "",
-                    State = dgvRequests.Columns.Contains("State") ? (row.Cells["State"].Value?.ToString() ?? "") : "",
-                    FatherName = dgvRequests.Columns.Contains("FatherName") ? (row.Cells["FatherName"].Value?.ToString() ?? "") : ""
+                    Address = rawAddress,
+                    City = rawCity,
+                    State = rawState,
+                    FatherName = rawFather
                 };
 
                 // Save to session so frmOPD can pick it up

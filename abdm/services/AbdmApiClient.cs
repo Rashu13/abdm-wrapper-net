@@ -357,7 +357,7 @@ namespace ABDM.Api
 
         private string BaseUrl => _cfg.BaseUrl.TrimEnd('/');
 
-        private async Task<string> PostToWrapperAsync(string path, string jsonPayload, string? userToken = null)
+        private async Task<string> PostToWrapperAsync(string path, string jsonPayload, string userToken = null)
         {
             using (var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"{BaseUrl}{path}"))
             {
@@ -385,7 +385,7 @@ namespace ABDM.Api
             }
         }
 
-        private async Task<string> PutToWrapperAsync(string path, string jsonPayload, string? userToken = null)
+        private async Task<string> PutToWrapperAsync(string path, string jsonPayload, string userToken = null)
         {
             using (var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"{BaseUrl}{path}"))
             {
@@ -413,7 +413,7 @@ namespace ABDM.Api
             }
         }
 
-        private async Task<string> GetFromWrapperAsync(string path, string? userToken = null)
+        private async Task<string> GetFromWrapperAsync(string path, string userToken = null)
         {
             using (var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}{path}"))
             {
@@ -842,6 +842,61 @@ namespace ABDM.Api
                     return AbdmApiClient.Ok(result);
                 }
                 catch (Exception ex) { return AbdmApiClient.Fail<AbhaSuggestionResponse>(ex.Message); }
+            }
+        }
+
+        // ??? Profile On-Share ??????????????????????????????????????????????????
+
+        public async Task<AbdmResponse<string>> ProfileOnShareAsync(string abhaAddress, string context, string tokenNumber, string requestId = null)
+        {
+            if (!_cfg.BaseUrl.Contains("abdm.gov.in"))
+            {
+                // In wrapper mode, the wrapper automatically sends the on-share acknowledgement
+                // to the gateway upon receiving the callback. We can return success immediately.
+                return AbdmApiClient.Ok("SUCCESS", "Auto-acknowledged by wrapper.");
+            }
+            else
+            {
+                try
+                {
+                    var token = await GetAccessTokenAsync();
+                    AddCommonHeaders(token);
+
+                    string endpoint = $"{GwBase}/patient-share/v3/on-share";
+
+                    if (string.IsNullOrWhiteSpace(requestId))
+                        requestId = Guid.NewGuid().ToString();
+
+                    var payload = SimpleJson.Serialize(new Dictionary<string, object>
+                    {
+                        ["acknowledgement"] = new Dictionary<string, object>
+                        {
+                            ["abhaAddress"] = abhaAddress,
+                            ["status"] = "SUCCESS",
+                            ["profile"] = new Dictionary<string, object>
+                            {
+                                ["context"] = context,
+                                ["tokenNumber"] = tokenNumber,
+                                ["expiry"] = "180"
+                            }
+                        },
+                        ["response"] = new Dictionary<string, object>
+                        {
+                            ["requestId"] = requestId
+                        }
+                    });
+
+                    var resp = await _http.PostAsync(endpoint, JsonContent(payload));
+                    var body = await resp.Content.ReadAsStringAsync();
+                    LastRawResponse = body;
+                    LogResponse("ProfileOnShareAsync", body);
+
+                    if (!resp.IsSuccessStatusCode)
+                        return AbdmApiClient.Fail<string>($"Profile On-Share Error [{resp.StatusCode}]: {body}");
+
+                    return AbdmApiClient.Ok(body, "Profile On-Share successful.");
+                }
+                catch (Exception ex) { return AbdmApiClient.Fail<string>(ex.Message); }
             }
         }
 
@@ -1828,8 +1883,8 @@ namespace ABDM.Api
                         addr = string.Join(", ", addrParts);
                     }
                     profile.Address = addr;
-                    profile.City = Get(ap, "districtName");
-                    profile.State = Get(ap, "stateName");
+                    profile.City = GetFirst(ap, "districtName", "district", "subdistrictName", "subDistrictName");
+                    profile.State = GetFirst(ap, "stateName", "state");
 
                     // Photo
                     var photo = GetFirst(ap, "photo", "profilePhoto");
@@ -1944,7 +1999,7 @@ namespace ABDM.Api
                 addr = string.Join(", ", addrParts);
             }
             profile.Address = addr;
-            profile.City = GetFirst(dict, "districtName", "district");
+            profile.City = GetFirst(dict, "districtName", "district", "subdistrictName", "subDistrictName");
             profile.State = GetFirst(dict, "stateName", "state");
 
             // Photo
@@ -1965,7 +2020,15 @@ namespace ABDM.Api
 
         private static string Get(Dictionary<string, object> d, string key)
         {
-            return d != null && d.ContainsKey(key) ? d[key]?.ToString() ?? "" : "";
+            if (d == null) return "";
+            foreach (var k in d.Keys)
+            {
+                if (string.Equals(k, key, StringComparison.OrdinalIgnoreCase))
+                {
+                    return d[k]?.ToString() ?? "";
+                }
+            }
+            return "";
         }
 
         private static string GetFirst(Dictionary<string, object> d, params string[] keys)

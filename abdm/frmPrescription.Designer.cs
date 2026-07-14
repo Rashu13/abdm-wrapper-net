@@ -541,35 +541,35 @@ namespace HMS.abdm
             // 
             // lblDosage_OP
             // 
-            lblDosage_OP.Location = new Point(0, 0);
+            lblDosage_OP.Location = new Point(10, 101);
             lblDosage_OP.Name = "lblDosage_OP";
             lblDosage_OP.Size = new Size(100, 23);
             lblDosage_OP.TabIndex = 11;
             // 
             // lblTiming_OP
             // 
-            lblTiming_OP.Location = new Point(0, 0);
+            lblTiming_OP.Location = new Point(10, 67);
             lblTiming_OP.Name = "lblTiming_OP";
             lblTiming_OP.Size = new Size(100, 23);
             lblTiming_OP.TabIndex = 12;
             // 
             // lblRoute_OP
             // 
-            lblRoute_OP.Location = new Point(0, 0);
+            lblRoute_OP.Location = new Point(3, 38);
             lblRoute_OP.Name = "lblRoute_OP";
             lblRoute_OP.Size = new Size(100, 23);
             lblRoute_OP.TabIndex = 13;
             // 
             // lblMethod_OP
             // 
-            lblMethod_OP.Location = new Point(0, 0);
+            lblMethod_OP.Location = new Point(312, 7);
             lblMethod_OP.Name = "lblMethod_OP";
             lblMethod_OP.Size = new Size(100, 23);
             lblMethod_OP.TabIndex = 14;
             // 
             // lblInstructions_OP
             // 
-            lblInstructions_OP.Location = new Point(0, 0);
+            lblInstructions_OP.Location = new Point(316, 39);
             lblInstructions_OP.Name = "lblInstructions_OP";
             lblInstructions_OP.Size = new Size(100, 23);
             lblInstructions_OP.TabIndex = 15;
@@ -939,8 +939,11 @@ namespace HMS.abdm
             // 
             // ucImmunization
             // 
-            ucImmunization.Dock = System.Windows.Forms.DockStyle.Fill;
+            ucImmunization.BackColor = Color.White;
+            ucImmunization.Dock = DockStyle.Fill;
+            ucImmunization.Font = new Font("Segoe UI", 10F);
             ucImmunization.Location = new Point(0, 0);
+            ucImmunization.Margin = new Padding(3, 4, 3, 4);
             ucImmunization.Name = "ucImmunization";
             ucImmunization.Size = new Size(696, 296);
             ucImmunization.TabIndex = 0;
@@ -1055,8 +1058,11 @@ namespace HMS.abdm
             // 
             // ucInvoice
             // 
-            ucInvoice.Dock = System.Windows.Forms.DockStyle.Fill;
+            ucInvoice.BackColor = Color.White;
+            ucInvoice.Dock = DockStyle.Fill;
+            ucInvoice.Font = new Font("Segoe UI", 10F);
             ucInvoice.Location = new Point(0, 0);
+            ucInvoice.Margin = new Padding(3, 4, 3, 4);
             ucInvoice.Name = "ucInvoice";
             ucInvoice.Size = new Size(696, 296);
             ucInvoice.TabIndex = 0;
@@ -1396,11 +1402,9 @@ namespace HMS.abdm
             tpDischargeSummary.PerformLayout();
             tpHealthDocument.ResumeLayout(false);
             tpImmunization.ResumeLayout(false);
-            tpImmunization.PerformLayout();
             tpWellness.ResumeLayout(false);
             tpWellness.PerformLayout();
             tpInvoice.ResumeLayout(false);
-            tpInvoice.PerformLayout();
             tpPrescription.ResumeLayout(false);
             tpPrescription.PerformLayout();
             gbPdf.ResumeLayout(false);

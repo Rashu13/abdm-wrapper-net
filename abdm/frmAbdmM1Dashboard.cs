@@ -52,7 +52,7 @@ namespace HMS.abdm
                     lblGenderVal.Text = _currentSession.Gender == "M" ? "Male" : (_currentSession.Gender == "F" ? "Female" : _currentSession.Gender);
                     lblDobVal.Text = _currentSession.Dob;
                     lblMobileVal.Text = _currentSession.Mobile;
-                    
+
                     lblStatus.Text = $"Active Session Loaded. Token Expires: {_currentSession.SavedAtUtc.AddHours(24).ToLocalTime().ToString("g")}";
                     btnReKyc.Enabled = true;
                     btnDownloadCard.Enabled = true;
@@ -167,18 +167,18 @@ namespace HMS.abdm
                 if (resp.Success && resp.Data != null)
                 {
                     string txnId = resp.Data.TransactionId;
-                    
+
                     // Simple input dialog for Re-KYC OTP verification
                     string otpVal = PromptDialog("Re-KYC OTP sent to Aadhaar-linked mobile. Enter OTP:", "Re-KYC Verification");
                     if (!string.IsNullOrEmpty(otpVal))
                     {
                         lblStatus.Text = "Verifying Re-KYC OTP...";
                         var verifyResp = await _client.VerifyReKycOtpAsync(_currentSession.UserToken, txnId, otpVal);
-                        
+
                         if (verifyResp.Success)
                         {
                             MessageBox.Show("Re-KYC demographic verification successful!", "Re-KYC Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            
+
                             // Re-fetch Profile to update database & session
                             var profileResp = await _client.GetAbhaProfileAsync(_currentSession.UserToken);
                             if (profileResp.Success && profileResp.Data != null)
@@ -311,13 +311,18 @@ namespace HMS.abdm
             Label textLabel = new Label() { Left = 20, Top = 20, Text = text, Width = 350 };
             TextBox textBox = new TextBox() { Left = 20, Top = 50, Width = 350, Font = new Font("Segoe UI", 12F) };
             Button confirmation = new Button() { Text = "Submit", Left = 270, Width = 100, Top = 85, DialogResult = DialogResult.OK };
-            
+
             prompt.Controls.Add(textBox);
             prompt.Controls.Add(textLabel);
             prompt.Controls.Add(confirmation);
             prompt.AcceptButton = confirmation;
 
             return prompt.ShowDialog() == DialogResult.OK ? textBox.Text.Trim() : "";
+        }
+
+        private void frmAbdmM1Dashboard_Load_1(object sender, EventArgs e)
+        {
+
         }
     }
 }
