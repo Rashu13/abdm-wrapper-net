@@ -20,8 +20,8 @@ namespace ABDM.Models
         public bool? Chk5 { get; set; }
         public bool? Chk6 { get; set; }
         public bool? Chk7 { get; set; }
-        public string OperatorName { get; set; }
-        public string BeneficiaryName { get; set; }
+        public string? OperatorName { get; set; }
+        public string? BeneficiaryName { get; set; }
         public DateTime? ConsentTimestamp { get; set; }
     }
 
