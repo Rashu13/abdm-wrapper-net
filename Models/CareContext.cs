@@ -14,6 +14,6 @@ public class CareContext
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? HiType { get; set; }
 
-    [JsonIgnore]
+    [JsonPropertyName("isLinked")]
     public bool IsLinked { get; set; }
 }

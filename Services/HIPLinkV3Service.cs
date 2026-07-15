@@ -100,12 +100,30 @@ public class HIPLinkV3Service : IHIPLinkV3Service
             }
 
             // Rebuild the original link request from DB and retry
+            var originalCareContexts = new List<CareContext>();
+            if (requestLog.RequestDetails != null && requestLog.RequestDetails.TryGetValue("linkRecordsRequest", out var linkRecordsBson))
+            {
+                try
+                {
+                    var json = linkRecordsBson.ToString();
+                    var linkRecordsRequest = System.Text.Json.JsonSerializer.Deserialize<LinkRecordsV3Request>(json);
+                    if (linkRecordsRequest?.CareContexts != null)
+                    {
+                        originalCareContexts = linkRecordsRequest.CareContexts;
+                    }
+                }
+                catch (Exception jsonEx)
+                {
+                    _logger.LogError(jsonEx, "Failed to deserialize original link request details from requestLog");
+                }
+            }
+
             var originalRequest = new LinkRecordsV3Request
             {
                 RequestId = requestLog.ClientRequestId ?? Guid.NewGuid().ToString(),
                 RequesterId = hipId.ToString(),
                 AbhaAddress = response.AbhaAddress,
-                CareContexts = new List<CareContext>()  // re-fetched on retry via addCareContexts flow
+                CareContexts = originalCareContexts
             };
 
             await AddCareContextsAsync(originalRequest);
@@ -225,6 +243,19 @@ public class HIPLinkV3Service : IHIPLinkV3Service
             }
 
             var errorMsg = !string.IsNullOrEmpty(response?.Message) ? response.Message : "Unable to link care contexts";
+            if (errorMsg.Contains("Duplicate HIP link request") || errorMsg.Contains("ABDM-9999"))
+            {
+                _logger.LogInformation($"Intercepted duplicate link request for {request.AbhaAddress}. Marking care contexts as linked in DB.");
+                await _requestLogService.UpdateStatusAsync(request.RequestId, RequestStatus.CARE_CONTEXT_LINKED);
+                await _patientService.AddPatientCareContextsAsync(request);
+                return new FacadeV3Response
+                {
+                    ClientRequestId = request.RequestId,
+                    Message = "Care context is already linked on ABDM Gateway.",
+                    HttpStatusCode = 202
+                };
+            }
+
             var errorList = new List<ErrorV3Response> { new() { Error = new ErrorResponse { Code = "1000", Message = errorMsg } } };
             
             await _requestLogService.UpdateErrorAsync(
