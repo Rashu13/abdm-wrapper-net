@@ -217,10 +217,9 @@ public class FhirMapperService : IFhirMapperService
                     Intent = MedicationRequest.MedicationRequestIntent.Order,
                     Medication = new CodeableConcept
                     {
-                        Text = medName,
                         Coding = new List<Coding>
                         {
-                            new Coding(SNOMED_URL, "261665006", medName)
+                            new Coding(SNOMED_URL, "410942007", medName) // Changed to generic pharmaceutical SNOMED
                         }
                     },
                     Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
@@ -239,7 +238,6 @@ public class FhirMapperService : IFhirMapperService
                         {
                             new CodeableConcept
                             {
-                                Text = additionalInstructions,
                                 Coding = new List<Coding>
                                 {
                                     new Coding(SNOMED_URL, "1000000570007", additionalInstructions)
@@ -253,7 +251,6 @@ public class FhirMapperService : IFhirMapperService
                     {
                         dosageInst.Route = new CodeableConcept
                         {
-                            Text = route,
                             Coding = new List<Coding>
                             {
                                 new Coding(SNOMED_URL, "26643006", route)
@@ -266,7 +263,6 @@ public class FhirMapperService : IFhirMapperService
                     {
                         dosageInst.Method = new CodeableConcept
                         {
-                            Text = method,
                             Coding = new List<Coding>
                             {
                                 new Coding(SNOMED_URL, "421521004", method)
@@ -304,6 +300,22 @@ public class FhirMapperService : IFhirMapperService
                                     };
                                 }
                             }
+                            else
+                            {
+                                // Fallback: put timing text in additionalInstruction SNOMED code
+                                string tCode = timing.ToLower().Contains("twice") ? "229799001" :
+                                               timing.ToLower().Contains("thrice") || timing.ToLower().Contains("three") ? "229798009" :
+                                               timing.ToLower().Contains("once") ? "229797004" :
+                                               timing.ToLower().Contains("four") ? "307439001" : "229799001";
+                                
+                                if (dosageInst.AdditionalInstruction == null)
+                                    dosageInst.AdditionalInstruction = new List<CodeableConcept>();
+                                
+                                dosageInst.AdditionalInstruction.Add(new CodeableConcept
+                                {
+                                    Coding = new List<Coding> { new Coding(SNOMED_URL, tCode, timing) }
+                                });
+                            }
                         }
                         catch { }
                     }
@@ -318,7 +330,6 @@ public class FhirMapperService : IFhirMapperService
                     {
                         new CodeableConcept
                         {
-                            Text = reason,
                             Coding = new List<Coding>
                             {
                                 new Coding(SNOMED_URL, "55607006", reason)
