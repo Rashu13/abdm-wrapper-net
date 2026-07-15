@@ -462,10 +462,28 @@ namespace ABDM.Api
                 Gender         = acc.ContainsKey("gender") ? acc["gender"]?.ToString() : "",
                 Mobile         = acc.ContainsKey("mobile") ? acc["mobile"]?.ToString() : "",
                 Address        = acc.ContainsKey("address") ? acc["address"]?.ToString() : "",
-                YearOfBirth    = acc.ContainsKey("yearOfBirth") ? acc["yearOfBirth"]?.ToString() : 
-                                 acc.ContainsKey("dob") ? acc["dob"]?.ToString() : "",
-                ProfilePhoto   = acc.ContainsKey("profilePhoto") ? acc["profilePhoto"]?.ToString() : ""
+                DayOfBirth     = GetFirst(acc, "dayOfBirth", "DayOfBirth"),
+                MonthOfBirth   = GetFirst(acc, "monthOfBirth", "MonthOfBirth"),
+                YearOfBirth    = GetFirst(acc, "yearOfBirth", "YearOfBirth", "dob"),
+                ProfilePhoto   = acc.ContainsKey("profilePhoto") ? acc["profilePhoto"]?.ToString() : "",
+                City           = GetFirst(acc, "city", "City", "districtName", "district", "subdistrictName", "subDistrictName"),
+                State          = GetFirst(acc, "state", "State", "stateName"),
+                FatherName     = GetFirst(acc, "fatherName", "FatherName", "father", "guardianName", "careOf")
             };
+
+            var dob = GetFirst(acc, "dob", "Dob", "DOB");
+            if (string.IsNullOrEmpty(dob) && !string.IsNullOrEmpty(profile.YearOfBirth))
+            {
+                if (!string.IsNullOrEmpty(profile.DayOfBirth) && !string.IsNullOrEmpty(profile.MonthOfBirth))
+                {
+                    dob = $"{profile.DayOfBirth}-{profile.MonthOfBirth}-{profile.YearOfBirth}";
+                }
+                else
+                {
+                    dob = profile.YearOfBirth;
+                }
+            }
+            profile.Dob = dob;
 
             if (acc.ContainsKey("tokens") && acc["tokens"] is Dictionary<string, object> tok)
             {
