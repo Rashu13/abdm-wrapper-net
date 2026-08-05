@@ -27,6 +27,7 @@ class ApiEndpoints {
 
   // ─── M3: HIU Consents & Health Records (HIUFacadeControllers) ───────────
   static String createConsentRequest = "$baseUrl/v3/consent-init";
+  static String getConsentList = "$baseUrl/v3/consent/list";
   static String getConsentStatus(String requestId) => "$baseUrl/v3/consent-status/$requestId";
   static String fetchEncryptedHealthRecord = "$baseUrl/v3/health-information/fetch-records";
   static String getHealthInformationStatus(String requestId) => "$baseUrl/v3/health-information/status/$requestId";

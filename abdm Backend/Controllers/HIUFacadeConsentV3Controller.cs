@@ -1,7 +1,9 @@
 using System.Threading.Tasks;
+using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using AbdmWrapperNet.Data;
 using AbdmWrapperNet.Models;
 using AbdmWrapperNet.Services;
 
@@ -12,6 +14,7 @@ namespace AbdmWrapperNet.Controllers;
 /// Exposes endpoints for the HIU application to:
 ///  - Initiate consent requests to ABDM
 ///  - Poll for consent status
+///  - List all consent requests
 /// Base path: /v3
 /// </summary>
 [ApiController]
@@ -19,13 +22,16 @@ namespace AbdmWrapperNet.Controllers;
 public class HIUFacadeConsentV3Controller : ControllerBase
 {
     private readonly HIUConsentV3Service _consentService;
+    private readonly AppDbContext _db;
     private readonly ILogger<HIUFacadeConsentV3Controller> _logger;
 
     public HIUFacadeConsentV3Controller(
         HIUConsentV3Service consentService,
+        AppDbContext db,
         ILogger<HIUFacadeConsentV3Controller> logger)
     {
         _consentService = consentService;
+        _db = db;
         _logger = logger;
     }
 
@@ -55,5 +61,32 @@ public class HIUFacadeConsentV3Controller : ControllerBase
         _logger.LogInformation($"Facade: fetching consent status for {requestId}");
         var response = await _consentService.GetConsentStatusAsync(requestId);
         return StatusCode(response.HttpStatusCode > 0 ? response.HttpStatusCode : 200, response);
+    }
+
+    /// <summary>
+    /// Returns all HIU Consent Requests for the frontend dashboard.
+    /// GET /v3/consent/list
+    /// </summary>
+    [HttpGet("consent/list")]
+    public IActionResult GetConsentList()
+    {
+        var logs = _db.RequestLogs
+            .Where(r => r.Module == "HIU_CONSENT" || r.Module.Contains("CONSENT"))
+            .OrderByDescending(r => r.CreatedOn)
+            .ToList()
+            .Select(r => new
+            {
+                id = r.Id,
+                clientRequestId = r.ClientRequestId,
+                transactionId = r.TransactionId,
+                status = r.Status,
+                gatewayRequestId = r.GatewayRequestId,
+                createdAt = r.CreatedOn,
+                lastUpdated = r.LastUpdated,
+                requestDetails = r.RequestDetails,
+                responseDetails = r.ResponseDetails,
+            });
+
+        return Ok(logs);
     }
 }

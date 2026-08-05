@@ -26,6 +26,7 @@ class HipCareContextRepo {
     required String abhaAddress,
     required String visitRef,
     String? display,
+    String? hiType,
     String? requesterId,
   }) async {
     try {
@@ -41,7 +42,7 @@ class HipCareContextRepo {
             {
               'referenceNumber': visitRef,
               'display': display ?? 'OPD Consultation ($visitRef)',
-              'hiType': 'OPConsultation',
+              'hiType': hiType ?? 'OPConsultation',
               'isLinked': false,
             }
           ]

@@ -206,8 +206,10 @@ public class FhirMapperService : IFhirMapperService
         {
             foreach (var p in prescriptionsElement.EnumerateArray())
             {
-                var medName = GetString(p, "medicine") ?? "Unknown Medicine";
+                var medName = GetString(p, "medicine") ?? GetString(p, "name") ?? "Unknown Medicine";
                 var dosage = GetString(p, "dosage") ?? "";
+                var explicitSnomed = GetString(p, "snomedCode") ?? GetString(p, "code");
+                var snomedCode = ResolveSnomedMedicineCode(medName, explicitSnomed);
 
                 var medReq = new MedicationRequest
                 {
@@ -217,9 +219,10 @@ public class FhirMapperService : IFhirMapperService
                     Intent = MedicationRequest.MedicationRequestIntent.Order,
                     Medication = new CodeableConcept
                     {
+                        Text = medName,
                         Coding = new List<Coding>
                         {
-                            new Coding(SNOMED_URL, "410942007", medName) // Changed to generic pharmaceutical SNOMED
+                            new Coding(SNOMED_URL, snomedCode, medName)
                         }
                     },
                     Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
@@ -2688,5 +2691,42 @@ public class FhirMapperService : IFhirMapperService
         var fhirJson = serializer.SerializeToString(bundle);
 
         return System.Threading.Tasks.Task.FromResult(fhirJson);
+    }
+
+    private static string ResolveSnomedMedicineCode(string medName, string? explicitSnomedCode)
+    {
+        if (!string.IsNullOrWhiteSpace(explicitSnomedCode))
+        {
+            return explicitSnomedCode.Trim();
+        }
+
+        if (string.IsNullOrWhiteSpace(medName)) return "410942007";
+
+        var clean = medName.Trim().ToLowerInvariant();
+
+        if (clean.Contains("dolo") || clean.Contains("paracetamol 650") || clean.Contains("pcm 650"))
+            return "322236009"; // Paracetamol 650 mg tablet
+        if (clean.Contains("paracetamol") || clean.Contains("pcm") || clean.Contains("crocin") || clean.Contains("calpol"))
+            return "387517004"; // Paracetamol
+        if (clean.Contains("amoxicillin") || clean.Contains("moxikind") || clean.Contains("amox"))
+            return "372687004"; // Amoxicillin
+        if (clean.Contains("pantoprazole") || clean.Contains("pan 40") || clean.Contains("pan-40"))
+            return "372605007"; // Pantoprazole
+        if (clean.Contains("azithromycin") || clean.Contains("azee") || clean.Contains("zathrin"))
+            return "372522002"; // Azithromycin
+        if (clean.Contains("cetirizine") || clean.Contains("cetzine") || clean.Contains("okacet"))
+            return "372583007"; // Cetirizine
+        if (clean.Contains("metformin") || clean.Contains("glycomet"))
+            return "372567009"; // Metformin
+        if (clean.Contains("amlodipine") || clean.Contains("stamlo") || clean.Contains("amlong"))
+            return "372833007"; // Amlodipine
+        if (clean.Contains("ibuprofen") || clean.Contains("brufen") || clean.Contains("combiflam"))
+            return "387207008"; // Ibuprofen
+        if (clean.Contains("ranitidine") || clean.Contains("aciloc") || clean.Contains("rantac"))
+            return "372765001"; // Ranitidine
+        if (clean.Contains("multivitamin") || clean.Contains("becosules"))
+            return "421689004"; // Multivitamin preparation
+
+        return "410942007"; // Generic Pharmaceutical Product
     }
 }

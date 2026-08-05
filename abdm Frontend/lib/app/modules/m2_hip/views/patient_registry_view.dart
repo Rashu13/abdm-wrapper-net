@@ -304,6 +304,7 @@ class PatientRegistryView extends StatelessWidget {
         text: 'VISIT-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}');
     final displayCtrl = TextEditingController(
         text: 'OPD Consultation - ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}');
+    String selectedHiType = 'OPConsultation';
 
     Get.dialog(
       Dialog(
@@ -377,6 +378,62 @@ class PatientRegistryView extends StatelessWidget {
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 ),
+              const SizedBox(height: 14),
+              Text('Health Information (HI) Type & SNOMED CT Code',
+                  style: TextStyle(color: AppColor.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 6),
+              StatefulBuilder(
+                builder: (context, setState) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: AppColor.background,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColor.border),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: selectedHiType,
+                        isExpanded: true,
+                        dropdownColor: AppColor.surface,
+                        style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'OPConsultation',
+                            child: Text('OPConsultation (SNOMED: 371530004 - OP Note)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Prescription',
+                            child: Text('Prescription (SNOMED: 440545006 - Rx Record)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'DiagnosticReport',
+                            child: Text('DiagnosticReport (SNOMED: 721981007 - Lab/Rad)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'DischargeSummary',
+                            child: Text('DischargeSummary (SNOMED: 371535009 - Discharge)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'ImmunizationRecord',
+                            child: Text('ImmunizationRecord (SNOMED: 41000179103 - Vaccine)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'HealthDocumentRecord',
+                            child: Text('HealthDocumentRecord (SNOMED: 419891008 - Health Doc)'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'WellnessRecord',
+                            child: Text('WellnessRecord (SNOMED: 409073007 - Wellness)'),
+                          ),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) setState(() => selectedHiType = val);
+                        },
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 20),
               Row(
@@ -400,6 +457,7 @@ class PatientRegistryView extends StatelessWidget {
                         abhaAddress: patient.abhaAddress,
                         visitRef: ref,
                         display: disp,
+                        hiType: selectedHiType,
                         hipId: patient.hipId,
                       );
                     },

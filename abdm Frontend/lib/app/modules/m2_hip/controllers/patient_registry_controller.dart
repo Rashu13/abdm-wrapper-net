@@ -91,6 +91,7 @@ class PatientRegistryController extends GetxController {
     required String abhaAddress,
     required String visitRef,
     required String display,
+    String? hiType,
     String? hipId,
   }) async {
     isLinkingMap[abhaAddress] = true;
@@ -99,6 +100,7 @@ class PatientRegistryController extends GetxController {
         abhaAddress: abhaAddress,
         visitRef: visitRef,
         display: display,
+        hiType: hiType ?? 'OPConsultation',
         requesterId: hipId,
       );
 
