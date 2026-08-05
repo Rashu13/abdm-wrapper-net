@@ -28,16 +28,30 @@ class HealthRecordController extends GetxController {
   var isLoadingPatients = false.obs;
 
   // Active HI Type Tab ('Prescription', 'DiagnosticReport', 'DischargeSummary', 'OPConsultation', 'ImmunizationRecord', 'WellnessRecord')
-  var activeHiType = 'Prescription'.obs;
+  var activeHiType = 'OPConsultation'.obs;
 
   final List<String> hiTypeList = [
+    'OPConsultation',
     'Prescription',
     'DiagnosticReport',
-    'OPConsultation',
     'DischargeSummary',
     'ImmunizationRecord',
     'WellnessRecord',
   ];
+
+  // OP Consultation State (Matching React HealthRecordsPage.tsx)
+  var encounterType = 'Outpatient'.obs;
+  var opHeight = '170'.obs;
+  var opWeight = '68'.obs;
+  var opBmi = '23.5'.obs;
+
+  var vitalsList = <VitalFormItem>[].obs;
+  var complaintsList = <String>[].obs;
+  var allergiesList = <AllergyFormItem>[].obs;
+  var medicalHistoryList = <String>[].obs;
+  final opObservationResultCtrl = TextEditingController(
+      text:
+          'General examination normal. Chest clear, S1 S2 heard. Abdomen soft.');
 
   // Dynamic EMR Form Lists
   var medicines = <MedicineFormItem>[].obs;
@@ -45,13 +59,7 @@ class HealthRecordController extends GetxController {
   var immunizationList = <ImmunizationFormItem>[].obs;
 
   // Form Fields
-  final complaintsCtrl =
-      TextEditingController(text: 'Fever and body pain since 2 days');
   final diagnosisCtrl = TextEditingController(text: 'Acute Viral Pyrexia');
-  final bpCtrl = TextEditingController(text: '120/80 mmHg');
-  final pulseCtrl = TextEditingController(text: '72 bpm');
-  final tempCtrl = TextEditingController(text: '98.6 °F');
-  final spo2Ctrl = TextEditingController(text: '98%');
   final reportTitleCtrl =
       TextEditingController(text: 'Complete Blood Count (CBC) & Lipid Profile');
   final dischargeNotesCtrl = TextEditingController(
@@ -96,7 +104,39 @@ class HealthRecordController extends GetxController {
     fetchPatients();
   }
 
+  void calculateBmi() {
+    try {
+      final h = double.tryParse(opHeight.value) ?? 0;
+      final w = double.tryParse(opWeight.value) ?? 0;
+      if (h > 0 && w > 0) {
+        final hm = h / 100.0;
+        opBmi.value = (w / (hm * hm)).toStringAsFixed(1);
+      }
+    } catch (_) {}
+  }
+
   void resetFormLists() {
+    vitalsList.value = [
+      VitalFormItem(vitalName: 'Blood Pressure', value: '120/80', unit: 'mmHg'),
+      VitalFormItem(vitalName: 'Pulse Rate', value: '72', unit: 'bpm'),
+      VitalFormItem(vitalName: 'Body Temperature', value: '98.6', unit: '°F'),
+      VitalFormItem(vitalName: 'SpO2 Oxygen', value: '98', unit: '%'),
+    ];
+
+    complaintsList.value = [
+      'Fever with chills for 2 days',
+      'Mild headache and body fatigue',
+    ];
+
+    allergiesList.value = [
+      AllergyFormItem(
+          allergyName: 'Penicillin', type: 'medication', status: 'active'),
+    ];
+
+    medicalHistoryList.value = [
+      'Type 2 Diabetes Mellitus (Under control)',
+    ];
+
     medicines.value = [
       MedicineFormItem(
         drugName: 'Dolo 650 mg',
@@ -135,24 +175,34 @@ class HealthRecordController extends GetxController {
     ];
   }
 
-  void addMedicine() {
-    medicines.add(MedicineFormItem());
+  void addVital() => vitalsList.add(VitalFormItem());
+  void removeVital(int idx) {
+    if (vitalsList.length > 1) vitalsList.removeAt(idx);
   }
 
+  void addComplaint() => complaintsList.add('');
+  void removeComplaint(int idx) {
+    if (complaintsList.length > 1) complaintsList.removeAt(idx);
+  }
+
+  void addAllergy() => allergiesList.add(AllergyFormItem());
+  void removeAllergy(int idx) {
+    if (allergiesList.length > 1) allergiesList.removeAt(idx);
+  }
+
+  void addMedicalHistory() => medicalHistoryList.add('');
+  void removeMedicalHistory(int idx) {
+    if (medicalHistoryList.length > 1) medicalHistoryList.removeAt(idx);
+  }
+
+  void addMedicine() => medicines.add(MedicineFormItem());
   void removeMedicine(int index) {
-    if (medicines.length > 1) {
-      medicines.removeAt(index);
-    }
+    if (medicines.length > 1) medicines.removeAt(index);
   }
 
-  void addLabResult() {
-    labResults.add(LabResultFormItem());
-  }
-
+  void addLabResult() => labResults.add(LabResultFormItem());
   void removeLabResult(int index) {
-    if (labResults.length > 1) {
-      labResults.removeAt(index);
-    }
+    if (labResults.length > 1) labResults.removeAt(index);
   }
 
   Future<void> fetchPatients() async {
@@ -256,11 +306,12 @@ class HealthRecordController extends GetxController {
     final displayTitle =
         "$hiType Record - ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}";
 
-    // Construct FHIR payload JSON structure
+    // Construct FHIR payload JSON structure matching React HealthRecordsPage.tsx
     final fhirPayload = {
       'careContextReference': visitRef,
       'authoredOn': DateTime.now().toUtc().toIso8601String(),
       'recordType': hiType,
+      'encounterType': encounterType.value,
       'patient': {
         'patientReference': patient.patientReference.isNotEmpty
             ? patient.patientReference
@@ -280,14 +331,18 @@ class HealthRecordController extends GetxController {
         'facilityId': patient.hipId.isNotEmpty ? patient.hipId : 'IN0610090658',
         'facilityName': 'MIDHA HOSPITAL / SONOMED CLINIC',
       },
-      'complaints': complaintsCtrl.text.trim(),
-      'diagnosis': diagnosisCtrl.text.trim(),
-      'vitals': {
-        'bp': bpCtrl.text.trim(),
-        'pulse': pulseCtrl.text.trim(),
-        'temp': tempCtrl.text.trim(),
-        'spo2': spo2Ctrl.text.trim(),
+      'bodyMeasurements': {
+        'heightCm': opHeight.value,
+        'weightKg': opWeight.value,
+        'bmi': opBmi.value,
       },
+      'vitals': vitalsList.map((v) => v.toJson()).toList(),
+      'complaints': complaintsList.where((c) => c.trim().isNotEmpty).toList(),
+      'clinicalObservation': opObservationResultCtrl.text.trim(),
+      'allergies': allergiesList.map((a) => a.toJson()).toList(),
+      'medicalHistory':
+          medicalHistoryList.where((m) => m.trim().isNotEmpty).toList(),
+      'diagnosis': diagnosisCtrl.text.trim(),
       'prescriptions': medicines.map((m) => m.toJson()).toList(),
       'labResults': labResults.map((l) => l.toJson()).toList(),
       'reportTitle': reportTitleCtrl.text.trim(),

@@ -8,7 +8,7 @@ class MedicineFormItem {
 
   MedicineFormItem({
     this.drugName = '',
-    this.dosagePattern = 'Morning Only (1-0-0)',
+    this.dosagePattern = '1-0-1 (After Food)',
     this.route = 'Oral',
     this.method = 'After Food',
     this.reason = '',
@@ -41,6 +41,42 @@ class LabResultFormItem {
         'testName': testName,
         'value': value,
         'unit': unit,
+      };
+}
+
+class VitalFormItem {
+  String vitalName;
+  String value;
+  String unit;
+
+  VitalFormItem({
+    this.vitalName = '',
+    this.value = '',
+    this.unit = '',
+  });
+
+  Map<String, dynamic> toJson() => {
+        'vitalName': vitalName,
+        'value': value,
+        'unit': unit,
+      };
+}
+
+class AllergyFormItem {
+  String allergyName;
+  String type; // medication, food, environment, biologic
+  String status; // active, inactive, resolved
+
+  AllergyFormItem({
+    this.allergyName = '',
+    this.type = 'medication',
+    this.status = 'active',
+  });
+
+  Map<String, dynamic> toJson() => {
+        'allergyName': allergyName,
+        'type': type,
+        'status': status,
       };
 }
 

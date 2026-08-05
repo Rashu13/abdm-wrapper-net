@@ -44,7 +44,7 @@ class EmrHealthRecordsPage extends GetView<HealthRecordController> {
                             style: fontBold.copyWith(fontSize: 18)),
                         const SizedBox(height: 4),
                         Text(
-                          "Select HI Type (Prescription, Diagnostic, OPD Note, Discharge Summary) to build FHIR bundles and link to ABDM Gateway.",
+                          "Select HI Type (OP Consultation, Prescription, Diagnostic, Discharge Summary) to build FHIR bundles and link to ABDM Gateway.",
                           style: fontSmall,
                         ),
                       ],
@@ -154,18 +154,18 @@ class EmrHealthRecordsPage extends GetView<HealthRecordController> {
             Obx(() {
               final type = controller.activeHiType.value;
               switch (type) {
+                case 'OPConsultation':
+                  return _buildOpConsultationForm();
                 case 'Prescription':
                   return _buildPrescriptionForm();
                 case 'DiagnosticReport':
                   return _buildDiagnosticForm();
-                case 'OPConsultation':
-                  return _buildOpConsultationForm();
                 case 'DischargeSummary':
                   return _buildDischargeSummaryForm();
                 case 'ImmunizationRecord':
                   return _buildImmunizationForm();
                 default:
-                  return _buildPrescriptionForm();
+                  return _buildOpConsultationForm();
               }
             }),
 
@@ -203,6 +203,453 @@ class EmrHealthRecordsPage extends GetView<HealthRecordController> {
           ],
         ),
       ),
+    );
+  }
+
+  // ─── OP Consultation Form (Matching React HealthRecordsPage.tsx) ─────────
+  Widget _buildOpConsultationForm() {
+    return Column(
+      children: [
+        // 1. ENCOUNTER TYPE & VISIT METADATA
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: glassDecoration(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('ENCOUNTER TYPE & METADATA', style: fontBold.copyWith(fontSize: 14)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Obx(() => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: AppColor.background,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColor.border),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: controller.encounterType.value,
+                              isExpanded: true,
+                              dropdownColor: AppColor.surface,
+                              style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                              items: const [
+                                DropdownMenuItem(value: 'Outpatient', child: Text('Outpatient')),
+                                DropdownMenuItem(value: 'Inpatient', child: Text('Inpatient')),
+                                DropdownMenuItem(value: 'Emergency', child: Text('Emergency')),
+                                DropdownMenuItem(value: 'Ambulatory', child: Text('Ambulatory')),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) controller.encounterType.value = val;
+                              },
+                            ),
+                          ),
+                        )),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColor.background,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColor.border),
+                      ),
+                      child: Text(
+                        'Visit Date: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} ${DateTime.now().hour}:${DateTime.now().minute}',
+                        style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // 2. BODY MEASUREMENTS (Height, Weight, Auto BMI)
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: glassDecoration(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('BODY MEASUREMENTS', style: fontBold.copyWith(fontSize: 14)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      onChanged: (v) {
+                        controller.opHeight.value = v;
+                        controller.calculateBmi();
+                      },
+                      controller: TextEditingController(text: controller.opHeight.value),
+                      keyboardType: TextInputType.number,
+                      style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                      decoration: InputDecoration(
+                        labelText: 'HEIGHT (CM)',
+                        hintText: 'e.g. 170',
+                        filled: true,
+                        fillColor: AppColor.background,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      onChanged: (v) {
+                        controller.opWeight.value = v;
+                        controller.calculateBmi();
+                      },
+                      controller: TextEditingController(text: controller.opWeight.value),
+                      keyboardType: TextInputType.number,
+                      style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                      decoration: InputDecoration(
+                        labelText: 'WEIGHT (KG)',
+                        hintText: 'e.g. 68',
+                        filled: true,
+                        fillColor: AppColor.background,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Obx(() => TextField(
+                          readOnly: true,
+                          controller: TextEditingController(text: controller.opBmi.value),
+                          style: TextStyle(color: AppColor.textPrimary, fontSize: 13, fontWeight: FontWeight.bold),
+                          decoration: InputDecoration(
+                            labelText: 'BMI (KG/M²)',
+                            filled: true,
+                            fillColor: const Color(0xFF10B981).withOpacity(0.1),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                        )),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // 3. VITALS (+ Add Vital)
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: glassDecoration(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('VITALS', style: fontBold.copyWith(fontSize: 14)),
+                  TextButton.icon(
+                    onPressed: controller.addVital,
+                    icon: const Icon(Icons.add_circle_outline_rounded, size: 18, color: Color(0xFF10B981)),
+                    label: const Text('+ Add Vital', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Obx(() => ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: controller.vitalsList.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, idx) {
+                      final v = controller.vitalsList[idx];
+                      return Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: TextField(
+                              controller: TextEditingController(text: v.vitalName)
+                                ..selection = TextSelection.collapsed(offset: v.vitalName.length),
+                              onChanged: (val) => v.vitalName = val,
+                              style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                              decoration: InputDecoration(
+                                labelText: 'Vital Name (e.g. Blood Pressure)',
+                                filled: true,
+                                fillColor: AppColor.background,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            flex: 2,
+                            child: TextField(
+                              controller: TextEditingController(text: v.value)
+                                ..selection = TextSelection.collapsed(offset: v.value.length),
+                              onChanged: (val) => v.value = val,
+                              style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                              decoration: InputDecoration(
+                                labelText: 'Value (120/80)',
+                                filled: true,
+                                fillColor: AppColor.background,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            flex: 1,
+                            child: TextField(
+                              controller: TextEditingController(text: v.unit)
+                                ..selection = TextSelection.collapsed(offset: v.unit.length),
+                              onChanged: (val) => v.unit = val,
+                              style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                              decoration: InputDecoration(
+                                labelText: 'Unit (mmHg)',
+                                filled: true,
+                                fillColor: AppColor.background,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+                            onPressed: () => controller.removeVital(idx),
+                          ),
+                        ],
+                      );
+                    },
+                  )),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // 4. CHIEF COMPLAINTS (+ Add)
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: glassDecoration(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('CHIEF COMPLAINTS', style: fontBold.copyWith(fontSize: 14)),
+                  TextButton.icon(
+                    onPressed: controller.addComplaint,
+                    icon: const Icon(Icons.add_circle_outline_rounded, size: 18, color: Color(0xFF10B981)),
+                    label: const Text('+ Add Complaint', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Obx(() => ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: controller.complaintsList.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, idx) {
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: TextEditingController(text: controller.complaintsList[idx])
+                                ..selection = TextSelection.collapsed(offset: controller.complaintsList[idx].length),
+                              onChanged: (val) => controller.complaintsList[idx] = val,
+                              style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                              decoration: InputDecoration(
+                                hintText: 'Enter complaint details (e.g. Fever with chills for 2 days)',
+                                filled: true,
+                                fillColor: AppColor.background,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+                            onPressed: () => controller.removeComplaint(idx),
+                          ),
+                        ],
+                      );
+                    },
+                  )),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // 5. CLINICAL OBSERVATION / EXAMINATION RESULT
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: glassDecoration(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('CLINICAL OBSERVATION / EXAMINATION RESULT', style: fontBold.copyWith(fontSize: 14)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: controller.opObservationResultCtrl,
+                maxLines: 2,
+                style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                decoration: InputDecoration(
+                  hintText: 'Enter clinical examination notes or test results...',
+                  filled: true,
+                  fillColor: AppColor.background,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  contentPadding: const EdgeInsets.all(12),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // 6. ALLERGIES (+ Add)
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: glassDecoration(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('ALLERGIES', style: fontBold.copyWith(fontSize: 14)),
+                  TextButton.icon(
+                    onPressed: controller.addAllergy,
+                    icon: const Icon(Icons.add_circle_outline_rounded, size: 18, color: Color(0xFF10B981)),
+                    label: const Text('+ Add Allergy', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Obx(() => ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: controller.allergiesList.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, idx) {
+                      final allergy = controller.allergiesList[idx];
+                      return Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: TextField(
+                              controller: TextEditingController(text: allergy.allergyName)
+                                ..selection = TextSelection.collapsed(offset: allergy.allergyName.length),
+                              onChanged: (val) => allergy.allergyName = val,
+                              style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                              decoration: InputDecoration(
+                                labelText: 'Allergy / Substance (e.g. Penicillin)',
+                                filled: true,
+                                fillColor: AppColor.background,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            flex: 2,
+                            child: DropdownButtonFormField<String>(
+                              value: allergy.type,
+                              style: TextStyle(color: AppColor.textPrimary, fontSize: 12),
+                              decoration: InputDecoration(
+                                labelText: 'Type',
+                                filled: true,
+                                fillColor: AppColor.background,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              ),
+                              items: const [
+                                DropdownMenuItem(value: 'medication', child: Text('medication')),
+                                DropdownMenuItem(value: 'food', child: Text('food')),
+                                DropdownMenuItem(value: 'environment', child: Text('environment')),
+                                DropdownMenuItem(value: 'biologic', child: Text('biologic')),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) allergy.type = val;
+                              },
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+                            onPressed: () => controller.removeAllergy(idx),
+                          ),
+                        ],
+                      );
+                    },
+                  )),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // 7. MEDICAL HISTORY (+ Add)
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: glassDecoration(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('MEDICAL HISTORY', style: fontBold.copyWith(fontSize: 14)),
+                  TextButton.icon(
+                    onPressed: controller.addMedicalHistory,
+                    icon: const Icon(Icons.add_circle_outline_rounded, size: 18, color: Color(0xFF10B981)),
+                    label: const Text('+ Add Condition', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Obx(() => ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: controller.medicalHistoryList.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, idx) {
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: TextEditingController(text: controller.medicalHistoryList[idx])
+                                ..selection = TextSelection.collapsed(offset: controller.medicalHistoryList[idx].length),
+                              onChanged: (val) => controller.medicalHistoryList[idx] = val,
+                              style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                              decoration: InputDecoration(
+                                hintText: 'Medical condition / Past history (e.g. Type 2 Diabetes Mellitus)',
+                                filled: true,
+                                fillColor: AppColor.background,
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
+                            onPressed: () => controller.removeMedicalHistory(idx),
+                          ),
+                        ],
+                      );
+                    },
+                  )),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // 8. PRESCRIPTIONS / MEDICINES
+        _buildPrescriptionForm(),
+      ],
     );
   }
 
@@ -444,105 +891,6 @@ class EmrHealthRecordsPage extends GetView<HealthRecordController> {
                   );
                 },
               )),
-        ],
-      ),
-    );
-  }
-
-  // ─── OP Consultation Form ────────────────────────────────────────────────
-  Widget _buildOpConsultationForm() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: glassDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Chief Complaints & Symptoms', style: fontBold.copyWith(fontSize: 14)),
-          const SizedBox(height: 6),
-          TextField(
-            controller: controller.complaintsCtrl,
-            maxLines: 2,
-            style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: AppColor.background,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              contentPadding: const EdgeInsets.all(12),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text('Vital Signs', style: fontBold.copyWith(fontSize: 14)),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: controller.bpCtrl,
-                  style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
-                  decoration: InputDecoration(
-                    labelText: 'Blood Pressure',
-                    filled: true,
-                    fillColor: AppColor.background,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: controller.pulseCtrl,
-                  style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
-                  decoration: InputDecoration(
-                    labelText: 'Pulse Rate',
-                    filled: true,
-                    fillColor: AppColor.background,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: controller.tempCtrl,
-                  style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
-                  decoration: InputDecoration(
-                    labelText: 'Body Temp',
-                    filled: true,
-                    fillColor: AppColor.background,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: controller.spo2Ctrl,
-                  style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
-                  decoration: InputDecoration(
-                    labelText: 'SpO2 Oxygen',
-                    filled: true,
-                    fillColor: AppColor.background,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text('Clinical Diagnosis', style: fontBold.copyWith(fontSize: 14)),
-          const SizedBox(height: 6),
-          TextField(
-            controller: controller.diagnosisCtrl,
-            style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: AppColor.background,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              contentPadding: const EdgeInsets.all(12),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildPrescriptionForm(),
         ],
       ),
     );
