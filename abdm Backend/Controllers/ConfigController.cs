@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using AbdmWrapperNet.Services;
 using AbdmWrapperNet.Data;
-using AbdmWrapperNet.Common;
+using AbdmWrapperNet.Configuration;
 using System.Linq;
 
 namespace AbdmWrapperNet.Controllers;
