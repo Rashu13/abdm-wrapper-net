@@ -175,14 +175,25 @@ public class GatewayClient : IGatewayClient
             {
                 cleanPath = cleanPath["api/".Length..];
             }
+
+            Uri requestUri;
+            if (cleanPath.StartsWith("hiecm/", StringComparison.OrdinalIgnoreCase) && client.BaseAddress != null && client.BaseAddress.AbsolutePath.Contains("/api"))
+            {
+                var baseHost = $"{client.BaseAddress.Scheme}://{client.BaseAddress.Authority}";
+                requestUri = new Uri(new Uri(baseHost), cleanPath);
+            }
+            else
+            {
+                requestUri = new Uri(client.BaseAddress!, cleanPath);
+            }
+
             if (_config.LogCurl)
             {
-                var fullUrl = client.BaseAddress != null ? new Uri(client.BaseAddress, cleanPath).ToString() : cleanPath;
-                LogCurlRequest(fullUrl, json, client.DefaultRequestHeaders, "POST");
+                LogCurlRequest(requestUri.ToString(), json, client.DefaultRequestHeaders, "POST");
             }
 
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync(cleanPath, content);
+            var response = await client.PostAsync(requestUri, content);
             
             var responseString = await response.Content.ReadAsStringAsync();
             _logger.LogInformation($"Gateway call status: {response.StatusCode}");
