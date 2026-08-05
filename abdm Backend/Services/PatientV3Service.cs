@@ -407,4 +407,13 @@ public class PatientV3Service : IPatientV3Service
         var filter = Builders<Patient>.Filter.Eq("consents.consentDetail.consentId", consentId);
         return await _context.Patients.Find(filter).FirstOrDefaultAsync();
     }
+
+    public async Task<List<Patient>> GetAllPatientsByHipIdAsync(string hipId)
+    {
+        var filter = Builders<Patient>.Filter.Eq(p => p.HipId, hipId);
+        return await _context.Patients.Find(filter)
+            .SortByDescending(p => p.PatientReference)
+            .ToListAsync();
+    }
 }
+

@@ -412,6 +412,39 @@ class AbhaCreationController extends GetxController {
       isLoading.value = false;
 
       if (profile != null) {
+        // ──────────────────────────────────────────────────────────────────
+        // SMART DETECT: If ABHA already exists (no abhaNumber/abhaAddress in
+        // verifyAadhaarOtp response), fallback to loginVerify for full profile.
+        // This happens when Aadhaar is already linked to an existing ABHA.
+        // ──────────────────────────────────────────────────────────────────
+        bool hasProfile = (profile.abhaNumber != null && profile.abhaNumber!.isNotEmpty) ||
+            (profile.abhaAddress != null && profile.abhaAddress!.isNotEmpty);
+
+        if (!hasProfile) {
+          debugPrint('⚠️ verifyAadhaarOtp: ABHA already exists! Fetching full profile via loginVerify...');
+          // Switch to login mode silently and get full profile
+          var loginProfile = await AbhaCreationRepo.loginVerify(req);
+          if (loginProfile != null &&
+              ((loginProfile.abhaNumber != null && loginProfile.abhaNumber!.isNotEmpty) ||
+               (loginProfile.abhaAddress != null && loginProfile.abhaAddress!.isNotEmpty))) {
+            abhaProfile.value = loginProfile;
+            isCardCompleted.value = true;
+            isCreateMode.value = false; // switch to login mode
+            Get.snackbar(
+              'ABHA Found ✅',
+              'This Aadhaar already has an ABHA. Profile loaded successfully.',
+              snackPosition: SnackPosition.TOP,
+              backgroundColor: const Color(0xFF10B981),
+              colorText: Colors.white,
+              duration: const Duration(seconds: 3),
+            );
+            if (Get.currentRoute != Routes.GALAXY_ABHA) {
+              Get.offNamed(Routes.M1_ABHA_CARD);
+            }
+            return;
+          }
+        }
+
         abhaProfile.value = profile;
         if (profile.existingAbhaAddresses != null &&
             profile.existingAbhaAddresses!.isNotEmpty) {

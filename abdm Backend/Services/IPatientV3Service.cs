@@ -24,4 +24,5 @@ public interface IPatientV3Service
     Task<Patient?> GetPatientAsync(string abhaAddress, string hipId);
     Task<FacadeV3Response> UpsertPatientsAsync(List<Patient> patients);
     Task<Patient?> GetPatientByConsentIdAsync(string consentId);
+    Task<List<Patient>> GetAllPatientsByHipIdAsync(string hipId);
 }

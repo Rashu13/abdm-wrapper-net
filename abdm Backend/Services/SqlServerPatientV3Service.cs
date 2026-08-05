@@ -406,4 +406,13 @@ public class SqlServerPatientV3Service : IPatientV3Service
         var patients = await _context.Patients.ToListAsync(); // Fallback if EF.Property fails
         return patients.FirstOrDefault(p => p.Consents != null && p.Consents.Any(c => c.ConsentDetail != null && c.ConsentDetail.ConsentId == consentId));
     }
+
+    public async Task<List<Patient>> GetAllPatientsByHipIdAsync(string hipId)
+    {
+        return await _context.Patients
+            .Where(p => p.HipId == hipId)
+            .OrderByDescending(p => p.PatientReference)
+            .ToListAsync();
+    }
 }
+

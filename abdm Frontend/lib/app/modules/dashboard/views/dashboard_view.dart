@@ -7,6 +7,7 @@ import '../../m1_abha/views/create_abha_view.dart';
 import '../../m2_hip/views/discovery_view.dart';
 import '../../m3_hiu/views/consent_request_view.dart';
 import '../../m2_hip/views/scan_share_view.dart';
+import '../../m2_hip/views/patient_registry_view.dart';
 import '../../../../util/constants.dart';
 import '../../../../util/style.dart';
 
@@ -19,6 +20,7 @@ class DashboardView extends GetView<DashboardController> {
     const DiscoveryView(),
     const ConsentRequestView(),
     const ScanShareView(),
+    const PatientRegistryView(),
   ];
 
   @override
@@ -209,6 +211,13 @@ class DashboardView extends GetView<DashboardController> {
                                     activeIcon: Icons.qr_code_scanner,
                                     title: "Scan & Share",
                                     subtitle: "OPD QR & Token Engine",
+                                  )),
+                              Obx(() => _buildSidebarTile(
+                                    index: 5,
+                                    icon: Icons.people_alt_outlined,
+                                    activeIcon: Icons.people_alt,
+                                    title: "Patient Registry",
+                                    subtitle: "Registered HIP Patients",
                                   )),
                             ],
                           ),

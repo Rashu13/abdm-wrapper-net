@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using AbdmWrapperNet.Configuration;
 using AbdmWrapperNet.Models;
 using AbdmWrapperNet.Services;
 
@@ -14,13 +16,16 @@ public class PatientV3Controller : ControllerBase
 {
     private readonly ILogger<PatientV3Controller> _logger;
     private readonly IPatientV3Service _patientService;
+    private readonly AbdmConfig _abdmConfig;
 
     public PatientV3Controller(
         ILogger<PatientV3Controller> logger,
-        IPatientV3Service patientService)
+        IPatientV3Service patientService,
+        IOptions<AbdmConfig> abdmConfig)
     {
         _logger = logger;
         _patientService = patientService;
+        _abdmConfig = abdmConfig.Value;
     }
 
     /// <summary>
@@ -81,5 +86,33 @@ public class PatientV3Controller : ControllerBase
         await _patientService.AddHealthDataRecordAsync(record);
         
         return Ok(new { Message = "Health data record saved successfully." });
+    }
+
+    /// <summary>
+    /// Returns all registered patients for the current HIP from local database.
+    /// Used by the Patient Registry dashboard in the frontend.
+    /// </summary>
+    [HttpGet("list")]
+    public async Task<IActionResult> GetAllPatients([FromQuery] string? hipId = null)
+    {
+        var resolvedHipId = hipId ?? _abdmConfig.HipId;
+        _logger.LogInformation($"Fetching all patients for HIP: {resolvedHipId}");
+
+        var patients = await _patientService.GetAllPatientsByHipIdAsync(resolvedHipId);
+        
+        var result = patients.Select(p => new
+        {
+            abhaAddress      = p.AbhaAddress,
+            name             = p.Name,
+            patientReference = p.PatientReference,
+            patientDisplay   = p.PatientDisplay,
+            gender           = p.Gender,
+            dateOfBirth      = p.DateOfBirth,
+            mobile           = p.PatientMobile,
+            hipId            = p.HipId,
+            careContextCount = p.CareContexts?.Count ?? 0,
+        });
+
+        return Ok(result);
     }
 }

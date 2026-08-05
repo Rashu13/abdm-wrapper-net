@@ -36,6 +36,8 @@ class ApiEndpoints {
   static String getSubscriptionStatus(String requestId) => "$baseUrl/v3/subscription-status/$requestId";
 
   // ─── Patient Profile & Health Data (PatientV3Controller) ─────────────────
+  static String getPatientList({String? hipId}) =>
+      hipId != null ? "$baseUrl/v3/patient/list?hipId=$hipId" : "$baseUrl/v3/patient/list";
   static String getPatientDetails(String patientId, String hipId) => "$baseUrl/v3/patient/$patientId?hipId=$hipId";
   static String saveHealthDataRecord = "$baseUrl/v3/patient/health-data";
 
@@ -43,4 +45,5 @@ class ApiEndpoints {
   static String registerBridgeUrl = "$baseUrl/v3/config/register-bridge";
   static String checkBridgeServices = "$baseUrl/v3/config/bridge-services";
   static String getRequestLogs = "$baseUrl/v3/config/request-logs";
+  static String getAppSettings = "$baseUrl/v3/config/settings";
 }

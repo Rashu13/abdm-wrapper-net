@@ -18,6 +18,7 @@ import '../modules/m3_hiu/views/consent_request_view.dart';
 import '../modules/m3_hiu/views/health_record_viewer_page.dart';
 
 import '../modules/m2_hip/views/scan_share_view.dart';
+import '../modules/m2_hip/views/patient_registry_view.dart';
 
 class AppPages {
   static const INITIAL = Routes.SPLASH;
@@ -72,6 +73,10 @@ class AppPages {
       name: Routes.M2_SCAN_SHARE,
       page: () => const ScanShareView(),
       binding: HipBinding(),
+    ),
+    GetPage(
+      name: Routes.M2_PATIENT_REGISTRY,
+      page: () => const PatientRegistryView(),
     ),
     GetPage(
       name: Routes.M3_CONSENT_REQUEST,
