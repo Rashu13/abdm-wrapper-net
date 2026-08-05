@@ -1,3 +1,5 @@
+using ABDM.Models;
+using AbdmWrapperNet.Controllers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,7 +8,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using ABDM.Models;
 
 namespace ABDM.Api
 {
@@ -21,6 +22,7 @@ namespace ABDM.Api
         private string _cachedAccessToken = "";
         private DateTime _cachedAccessTokenUtc = DateTime.MinValue;
         private string _cachedPublicKey = "";
+        private readonly ILogger<AbdmM1Controller> _logger;
 
         /// <summary>Stores the last raw API response for debugging purposes.</summary>
         public string LastRawResponse { get; private set; } = "";
@@ -234,11 +236,15 @@ namespace ABDM.Api
             if (!string.IsNullOrEmpty(_cachedPublicKey))
                 return _cachedPublicKey;
 
-            // Try V3 endpoint first, fallback to V1 if 404
             var endpoints = new[]
             {
                 $"{_cfg.AbhaServiceUrl}/profile/public/certificate",
-                $"{_cfg.BaseUrl.Replace("/api/hiecm/gateway", "")}/abha/api/v1/profile/public/certificate"
+                $"{_cfg.AbhaServiceUrl}/enrollment/public/certificate",
+                $"{_cfg.AbhaServiceUrl}/profile/login/public/certificate",
+                $"{_cfg.AbhaServiceUrl.Replace("/v3", "/v1")}/profile/public/certificate",
+                $"{_cfg.BaseUrl.Replace("/api/hiecm/gateway", "")}/abha/api/v1/profile/public/certificate",
+                "https://abhasbx.abdm.gov.in/abha/api/v3/profile/public/certificate",
+                "https://abhasbx.abdm.gov.in/abha/api/v3/enrollment/public/certificate"
             };
 
             Exception lastEx = null;
@@ -250,27 +256,50 @@ namespace ABDM.Api
                     var resp = await _http.GetAsync(endpoint);
                     var respBody = await resp.Content.ReadAsStringAsync();
 
-                    if (!resp.IsSuccessStatusCode) { lastEx = new Exception($"PublicKey Error [{resp.StatusCode}]: {respBody}"); continue; }
+                    if (!resp.IsSuccessStatusCode || string.IsNullOrWhiteSpace(respBody))
+                    {
+                        lastEx = new Exception($"PublicKey Error [{resp.StatusCode}]: {respBody}");
+                        continue;
+                    }
 
                     // Plain PEM string
                     if (respBody.TrimStart().StartsWith("-----BEGIN"))
-                        return respBody.Trim();
+                    {
+                        _cachedPublicKey = respBody.Trim();
+                        return _cachedPublicKey;
+                    }
 
-                    // JSON response ∩┐╜ try common key names
+                    // JSON response — try common key names
                     if (respBody.TrimStart().StartsWith("{"))
                     {
                         var dict = SimpleJson.Deserialize(respBody);
                         foreach (var key in new[] { "publicKey", "cert", "certificate", "public_key" })
+                        {
                             if (dict.ContainsKey(key) && !string.IsNullOrEmpty(dict[key]?.ToString()))
-                                return dict[key].ToString();
+                            {
+                                _cachedPublicKey = dict[key].ToString();
+                                return _cachedPublicKey;
+                            }
+                        }
                     }
+
                     // Fallback: return raw body as-is (might be plain base64 or PEM)
-                    _cachedPublicKey = respBody.Trim();
-                    return _cachedPublicKey;
+                    if (respBody.Trim().Length > 20)
+                    {
+                        _cachedPublicKey = respBody.Trim();
+                        return _cachedPublicKey;
+                    }
                 }
-                catch (Exception ex) { lastEx = ex; }
+                catch (Exception ex)
+                {
+                    lastEx = ex;
+                }
             }
-            throw lastEx ?? new Exception("PublicKey Error: All endpoints failed.");
+
+            _logger.LogWarning($"GetPublicKeyAsync: All NHA Certificate endpoints failed ({lastEx?.Message}). Retrying with primary endpoint.");
+            if (!string.IsNullOrEmpty(_cachedPublicKey)) return _cachedPublicKey;
+
+            throw lastEx ?? new Exception("PublicKey Error: NHA Public Key Certificate is currently unavailable from Gateway.");
         }
 
         // ??? RSA Encrypt (OAEP SHA-1 ∩┐╜ built-in .NET 4.8) ????????????????????
@@ -636,18 +665,23 @@ namespace ABDM.Api
                     {
                         // Aadhaar enrollment verify
                         url = $"{_cfg.AbhaServiceUrl}/enrollment/enrol/byAadhaar";
+                        var otpDict = new Dictionary<string, object>
+                        {
+                            ["timeStamp"] = ts,
+                            ["txnId"]     = request.TransactionId,
+                            ["otpValue"]  = encOtp
+                        };
+                        if (!string.IsNullOrWhiteSpace(request.Mobile) && request.Mobile.Trim().Length == 10)
+                        {
+                            otpDict["mobile"] = request.Mobile.Trim();
+                        }
+
                         payloadJson = SimpleJson.Serialize(new Dictionary<string, object>
                         {
                             ["authData"] = new Dictionary<string, object>
                             {
                                 ["authMethods"] = new[] { "otp" },
-                                ["otp"] = new Dictionary<string, object>
-                                {
-                                    ["timeStamp"] = ts,
-                                    ["txnId"]     = request.TransactionId,
-                                    ["otpValue"]  = encOtp,
-                                    ["mobile"]    = request.Mobile
-                                }
+                                ["otp"] = otpDict
                             },
                             ["consent"] = new Dictionary<string, object>
                             {
@@ -724,23 +758,29 @@ namespace ABDM.Api
                 {
                     var token     = await GetAccessTokenAsync();
                     var publicKey = await GetPublicKeyAsync(token);
-                    var encrypted = Encrypt(request.LoginId.Trim(), publicKey);
 
-                    string loginIdClean = request.LoginId?.Replace("-", "").Trim() ?? "";
+                    string loginIdClean = request.LoginId?.Replace("-", "").Replace(" ", "").Trim() ?? "";
                     string loginHint = "mobile";
                     string otpSystem = "abdm";
                     string[] scope = new[] { "abha-login", "mobile-verify" };
 
-                    if (request.LoginType?.ToUpper() == "AADHAAR" || (loginIdClean.Length == 12 && System.Text.RegularExpressions.Regex.IsMatch(loginIdClean, "^[0-9]+$")))
+                    string reqTypeUpper = request.LoginType?.ToUpper().Trim() ?? "";
+                    string loginIdToEncrypt = request.LoginId?.Trim() ?? "";
+
+                    if (reqTypeUpper == "AADHAAR" || (loginIdClean.Length == 12 && System.Text.RegularExpressions.Regex.IsMatch(loginIdClean, "^[0-9]+$")))
                     {
                         loginHint = "aadhaar";
                         otpSystem = "aadhaar";
                         scope = new[] { "abha-login", "aadhaar-verify" };
+                        loginIdToEncrypt = loginIdClean;
                     }
                     else if (loginIdClean.Length == 14 && System.Text.RegularExpressions.Regex.IsMatch(loginIdClean, "^[0-9]+$"))
                     {
                         loginHint = "abha-number";
-                        if (request.LoginType?.ToUpper() == "AADHAAR")
+                        // Format ABHA Number as 91-XXXX-XXXX-XXXX for NHA validator
+                        loginIdToEncrypt = $"{loginIdClean.Substring(0, 2)}-{loginIdClean.Substring(2, 4)}-{loginIdClean.Substring(6, 4)}-{loginIdClean.Substring(10, 4)}";
+                        
+                        if (reqTypeUpper.Contains("AADHAAR"))
                         {
                             otpSystem = "aadhaar";
                             scope = new[] { "abha-login", "aadhaar-verify" };
@@ -751,12 +791,30 @@ namespace ABDM.Api
                             scope = new[] { "abha-login", "mobile-verify" };
                         }
                     }
-                    else if (loginIdClean.Contains("@"))
+                    else if (loginIdClean.Contains("@") || reqTypeUpper.Contains("ABHA-ADDRESS") || reqTypeUpper.Contains("ABHA ADDRESS"))
                     {
                         loginHint = "abha-address";
+                        loginIdToEncrypt = request.LoginId.Trim();
+                        if (reqTypeUpper.Contains("AADHAAR"))
+                        {
+                            otpSystem = "aadhaar";
+                            scope = new[] { "abha-login", "aadhaar-verify" };
+                        }
+                        else
+                        {
+                            otpSystem = "abdm";
+                            scope = new[] { "abha-login", "mobile-verify" };
+                        }
+                    }
+                    else if (loginIdClean.Length == 10)
+                    {
+                        loginHint = "mobile";
+                        loginIdToEncrypt = loginIdClean;
                         otpSystem = "abdm";
                         scope = new[] { "abha-login", "mobile-verify" };
                     }
+
+                    var encrypted = Encrypt(loginIdToEncrypt, publicKey);
 
                     AddCommonHeaders(token);
                     var payload = SimpleJson.Serialize(new Dictionary<string, object>
@@ -1014,13 +1072,13 @@ namespace ABDM.Api
                             var acc = a as Dictionary<string, object>;
                             if (acc != null)
                             {
-                                loginResp.Accounts.Add(new AbhaProfile
-                                {
-                                    HealthIdNumber = acc.ContainsKey("ABHANumber")            ? acc["ABHANumber"]?.ToString()            : "",
-                                    Name           = acc.ContainsKey("name")                  ? acc["name"]?.ToString()                  : "",
-                                    AbhaAddress    = acc.ContainsKey("preferredAbhaAddress")  ? acc["preferredAbhaAddress"]?.ToString()  : "",
-                                    ProfilePhoto   = acc.ContainsKey("profilePhoto")          ? acc["profilePhoto"]?.ToString()          : ""
-                                });
+                                var p = new AbhaProfile();
+                                PopulateProfileFromDict(p, acc);
+                                p.AbhaAddress = GetFirst(acc, "preferredAbhaAddress", "abhaAddress", "healthId");
+                                p.HealthIdNumber = GetFirst(acc, "ABHANumber", "healthIdNumber", "abhaNumber");
+                                if (string.IsNullOrEmpty(p.Mobile))
+                                    p.Mobile = request.Mobile ?? GetFirst(acc, "mobile", "maskedMobile");
+                                loginResp.Accounts.Add(p);
                             }
                         }
                     }

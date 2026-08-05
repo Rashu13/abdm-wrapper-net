@@ -61,13 +61,14 @@ public class AbdmM1Controller : ControllerBase
         // Validate Captcha if provided
         if (!string.IsNullOrEmpty(request.CaptchaTxnId))
         {
-            if (!_captchaStore.TryRemove(request.CaptchaTxnId, out var storedCaptcha) ||
+            if (!_captchaStore.TryGetValue(request.CaptchaTxnId, out var storedCaptcha) ||
                 storedCaptcha.Expiry < DateTime.UtcNow ||
-                !string.Equals(storedCaptcha.Code, request.CaptchaValue, StringComparison.OrdinalIgnoreCase))
+                !string.Equals(storedCaptcha.Code?.Trim(), request.CaptchaValue?.Trim(), StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogWarning($"M1 GenerateOtp: Captcha validation failed for TxnId={request.CaptchaTxnId}");
                 return BadRequest(new { success = false, message = "Invalid or expired Security Captcha code. Please try again." });
             }
+            _captchaStore.TryRemove(request.CaptchaTxnId, out _);
         }
 
         if (request.ConsentTimestamp != null || request.Chk1 == true)
