@@ -52,13 +52,13 @@ public class DiscoveryV3Service : IDiscoveryV3Service
         if (patient != null)
         {
             _logger.LogInformation($"Patient found in DB: {patient.Name} / {abhaAddress}");
-            _ = SendOnDiscoverAsync(discoverRequest, patient, incomingRequestId.ToString(), hipId);
+            await SendOnDiscoverAsync(discoverRequest, patient, incomingRequestId.ToString(), hipId);
             return new GenericV3Response { HttpStatus = "OK", Status = "SUCCESS" };
         }
 
         // Patient not in DB → send on-discover with "not found" error
         _logger.LogWarning($"Patient not found for abhaAddress: {abhaAddress}");
-        _ = SendOnDiscoverErrorAsync(discoverRequest, incomingRequestId.ToString(), hipId);
+        await SendOnDiscoverErrorAsync(discoverRequest, incomingRequestId.ToString(), hipId);
         return new GenericV3Response { HttpStatus = "OK", Status = "NOT_FOUND" };
     }
 
