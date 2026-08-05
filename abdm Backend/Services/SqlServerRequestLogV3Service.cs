@@ -203,7 +203,14 @@ public class SqlServerRequestLogV3Service : IRequestLogV3Service
             return response;
         }
 
-        throw new Exception($"Request not found in database for: {requestId}");
+        return new RequestStatusV3Response
+        {
+            Status = "NOT_FOUND",
+            Errors = new List<ErrorResponse>
+            {
+                new ErrorResponse { Message = $"Request not found in database for: {requestId}" }
+            }
+        };
     }
 
     public async Task SaveHealthInformationRequestAsync(HIPHealthInformationRequest hipHealthInformationRequest, RequestStatus requestStatus)

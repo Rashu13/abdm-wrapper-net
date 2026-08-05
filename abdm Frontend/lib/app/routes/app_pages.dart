@@ -17,6 +17,8 @@ import '../modules/m3_hiu/bindings/hiu_binding.dart';
 import '../modules/m3_hiu/views/consent_request_view.dart';
 import '../modules/m3_hiu/views/health_record_viewer_page.dart';
 
+import '../modules/m2_hip/views/scan_share_view.dart';
+
 class AppPages {
   static const INITIAL = Routes.SPLASH;
 
@@ -64,6 +66,11 @@ class AppPages {
     GetPage(
       name: Routes.M2_DISCOVERY,
       page: () => const DiscoveryView(),
+      binding: HipBinding(),
+    ),
+    GetPage(
+      name: Routes.M2_SCAN_SHARE,
+      page: () => const ScanShareView(),
       binding: HipBinding(),
     ),
     GetPage(

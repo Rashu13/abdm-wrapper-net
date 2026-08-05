@@ -13,6 +13,7 @@ abstract class Routes {
   // Milestone M2 Routes
   static const M2_DISCOVERY = '/m2/discovery';
   static const M2_LINK_CARE_CONTEXT = '/m2/link-care-context';
+  static const M2_SCAN_SHARE = '/m2/scan-share';
 
   // Milestone M3 Routes
   static const M3_CONSENT_REQUEST = '/m3/consent-request';

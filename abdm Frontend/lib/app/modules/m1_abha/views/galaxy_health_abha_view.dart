@@ -28,7 +28,10 @@ class GalaxyHealthAbhaView extends GetView<AbhaCreationController> {
             constraints: const BoxConstraints(maxWidth: 850),
             child: Obx(() {
               // If user selected Create ABHA or an OTP transaction is active, show the Creation Form
-              if (controller.isFormActive.value || controller.txnId.value.isNotEmpty) {
+              if (controller.isFormActive.value ||
+                  controller.txnId.value.isNotEmpty ||
+                  controller.isCardCompleted.value ||
+                  controller.abhaProfile.value != null) {
                 return _buildAbhaFormWidget(context);
               }
 
@@ -162,9 +165,7 @@ class GalaxyHealthAbhaView extends GetView<AbhaCreationController> {
         }
 
         // If ABHA Card profile created and completed, show ABHA Card
-        if (controller.isCardCompleted.value &&
-            profile != null &&
-            profile.abhaNumber != null) {
+        if (controller.isCardCompleted.value && profile != null) {
           return _buildCardDisplay(profile);
         }
 
@@ -933,6 +934,41 @@ class GalaxyHealthAbhaView extends GetView<AbhaCreationController> {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+
+        // Register Patient in HIP Database Action Button
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: Obx(() => ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              elevation: 4,
+            ),
+            onPressed: controller.isRegisteringDb.value
+                ? null
+                : () => controller.registerPatientInDatabase(),
+            icon: controller.isRegisteringDb.value
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Icon(Icons.how_to_reg, color: Colors.white, size: 20),
+            label: Text(
+              controller.isRegisteringDb.value
+                  ? 'Registering in DB...'
+                  : 'REGISTER PATIENT IN DATABASE',
+              style: fontBold.copyWith(color: Colors.white, fontSize: 14),
+            ),
+          )),
         ),
       ],
     );

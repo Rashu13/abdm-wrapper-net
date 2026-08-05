@@ -60,13 +60,46 @@ class AbhaProfileModel {
       }
     }
 
+    Map<String, dynamic> abhaProfileMap = {};
+    if (data['ABHAProfile'] is Map<String, dynamic>) {
+      abhaProfileMap = data['ABHAProfile'] as Map<String, dynamic>;
+    } else if (json['ABHAProfile'] is Map<String, dynamic>) {
+      abhaProfileMap = json['ABHAProfile'] as Map<String, dynamic>;
+    }
+
+    Map<String, dynamic> profileMap = {};
+    if (data['profile'] is Map<String, dynamic>) {
+      profileMap = data['profile'] as Map<String, dynamic>;
+    } else if (json['profile'] is Map<String, dynamic>) {
+      profileMap = json['profile'] as Map<String, dynamic>;
+    }
+
+    Map<String, dynamic> accountMap = {};
+    if (data['account'] is Map<String, dynamic>) {
+      accountMap = data['account'] as Map<String, dynamic>;
+    } else if (json['account'] is Map<String, dynamic>) {
+      accountMap = json['account'] as Map<String, dynamic>;
+    }
+
+    Map<String, dynamic> authResultMap = {};
+    if (data['authResult'] is Map<String, dynamic>) {
+      authResultMap = data['authResult'] as Map<String, dynamic>;
+    }
+
+    Map<String, dynamic> patientMap = {};
+    if (authResultMap['patient'] is Map<String, dynamic>) {
+      patientMap = authResultMap['patient'] as Map<String, dynamic>;
+    } else if (data['patient'] is Map<String, dynamic>) {
+      patientMap = data['patient'] as Map<String, dynamic>;
+    }
+
     // Helper to pick first non-empty string value across sources and keys
     String? pickVal(List<Map<String, dynamic>> sources, List<String> keys) {
       for (var source in sources) {
         for (var key in keys) {
           if (source.containsKey(key) && source[key] != null) {
             var val = source[key].toString().trim();
-            if (val.isNotEmpty) {
+            if (val.isNotEmpty && val.toLowerCase() != 'null') {
               return val;
             }
           }
@@ -75,13 +108,22 @@ class AbhaProfileModel {
       return null;
     }
 
-    var sources = [firstAccount, data, json];
+    var sources = [
+      firstAccount,
+      abhaProfileMap,
+      profileMap,
+      accountMap,
+      patientMap,
+      authResultMap,
+      data,
+      json
+    ];
 
     // Extract full name
-    String? nameVal = pickVal(sources, ['name', 'Name']);
-    String? fn = pickVal(sources, ['firstName', 'FirstName']);
-    String? mn = pickVal(sources, ['middleName', 'MiddleName']);
-    String? ln = pickVal(sources, ['lastName', 'LastName']);
+    String? nameVal = pickVal(sources, ['name', 'Name', 'fullName', 'FullName', 'patientName', 'PatientName']);
+    String? fn = pickVal(sources, ['firstName', 'FirstName', 'first_name']);
+    String? mn = pickVal(sources, ['middleName', 'MiddleName', 'middle_name']);
+    String? ln = pickVal(sources, ['lastName', 'LastName', 'last_name']);
     String fullName = nameVal ?? '${fn ?? ''} ${mn ?? ''} ${ln ?? ''}'.trim();
     if (fullName.isEmpty) fullName = 'ABHA Holder';
 
@@ -101,30 +143,30 @@ class AbhaProfileModel {
       }
     }
 
-    String? token = pickVal(sources, ['xToken', 'token', 'ABHAToken', 'userToken', 'UserToken']);
-    String? abhaNum = pickVal(sources, ['healthIdNumber', 'abhaNumber', 'ABHANumber', 'HealthIdNumber', 'AbhaNumber']);
-    String? abhaAddr = pickVal(sources, ['abhaAddress', 'healthId', 'phrAddress', 'preferredAbhaAddress', 'AbhaAddress', 'PreferredAbhaAddress']);
-    String? gender = pickVal(sources, ['gender', 'Gender']) ?? 'N/A';
-    String? dob = pickVal(sources, ['dob', 'dateOfBirth', 'dayOfBirth', 'Dob', 'DateOfBirth']);
+    String? token = pickVal(sources, ['xToken', 'token', 'ABHAToken', 'userToken', 'UserToken', 'x_token']);
+    String? abhaNum = pickVal(sources, ['healthIdNumber', 'abhaNumber', 'ABHANumber', 'HealthIdNumber', 'AbhaNumber', 'health_id_number']);
+    String? abhaAddr = pickVal(sources, ['abhaAddress', 'healthId', 'phrAddress', 'preferredAbhaAddress', 'AbhaAddress', 'PreferredAbhaAddress', 'health_id']);
+    String? gender = pickVal(sources, ['gender', 'Gender', 'sex', 'Sex']) ?? 'N/A';
+    String? dob = pickVal(sources, ['dob', 'dateOfBirth', 'dayOfBirth', 'Dob', 'DateOfBirth', 'date_of_birth']);
 
     if (dob == null) {
-      String? yob = pickVal(sources, ['yearOfBirth', 'YearOfBirth']);
+      String? yob = pickVal(sources, ['yearOfBirth', 'YearOfBirth', 'year_of_birth']);
       if (yob != null) {
-        String? mob = pickVal(sources, ['monthOfBirth', 'MonthOfBirth']) ?? '01';
-        String? dobDay = pickVal(sources, ['dayOfBirth', 'DayOfBirth']) ?? '01';
+        String? mob = pickVal(sources, ['monthOfBirth', 'MonthOfBirth', 'month_of_birth']) ?? '01';
+        String? dobDay = pickVal(sources, ['dayOfBirth', 'DayOfBirth', 'day_of_birth']) ?? '01';
         dob = '$dobDay/$mob/$yob';
       }
     }
 
-    String? mobile = pickVal(sources, ['mobile', 'phoneNumber', 'maskedMobile', 'Mobile', 'PhoneNumber', 'MaskedMobile']);
-    String? email = pickVal(sources, ['email', 'Email']);
-    String? photo = pickVal(sources, ['profilePhoto', 'photo', 'kycPhoto', 'ProfilePhoto', 'Photo', 'KycPhoto']);
-    String? address = pickVal(sources, ['address', 'Address', 'fullAddress', 'FullAddress']);
-    String? pincode = pickVal(sources, ['pincode', 'pinCode', 'Pincode', 'PinCode']);
-    String? districtName = pickVal(sources, ['districtName', 'district', 'DistrictName', 'District']);
-    String? stateName = pickVal(sources, ['stateName', 'state', 'StateName', 'State']);
-    String? stateCode = pickVal(sources, ['stateCode', 'StateCode']);
-    String? districtCode = pickVal(sources, ['districtCode', 'DistrictCode']);
+    String? mobile = pickVal(sources, ['mobile', 'phoneNumber', 'maskedMobile', 'Mobile', 'PhoneNumber', 'MaskedMobile', 'mobileNumber', 'MobileNumber', 'cell']);
+    String? email = pickVal(sources, ['email', 'Email', 'emailId', 'EmailId']);
+    String? photo = pickVal(sources, ['profilePhoto', 'photo', 'kycPhoto', 'ProfilePhoto', 'Photo', 'KycPhoto', 'image', 'Image']);
+    String? address = pickVal(sources, ['address', 'Address', 'fullAddress', 'FullAddress', 'addressLine', 'AddressLine', 'house', 'House', 'street', 'Street']);
+    String? pincode = pickVal(sources, ['pincode', 'pinCode', 'Pincode', 'PinCode', 'zip', 'Zip']);
+    String? districtName = pickVal(sources, ['districtName', 'district', 'DistrictName', 'District', 'district_name']);
+    String? stateName = pickVal(sources, ['stateName', 'state', 'StateName', 'State', 'state_name']);
+    String? stateCode = pickVal(sources, ['stateCode', 'StateCode', 'state_code']);
+    String? districtCode = pickVal(sources, ['districtCode', 'DistrictCode', 'district_code']);
 
     return AbhaProfileModel(
       abhaNumber: abhaNum,

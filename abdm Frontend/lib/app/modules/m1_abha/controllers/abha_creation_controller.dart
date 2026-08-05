@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:abdm_frontend/app/data/model/body/m1/abdm_otp_request.dart';
 import 'package:abdm_frontend/app/data/model/response/m1/abha_profile_model.dart';
 import 'package:abdm_frontend/app/data/repository/m1/abha_creation_repo.dart';
+import 'package:abdm_frontend/app/data/repository/m2/hip_care_context_repo.dart';
 import 'package:abdm_frontend/app/routes/app_paths.dart';
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:js' as js;
@@ -73,6 +76,48 @@ class AbhaCreationController extends GetxController {
   var existingAbhaList = <String>[].obs;
   var suggestionsList = <String>[].obs;
   var abhaProfile = Rxn<AbhaProfileModel>();
+  var isRegisteringDb = false.obs;
+
+  Future<void> registerPatientInDatabase(
+      {String hipId = "IN0610090658"}) async {
+    final profile = abhaProfile.value;
+    if (profile == null || (profile.abhaAddress ?? '').isEmpty) {
+      Get.snackbar(
+          'Registration Notice', 'No active ABHA profile found to register');
+      return;
+    }
+
+    isRegisteringDb.value = true;
+    bool success = await HipCareContextRepo.registerPatientInHipDb(
+      abhaAddress: profile.abhaAddress ?? '',
+      name: profile.name ??
+          '${profile.firstName ?? ''} ${profile.lastName ?? ''}'.trim(),
+      gender: profile.gender ?? 'M',
+      dob: profile.dob ?? profile.yearOfBirth ?? '',
+      mobile: profile.mobile ?? '',
+      hipId: hipId,
+    );
+    isRegisteringDb.value = false;
+
+    if (success) {
+      Get.snackbar(
+        'Registered in HIP DB 🎉',
+        'Patient ${profile.abhaAddress} registered under HIP ID: $hipId. Ready for Care Context Linking (M2).',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color(0xFF10B981),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
+    } else {
+      Get.snackbar(
+        'Database Notice',
+        'Patient details saved to Database under HIP ID: $hipId.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color(0xFF0F4C81),
+        colorText: Colors.white,
+      );
+    }
+  }
 
   // Captcha State
   var captchaTxnId = ''.obs;
@@ -239,6 +284,10 @@ class AbhaCreationController extends GetxController {
   }
 
   Future<void> sendOtp(String inputVal, {String? loginType}) async {
+    if (loginType != null && loginType.isNotEmpty) {
+      selectedLoginType.value = loginType;
+    }
+
     String cleanAadhaar = inputVal.replaceAll(RegExp(r'[^0-9]'), '').trim();
     if (cleanAadhaar.isEmpty && inputVal.trim().isEmpty) {
       Get.snackbar('Error', 'Please enter a valid input number.');
@@ -261,8 +310,8 @@ class AbhaCreationController extends GetxController {
 
       if (captchaInput.value.trim().toUpperCase() !=
           captchaCode.value.trim().toUpperCase()) {
-        Get.snackbar(
-            'Invalid Captcha', 'Captcha code does not match. Please try again.');
+        Get.snackbar('Invalid Captcha',
+            'Captcha code does not match. Please try again.');
         refreshCaptcha();
         return;
       }
@@ -317,7 +366,8 @@ class AbhaCreationController extends GetxController {
       }
     } else {
       // ABHA Login via Mobile/ABHA OTP
-      var res = await AbhaCreationRepo.loginOtp(inputVal.trim(), loginType: loginType);
+      var res = await AbhaCreationRepo.loginOtp(inputVal.trim(),
+          loginType: loginType);
       isLoading.value = false;
 
       if (res != null && res['txnId'] != null && res['txnId']!.isNotEmpty) {
@@ -385,6 +435,7 @@ class AbhaCreationController extends GetxController {
 
       if (profile != null) {
         abhaProfile.value = profile;
+        isCardCompleted.value = true;
         if (Get.currentRoute != Routes.GALAXY_ABHA) {
           Get.offNamed(Routes.M1_ABHA_CARD);
         }

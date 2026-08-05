@@ -6,6 +6,7 @@ import '../widgets/dashboard_action_grid.dart';
 import '../../m1_abha/views/create_abha_view.dart';
 import '../../m2_hip/views/discovery_view.dart';
 import '../../m3_hiu/views/consent_request_view.dart';
+import '../../m2_hip/views/scan_share_view.dart';
 import '../../../../util/constants.dart';
 import '../../../../util/style.dart';
 
@@ -17,6 +18,7 @@ class DashboardView extends GetView<DashboardController> {
     CreateAbhaView(),
     const DiscoveryView(),
     const ConsentRequestView(),
+    const ScanShareView(),
   ];
 
   @override
@@ -201,6 +203,13 @@ class DashboardView extends GetView<DashboardController> {
                                     title: "M3: HIU Records",
                                     subtitle: "Consents & FHIR Data",
                                   )),
+                              Obx(() => _buildSidebarTile(
+                                    index: 4,
+                                    icon: Icons.qr_code_scanner_outlined,
+                                    activeIcon: Icons.qr_code_scanner,
+                                    title: "Scan & Share",
+                                    subtitle: "OPD QR & Token Engine",
+                                  )),
                             ],
                           ),
                         ),
@@ -250,6 +259,10 @@ class DashboardView extends GetView<DashboardController> {
                 BottomNavigationBarItem(
                   icon: Icon(Icons.folder_shared),
                   label: 'M3: HIU',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.qr_code_scanner),
+                  label: 'Scan & Share',
                 ),
               ],
             ),

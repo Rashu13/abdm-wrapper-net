@@ -116,7 +116,15 @@ class DashboardActionGrid extends StatelessWidget {
                       onTap: () => onNavigateTab(3), // M3 HIU Consents
                     ),
 
-                    // Card 5: Token History
+                    // Card 5: Scan & Share OPD Counter
+                    _DashboardActionCard(
+                      icon: Icons.qr_code_scanner,
+                      title: "Scan & Share OPD Engine",
+                      subtitle: "Generate OPD Counter QR & manage patient token queue",
+                      onTap: () => onNavigateTab(4), // Tab index 4: ScanShareView
+                    ),
+
+                    // Card 6: Token History
                     _DashboardActionCard(
                       icon: Icons.history,
                       title: "Token History",

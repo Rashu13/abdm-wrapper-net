@@ -1,8 +1,10 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using AbdmWrapperNet.Services;
 using AbdmWrapperNet.Data;
+using AbdmWrapperNet.Common;
 using System.Linq;
 
 namespace AbdmWrapperNet.Controllers;
@@ -14,12 +16,14 @@ public class ConfigController : ControllerBase
     private readonly IGatewayClient _gatewayClient;
     private readonly ILogger<ConfigController> _logger;
     private readonly AppDbContext _db;
+    private readonly AbdmConfig _abdmConfig;
 
-    public ConfigController(IGatewayClient gatewayClient, ILogger<ConfigController> logger, AppDbContext db)
+    public ConfigController(IGatewayClient gatewayClient, ILogger<ConfigController> logger, AppDbContext db, IOptions<AbdmConfig> abdmConfig)
     {
         _gatewayClient = gatewayClient;
         _logger = logger;
         _db = db;
+        _abdmConfig = abdmConfig.Value;
     }
 
     public class BridgeUrlRequest
@@ -59,6 +63,20 @@ public class ConfigController : ControllerBase
         return Content(responseString, "application/json");
     }
 
+    /// <summary>
+    /// Returns HIP configuration (HipId, HipName) from appsettings.json — for frontend dynamic use.
+    /// </summary>
+    [HttpGet("settings")]
+    public IActionResult GetSettings()
+    {
+        return Ok(new
+        {
+            hipId = _abdmConfig.HipId,
+            hipName = _abdmConfig.HipName,
+            environment = _abdmConfig.Environment,
+        });
+    }
+
     [HttpGet("request-logs")]
     public IActionResult GetRequestLogs()
     {
@@ -81,3 +99,4 @@ public class ConfigController : ControllerBase
         return Ok(logs);
     }
 }
+

@@ -18,11 +18,12 @@ class ApiEndpoints {
   static String reKycOtp = "$baseUrl/api/v3/m1/re-kyc-otp";
   static String reKycVerify = "$baseUrl/api/v3/m1/re-kyc-verify";
 
-  // ─── M2: HIP Care Context Linking (HIPFacadeLinkV3Controller) ────────────
+  // ─── M2: HIP Care Context Linking & Scan & Share ───────────────────────
   static String addPatients = "$baseUrl/v3/add-patients";
   static String linkCareContext = "$baseUrl/v3/link-carecontexts";
   static String getLinkStatus(String requestId) => "$baseUrl/v3/link-status/$requestId";
   static String smsDeepLinkingNotify = "$baseUrl/v3/sms/notify";
+  static String profileShare = "$baseUrl/v3/hip/patient/share";
 
   // ─── M3: HIU Consents & Health Records (HIUFacadeControllers) ───────────
   static String createConsentRequest = "$baseUrl/v3/consent-init";

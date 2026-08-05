@@ -207,6 +207,40 @@ class AbhaCardView extends GetView<AbhaCreationController> {
                           ),
                         ),
                       )),
+                  const SizedBox(height: 12),
+
+                  // Register Patient in HIP Database Button
+                  Obx(() => SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF10B981),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: controller.isRegisteringDb.value
+                              ? null
+                              : () => controller.registerPatientInDatabase(),
+                          icon: controller.isRegisteringDb.value
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                )
+                              : const Icon(Icons.how_to_reg, color: Colors.white, size: 20),
+                          label: Text(
+                            controller.isRegisteringDb.value
+                                ? 'Registering in DB...'
+                                : 'REGISTER PATIENT IN DATABASE',
+                            style: fontBold.copyWith(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      )),
                   const SizedBox(height: 10),
 
                   // Verify Another button
