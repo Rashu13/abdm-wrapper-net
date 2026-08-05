@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
+    <PackageReference Include="Hl7.Fhir.R4" Version="6.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.2" />
+    <PackageReference Include="MongoDB.Driver" Version="3.9.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.1" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="abdm\BaseForm.cs" />
+    <Compile Remove="abdm\frm*" />
+    <Compile Remove="abdm\uc*" />
+    <EmbeddedResource Remove="abdm\frm*" />
+    <EmbeddedResource Remove="abdm\uc*" />
+    <None Remove="abdm\frm*" />
+    <None Remove="abdm\uc*" />
+    <Compile Remove="AbdmWinFormsTest\**" />
+    <EmbeddedResource Remove="AbdmWinFormsTest\**" />
+    <None Remove="AbdmWinFormsTest\**" />
+  </ItemGroup>
+
+  <!-- Force project file reload (Last updated: 2026-07-08 14:16) -->
+</Project>
