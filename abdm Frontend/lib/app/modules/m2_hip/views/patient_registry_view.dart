@@ -252,7 +252,7 @@ class PatientRegistryView extends StatelessWidget {
               ],
             ),
           ),
-          // Care context badge
+          // Care context badge & Link button
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -275,9 +275,148 @@ class PatientRegistryView extends StatelessWidget {
                   ),
                 ),
               ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: () => _showLinkCareContextDialog(Get.context!, p, Get.find<PatientRegistryController>()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.add_link_rounded, size: 16),
+                label: const Text(
+                  'Link Care Context',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  void _showLinkCareContextDialog(
+      BuildContext context, PatientRegistryModel patient, PatientRegistryController controller) {
+    final visitRefCtrl = TextEditingController(
+        text: 'VISIT-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}');
+    final displayCtrl = TextEditingController(
+        text: 'OPD Consultation - ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}');
+
+    Get.dialog(
+      Dialog(
+        backgroundColor: AppColor.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: 440,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.add_link_rounded, color: Color(0xFF10B981), size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Link Care Context (M2)',
+                            style: TextStyle(
+                                color: AppColor.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold)),
+                        Text('Patient: ${patient.name} (${patient.abhaAddress})',
+                            style: TextStyle(color: AppColor.textSecondary, fontSize: 12),
+                            overflow: TextOverflow.ellipsis),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text('Visit Reference Number',
+                  style: TextStyle(color: AppColor.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: visitRefCtrl,
+                style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: AppColor.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: AppColor.border),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text('Visit Display Title',
+                  style: TextStyle(color: AppColor.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: displayCtrl,
+                style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: AppColor.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: AppColor.border),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Get.back(),
+                    child: Text('Cancel', style: TextStyle(color: AppColor.textSecondary)),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      final ref = visitRefCtrl.text.trim();
+                      final disp = displayCtrl.text.trim();
+                      if (ref.isEmpty) {
+                        Get.snackbar('Error', 'Visit Reference cannot be empty.');
+                        return;
+                      }
+                      Get.back();
+                      controller.linkCareContextForPatient(
+                        abhaAddress: patient.abhaAddress,
+                        visitRef: ref,
+                        display: disp,
+                        hipId: patient.hipId,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    icon: const Icon(Icons.send_rounded, size: 16),
+                    label: const Text('Submit to ABDM Gateway', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:abdm_frontend/app/data/api/abdm_server.dart';
+import 'package:abdm_frontend/app/data/repository/m2/hip_care_context_repo.dart';
 import 'package:abdm_frontend/util/api_endpoints.dart';
 
 class PatientRegistryModel {
@@ -81,6 +82,49 @@ class PatientRegistryController extends GetxController {
       errorMessage.value = 'Error: $e';
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  var isLinkingMap = <String, bool>{}.obs;
+
+  Future<void> linkCareContextForPatient({
+    required String abhaAddress,
+    required String visitRef,
+    required String display,
+    String? hipId,
+  }) async {
+    isLinkingMap[abhaAddress] = true;
+    try {
+      bool success = await HipCareContextRepo.linkCareContext(
+        abhaAddress: abhaAddress,
+        visitRef: visitRef,
+        display: display,
+        requesterId: hipId,
+      );
+
+      if (success) {
+        Get.snackbar(
+          'Care Context Request Sent 🚀',
+          'Link request for "$visitRef" submitted to ABDM Gateway. Patient notification initiated.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: const Color(0xFF10B981),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
+        fetchPatients();
+      } else {
+        Get.snackbar(
+          'Linking Failed',
+          'Could not send care context link request for $abhaAddress.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: const Color(0xFFEF4444),
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Linking failed: $e', snackPosition: SnackPosition.TOP);
+    } finally {
+      isLinkingMap[abhaAddress] = false;
     }
   }
 }

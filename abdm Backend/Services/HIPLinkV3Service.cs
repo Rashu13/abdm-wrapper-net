@@ -151,7 +151,7 @@ public class HIPLinkV3Service : IHIPLinkV3Service
                 abhaAddress = patient.AbhaAddress,
                 name = patient.Name,
                 gender = patient.Gender,
-                yearOfBirth = int.TryParse(patient.DateOfBirth?.Length >= 4 ? patient.DateOfBirth[..4] : "0", out var yr) ? yr : 0
+                yearOfBirth = ParseYearOfBirth(patient.DateOfBirth)
             };
 
             var response = await _gateway.PostToGatewayAsync(
@@ -323,6 +323,19 @@ public class HIPLinkV3Service : IHIPLinkV3Service
         }
     }
 
+    private static int ParseYearOfBirth(string? dob)
+    {
+        if (string.IsNullOrWhiteSpace(dob)) return 1994;
+
+        var match = System.Text.RegularExpressions.Regex.Match(dob, @"\b(19\d{2}|20\d{2})\b");
+        if (match.Success && int.TryParse(match.Value, out int year))
+        {
+            return year;
+        }
+
+        return 1994;
+    }
+
     private static FacadeV3Response Error(string requestId, string msg) => new()
     {
         ClientRequestId = requestId,
@@ -330,3 +343,4 @@ public class HIPLinkV3Service : IHIPLinkV3Service
         HttpStatusCode = 400
     };
 }
+

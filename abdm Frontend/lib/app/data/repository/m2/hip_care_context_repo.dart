@@ -22,13 +22,29 @@ class HipCareContextRepo {
     return [];
   }
 
-  static Future<bool> linkCareContext(String abhaAddress, String visitRef) async {
+  static Future<bool> linkCareContext({
+    required String abhaAddress,
+    required String visitRef,
+    String? display,
+    String? requesterId,
+  }) async {
     try {
+      final reqId = "REQ_${DateTime.now().millisecondsSinceEpoch}";
       final response = await AbdmServer.postRequest(
         endpoint: ApiEndpoints.linkCareContext,
         body: {
+          'requestId': reqId,
+          'requesterId': requesterId ?? 'IN0610090658',
+          'abhaAddress': abhaAddress,
           'patientAbha': abhaAddress,
-          'careContexts': [{'referenceNumber': visitRef}]
+          'careContexts': [
+            {
+              'referenceNumber': visitRef,
+              'display': display ?? 'OPD Consultation ($visitRef)',
+              'hiType': 'OPConsultation',
+              'isLinked': false,
+            }
+          ]
         },
       );
       return response != null && (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 202);

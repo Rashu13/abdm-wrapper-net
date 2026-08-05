@@ -20,9 +20,13 @@ class CareContextController extends GetxController {
     isLoading.value = false;
   }
 
-  Future<void> linkNewCareContext(String abhaAddress, String visitRef) async {
+  Future<void> linkNewCareContext(String abhaAddress, String visitRef, {String? display}) async {
     isLinking.value = true;
-    bool success = await HipCareContextRepo.linkCareContext(abhaAddress, visitRef);
+    bool success = await HipCareContextRepo.linkCareContext(
+      abhaAddress: abhaAddress,
+      visitRef: visitRef,
+      display: display,
+    );
     isLinking.value = false;
     if (success) {
       Get.snackbar('Success', 'Care Context $visitRef linked to $abhaAddress!');
