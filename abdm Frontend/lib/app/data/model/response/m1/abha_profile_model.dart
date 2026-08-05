@@ -52,10 +52,18 @@ class AbhaProfileModel {
       data = json['data'] as Map<String, dynamic>;
     }
 
+    Map<String, dynamic> firstAccount = {};
+    if (data['accounts'] is List && (data['accounts'] as List).isNotEmpty) {
+      var item = (data['accounts'] as List).first;
+      if (item is Map<String, dynamic>) {
+        firstAccount = item;
+      }
+    }
+
     // Extract full name
-    String fullName = data['name'] ??
-        '${data['firstName'] ?? ''} ${data['middleName'] ?? ''} ${data['lastName'] ?? ''}'.trim();
-    if (fullName.isEmpty) fullName = json['name'] ?? 'ABHA User';
+    String fullName = data['name'] ?? firstAccount['name'] ??
+        '${data['firstName'] ?? firstAccount['firstName'] ?? ''} ${data['middleName'] ?? ''} ${data['lastName'] ?? firstAccount['lastName'] ?? ''}'.trim();
+    if (fullName.isEmpty) fullName = 'ABHA Holder';
 
     // Extract existing ABHA addresses
     List<String> existingAddrs = [];
@@ -65,6 +73,8 @@ class AbhaProfileModel {
       for (var acc in data['accounts']) {
         if (acc is Map && acc['abhaAddress'] != null) {
           existingAddrs.add(acc['abhaAddress'].toString());
+        } else if (acc is Map && acc['preferredAbhaAddress'] != null) {
+          existingAddrs.add(acc['preferredAbhaAddress'].toString());
         } else if (acc is String) {
           existingAddrs.add(acc);
         }
@@ -72,7 +82,6 @@ class AbhaProfileModel {
     }
 
     // Token extraction — NHA ABDM returns xToken at different levels
-    // Priority: data.xToken > data.token > json.xToken > json.token > data.ABHAToken
     String? token = data['xToken'] ??
         data['token'] ??
         data['ABHAToken'] ??
@@ -80,27 +89,58 @@ class AbhaProfileModel {
         json['token'] ??
         json['ABHAToken'];
 
+    String? abhaNum = data['healthIdNumber'] ??
+        data['abhaNumber'] ??
+        data['ABHANumber'] ??
+        firstAccount['ABHANumber'] ??
+        firstAccount['healthIdNumber'] ??
+        firstAccount['abhaNumber'];
+
+    String? abhaAddr = data['abhaAddress'] ??
+        data['healthId'] ??
+        data['phrAddress'] ??
+        data['preferredAbhaAddress'] ??
+        firstAccount['preferredAbhaAddress'] ??
+        firstAccount['abhaAddress'];
+
+    String? gender = data['gender'] ?? firstAccount['gender'] ?? 'N/A';
+    String? dob = data['dob'] ??
+        data['dateOfBirth'] ??
+        data['dayOfBirth'] ??
+        firstAccount['dob'] ??
+        firstAccount['dateOfBirth'];
+
+    if (dob == null && (data['yearOfBirth'] != null || firstAccount['yearOfBirth'] != null)) {
+      dob = '${data['dayOfBirth'] ?? '01'}/${data['monthOfBirth'] ?? '01'}/${data['yearOfBirth'] ?? firstAccount['yearOfBirth']}';
+    }
+
+    String? mobile = data['mobile'] ??
+        data['phoneNumber'] ??
+        data['maskedMobile'] ??
+        firstAccount['mobile'] ??
+        firstAccount['maskedMobile'];
+
     return AbhaProfileModel(
-      abhaNumber: data['healthIdNumber'] ?? data['abhaNumber'] ?? data['ABHANumber'],
-      abhaAddress: data['abhaAddress'] ?? data['healthId'] ?? data['phrAddress'],
+      abhaNumber: abhaNum,
+      abhaAddress: abhaAddr,
       existingAbhaAddresses: existingAddrs,
       name: fullName,
-      firstName: data['firstName'],
+      firstName: data['firstName'] ?? firstAccount['firstName'],
       middleName: data['middleName'],
-      lastName: data['lastName'],
-      gender: data['gender'] ?? 'M',
-      dob: data['dob'] ?? data['dateOfBirth'] ?? data['dayOfBirth'],
-      yearOfBirth: data['yearOfBirth'],
-      mobile: data['mobile'] ?? data['phoneNumber'],
-      email: data['email'],
-      profilePhoto: data['profilePhoto'] ?? data['photo'],
+      lastName: data['lastName'] ?? firstAccount['lastName'],
+      gender: gender,
+      dob: dob ?? 'N/A',
+      yearOfBirth: data['yearOfBirth'] ?? firstAccount['yearOfBirth'],
+      mobile: mobile ?? 'N/A',
+      email: data['email'] ?? firstAccount['email'],
+      profilePhoto: data['profilePhoto'] ?? data['photo'] ?? firstAccount['profilePhoto'] ?? firstAccount['photo'],
       userToken: token,
-      address: data['address'],
-      pincode: data['pincode'] ?? data['pinCode'],
-      districtName: data['districtName'],
-      stateName: data['stateName'],
-      stateCode: data['stateCode'],
-      districtCode: data['districtCode'],
+      address: data['address'] ?? firstAccount['address'],
+      pincode: data['pincode'] ?? data['pinCode'] ?? firstAccount['pincode'],
+      districtName: data['districtName'] ?? firstAccount['districtName'],
+      stateName: data['stateName'] ?? firstAccount['stateName'],
+      stateCode: data['stateCode'] ?? firstAccount['stateCode'],
+      districtCode: data['districtCode'] ?? firstAccount['districtCode'],
     );
   }
 }

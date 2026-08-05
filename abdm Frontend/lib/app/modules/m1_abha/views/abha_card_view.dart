@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -22,12 +23,17 @@ class AbhaCardView extends GetView<AbhaCreationController> {
         padding: const EdgeInsets.all(24.0),
         child: Obx(() {
           final profile = controller.abhaProfile.value;
-          String abhaNum = profile?.abhaNumber ?? '91-8842-1092-3312';
-          String abhaAddr = profile?.abhaAddress ?? 'user@abdm';
-          String name = profile?.name ?? 'Rahul Sharma';
-          String gender = profile?.gender ?? 'M';
-          String dob = profile?.dob ?? '15/08/1995';
-          String mobile = profile?.mobile ?? '9876543210';
+          String abhaNum = (profile?.abhaNumber != null && profile!.abhaNumber!.isNotEmpty) ? profile.abhaNumber! : 'N/A';
+          String abhaAddr = (profile?.abhaAddress != null && profile!.abhaAddress!.isNotEmpty) ? profile.abhaAddress! : 'N/A';
+          String name = (profile?.name != null && profile!.name!.isNotEmpty) ? profile.name! : 'ABHA Holder';
+          String gender = (profile?.gender != null && profile!.gender!.isNotEmpty) ? profile.gender! : 'N/A';
+          String dob = (profile?.dob != null && profile!.dob!.isNotEmpty) ? profile.dob! : 'N/A';
+          String mobile = (profile?.mobile != null && profile!.mobile!.isNotEmpty) ? profile.mobile! : 'N/A';
+          String address = (profile?.address != null && profile!.address!.isNotEmpty) ? profile.address! : 'N/A';
+          String pincode = (profile?.pincode != null && profile!.pincode!.isNotEmpty) ? profile.pincode! : 'N/A';
+          String district = (profile?.districtName != null && profile!.districtName!.isNotEmpty) ? profile.districtName! : 'N/A';
+          String state = (profile?.stateName != null && profile!.stateName!.isNotEmpty) ? profile.stateName! : 'N/A';
+          String email = (profile?.email != null && profile!.email!.isNotEmpty) ? profile.email! : 'N/A';
 
           return Column(
             children: [
@@ -94,34 +100,37 @@ class AbhaCardView extends GetView<AbhaCreationController> {
                       Divider(color: Colors.white.withOpacity(0.2)),
                       const SizedBox(height: 16),
 
-                      // Card Content: QR Code & User Identity
+                      // Card Content: Profile Photo, Details & QR Code
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: QrImageView(
-                              data: 'ABHA_NUM:$abhaNum|ABHA_ADDR:$abhaAddr',
-                              version: QrVersions.auto,
-                              size: 110.0,
-                            ),
-                          ),
-                          const SizedBox(width: 20),
+                          _buildProfilePhoto(profile?.profilePhoto),
+                          const SizedBox(width: 14),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(name, style: fontBold.copyWith(fontSize: 20, color: Colors.white)),
-                                const SizedBox(height: 8),
+                                Text(name, style: fontBold.copyWith(fontSize: 18, color: Colors.white)),
+                                const SizedBox(height: 6),
                                 Text('ABHA NUMBER', style: fontSmall.copyWith(color: Colors.white70, fontSize: 10)),
-                                Text(abhaNum, style: fontBold.copyWith(color: AppColor.accent, fontSize: 16)),
-                                const SizedBox(height: 8),
+                                Text(abhaNum, style: fontBold.copyWith(color: AppColor.accent, fontSize: 15)),
+                                const SizedBox(height: 6),
                                 Text('ABHA ADDRESS', style: fontSmall.copyWith(color: Colors.white70, fontSize: 10)),
-                                Text(abhaAddr, style: fontMedium.copyWith(color: Colors.white, fontSize: 14)),
+                                Text(abhaAddr, style: fontMedium.copyWith(color: Colors.white, fontSize: 13)),
                               ],
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: QrImageView(
+                              data: 'ABHA_NUM:$abhaNum|ABHA_ADDR:$abhaAddr',
+                              version: QrVersions.auto,
+                              size: 74.0,
                             ),
                           ),
                         ],
@@ -143,7 +152,57 @@ class AbhaCardView extends GetView<AbhaCreationController> {
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
+
+              // Address & Location Details Container
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.location_on_outlined, color: Color(0xFF0F4C81), size: 22),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Address & Contact Information',
+                          style: fontBold.copyWith(fontSize: 15, color: const Color(0xFF0F172A)),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 24, color: Color(0xFFE2E8F0)),
+                    _buildDetailRow('Full Address', address),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(child: _buildDetailRow('Pincode', pincode)),
+                        Expanded(child: _buildDetailRow('District', district)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(child: _buildDetailRow('State', state)),
+                        Expanded(child: _buildDetailRow('Email ID', email)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
 
               // Action Buttons
               Container(
@@ -164,11 +223,22 @@ class AbhaCardView extends GetView<AbhaCreationController> {
                             backgroundColor: Colors.transparent,
                             shadowColor: Colors.transparent,
                           ),
-                          onPressed: () {
-                            Get.snackbar('Download Started', 'Fetching printable PDF from /api/v3/m1/card...');
-                          },
-                          icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
-                          label: Text('Download Printable ABHA Card PDF', style: fontMedium.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                          onPressed: controller.isDownloadingCard.value
+                              ? null
+                              : () {
+                                  controller.downloadAbhaCard();
+                                },
+                          icon: controller.isDownloadingCard.value
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                )
+                              : const Icon(Icons.picture_as_pdf, color: Colors.white),
+                          label: Text(
+                            controller.isDownloadingCard.value ? 'Downloading ABHA Card...' : 'Download Printable ABHA Card PDF',
+                            style: fontMedium.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
                     ),
@@ -198,6 +268,45 @@ class AbhaCardView extends GetView<AbhaCreationController> {
     );
   }
 
+  Widget _buildProfilePhoto(String? photoB64) {
+    if (photoB64 != null && photoB64.trim().isNotEmpty) {
+      try {
+        String cleanB64 = photoB64.trim();
+        if (cleanB64.contains(',')) {
+          cleanB64 = cleanB64.split(',').last;
+        }
+        final bytes = base64Decode(cleanB64);
+        return Container(
+          width: 76,
+          height: 90,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white, width: 2),
+            color: Colors.white.withOpacity(0.2),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.memory(
+              bytes,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 45, color: Colors.white),
+            ),
+          ),
+        );
+      } catch (_) {}
+    }
+    return Container(
+      width: 76,
+      height: 90,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.5),
+        color: Colors.white.withOpacity(0.15),
+      ),
+      child: const Icon(Icons.person, size: 45, color: Colors.white70),
+    );
+  }
+
   Widget _buildCardDetailBadge(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,6 +314,23 @@ class AbhaCardView extends GetView<AbhaCreationController> {
         Text(label, style: fontSmall.copyWith(color: Colors.white60, fontSize: 9)),
         const SizedBox(height: 2),
         Text(value, style: fontMedium.copyWith(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: fontSmall.copyWith(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value.isNotEmpty ? value : 'N/A',
+          style: fontMedium.copyWith(color: const Color(0xFF0F172A), fontSize: 13.5, fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }

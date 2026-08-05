@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
@@ -26,6 +27,7 @@ class AbhaCreationController extends GetxController {
 
   var otp = ''.obs;
   var txnId = ''.obs;
+  var maskedMobile = ''.obs;
   var selectedAbhaHandle = ''.obs;
 
   // NHA Mandatory Consent Checkboxes
@@ -77,6 +79,129 @@ class AbhaCreationController extends GetxController {
   var captchaInput = ''.obs;
   var isFetchingCaptcha = false.obs;
 
+  // OTP Resend State (Max 2 Resends Allowed)
+  var resendCount = 0.obs;
+  var resendSeconds = 60.obs;
+  var canResend = false.obs;
+  Timer? _resendTimer;
+
+  void startResendTimer() {
+    _resendTimer?.cancel();
+    resendSeconds.value = 60;
+    canResend.value = false;
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (resendSeconds.value > 0) {
+        resendSeconds.value--;
+      } else {
+        canResend.value = true;
+        timer.cancel();
+      }
+    });
+  }
+
+  void resetResendState() {
+    _resendTimer?.cancel();
+    resendCount.value = 0;
+    resendSeconds.value = 60;
+    canResend.value = false;
+  }
+
+  Future<void> handleResendOtp() async {
+    if (resendCount.value >= 2) {
+      Get.snackbar(
+        'Resend Limit Reached',
+        'You can only resend OTP up to 2 times.',
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+
+    if (!canResend.value) {
+      Get.snackbar(
+        'Wait for Timer',
+        'Please wait until the countdown timer completes before resending.',
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+
+    resendCount.value++;
+    isLoading.value = true;
+
+    if (isCreateMode.value) {
+      // Fetch new captcha for resend
+      var captchaRes = await AbhaCreationRepo.fetchCaptcha();
+      if (captchaRes != null) {
+        captchaTxnId.value = captchaRes['captchaTxnId'] ?? '';
+        captchaCode.value = captchaRes['captchaCode'] ?? '';
+        captchaInput.value = captchaRes['captchaCode'] ?? '';
+      }
+
+      String? mobileVal = communicationMobile.value.trim();
+      if (mobileVal.isEmpty || mobileVal.length < 10) mobileVal = null;
+
+      var request = AbdmGenerateOtpRequest(
+        loginId: inputNumber.value,
+        loginType: "aadhaar",
+        aadhaar: inputNumber.value,
+        mobile: mobileVal,
+        operatorName: "NHA Partner Operator",
+        beneficiaryName: "Beneficiary",
+        consentTimestamp: DateTime.now().toUtc().toIso8601String(),
+        chk1: !chkIntendOtherDoc.value,
+        chk2: chkConsentLegacyRecords.value,
+        chk3: chkShareHealthRecords.value,
+        chk4: chkAnonymization.value,
+        chk5: chkInformedBeneficiary.value,
+        chk6: chkExplainedConsent.value,
+        chk7: true,
+        captchaTxnId: captchaTxnId.value,
+        captchaValue: captchaInput.value,
+      );
+      var res = await AbhaCreationRepo.generateAadhaarOtp(request);
+      isLoading.value = false;
+
+      if (res != null && res['txnId'] != null && res['txnId']!.isNotEmpty) {
+        txnId.value = res['txnId']!;
+        maskedMobile.value = res['maskedMobile'] ?? '';
+        startResendTimer();
+        Get.snackbar(
+          'OTP Resent',
+          'Aadhaar OTP resent successfully (Attempt ${resendCount.value}/2).',
+          snackPosition: SnackPosition.TOP,
+        );
+      } else {
+        resendCount.value--;
+        Get.snackbar(
+            'OTP Resend Failed', 'Unable to resend OTP. Please try again.');
+      }
+    } else {
+      var res = await AbhaCreationRepo.loginOtp(inputNumber.value);
+      isLoading.value = false;
+
+      if (res != null && res['txnId'] != null && res['txnId']!.isNotEmpty) {
+        txnId.value = res['txnId']!;
+        maskedMobile.value = res['maskedMobile'] ?? '';
+        startResendTimer();
+        Get.snackbar(
+          'OTP Resent',
+          'Login OTP resent successfully (Attempt ${resendCount.value}/2).',
+          snackPosition: SnackPosition.TOP,
+        );
+      } else {
+        resendCount.value--;
+        Get.snackbar(
+            'OTP Resend Failed', 'Unable to resend OTP. Please try again.');
+      }
+    }
+  }
+
+  @override
+  void onClose() {
+    _resendTimer?.cancel();
+    super.onClose();
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -98,10 +223,10 @@ class AbhaCreationController extends GetxController {
     isCreateMode.value = createMode;
   }
 
-  Future<void> sendOtp(String inputVal) async {
+  Future<void> sendOtp(String inputVal, {String? loginType}) async {
     String cleanAadhaar = inputVal.replaceAll(RegExp(r'[^0-9]'), '').trim();
-    if (cleanAadhaar.isEmpty) {
-      Get.snackbar('Error', 'Please enter a valid Aadhaar or Mobile number.');
+    if (cleanAadhaar.isEmpty && inputVal.trim().isEmpty) {
+      Get.snackbar('Error', 'Please enter a valid input number.');
       return;
     }
 
@@ -111,19 +236,24 @@ class AbhaCreationController extends GetxController {
       return;
     }
 
-    // Captcha Validation
-    if (captchaInput.value.trim().isEmpty) {
-      Get.snackbar('Captcha Required', 'Please enter the Security Captcha Code.');
-      return;
+    // Captcha Validation (Only for Aadhaar)
+    if (isCreateMode.value || cleanAadhaar.length == 12) {
+      if (captchaInput.value.trim().isEmpty) {
+        Get.snackbar(
+            'Captcha Required', 'Please enter the Security Captcha Code.');
+        return;
+      }
+
+      if (captchaInput.value.trim().toUpperCase() !=
+          captchaCode.value.trim().toUpperCase()) {
+        Get.snackbar(
+            'Invalid Captcha', 'Captcha code does not match. Please try again.');
+        refreshCaptcha();
+        return;
+      }
     }
 
-    if (captchaInput.value.trim().toUpperCase() != captchaCode.value.trim().toUpperCase()) {
-      Get.snackbar('Invalid Captcha', 'Captcha code does not match. Please try again.');
-      refreshCaptcha();
-      return;
-    }
-
-    inputNumber.value = cleanAadhaar;
+    inputNumber.value = inputVal.trim();
     isLoading.value = true;
 
     if (isCreateMode.value) {
@@ -150,32 +280,42 @@ class AbhaCreationController extends GetxController {
         captchaTxnId: captchaTxnId.value,
         captchaValue: captchaInput.value,
       );
-      var resultTxn = await AbhaCreationRepo.generateAadhaarOtp(request);
+      var res = await AbhaCreationRepo.generateAadhaarOtp(request);
       isLoading.value = false;
 
-      if (resultTxn != null && resultTxn.isNotEmpty) {
-        txnId.value = resultTxn;
-        if (Get.currentRoute != Routes.GALAXY_ABHA) {
+      if (res != null && res['txnId'] != null && res['txnId']!.isNotEmpty) {
+        txnId.value = res['txnId']!;
+        maskedMobile.value = res['maskedMobile'] ?? '';
+        resetResendState();
+        startResendTimer();
+        if (Get.currentRoute != Routes.GALAXY_ABHA &&
+            Get.currentRoute != Routes.M1_SEARCH_ABHA) {
           Get.toNamed(Routes.M1_VERIFY_OTP);
         } else {
           Get.snackbar('OTP Sent',
               'Aadhaar OTP sent successfully. Please enter OTP below.');
         }
       } else {
+        refreshCaptcha();
         Get.snackbar(
             'OTP Failed', 'Unable to send OTP. Please check input number.');
       }
     } else {
       // ABHA Login via Mobile/ABHA OTP
-      var resultTxn = await AbhaCreationRepo.loginOtp(inputNumber.value);
+      var res = await AbhaCreationRepo.loginOtp(inputVal.trim(), loginType: loginType);
       isLoading.value = false;
 
-      if (resultTxn != null && resultTxn.isNotEmpty) {
-        txnId.value = resultTxn;
-        if (Get.currentRoute != Routes.GALAXY_ABHA) {
+      if (res != null && res['txnId'] != null && res['txnId']!.isNotEmpty) {
+        txnId.value = res['txnId']!;
+        maskedMobile.value = res['maskedMobile'] ?? '';
+        resetResendState();
+        startResendTimer();
+        if (Get.currentRoute != Routes.GALAXY_ABHA &&
+            Get.currentRoute != Routes.M1_SEARCH_ABHA) {
           Get.toNamed(Routes.M1_VERIFY_OTP);
         }
       } else {
+        refreshCaptcha();
         Get.snackbar('Login Failed', 'Unable to send Login OTP.');
       }
     }
@@ -190,13 +330,16 @@ class AbhaCreationController extends GetxController {
     otp.value = inputOtp.trim();
     isLoading.value = true;
 
+    String? mobileVal;
+    if (communicationMobile.value.trim().length == 10) {
+      mobileVal = communicationMobile.value.trim();
+    }
+
     var req = AbdmVerifyOtpRequest(
       otp: otp.value,
       txnId: txnId.value,
       loginType: isCreateMode.value ? "aadhaar" : "mobile",
-      mobile: communicationMobile.value.trim().isNotEmpty
-          ? communicationMobile.value.trim()
-          : null,
+      mobile: mobileVal,
     );
 
     if (isCreateMode.value) {

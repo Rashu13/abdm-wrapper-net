@@ -795,6 +795,11 @@ namespace ABDM.Api
                     {
                         loginHint = "abha-address";
                         loginIdToEncrypt = request.LoginId.Trim();
+                        if (!loginIdToEncrypt.Contains("@"))
+                        {
+                            loginIdToEncrypt = loginIdToEncrypt + "@sbx";
+                        }
+
                         if (reqTypeUpper.Contains("AADHAAR"))
                         {
                             otpSystem = "aadhaar";

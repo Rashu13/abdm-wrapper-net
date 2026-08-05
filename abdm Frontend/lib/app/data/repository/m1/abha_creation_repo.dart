@@ -28,16 +28,40 @@ class AbhaCreationRepo {
     return null;
   }
 
+  static String? _extractMaskedMobile(dynamic data) {
+    if (data == null) return null;
+    if (data is Map) {
+      if (data['maskedMobile'] != null &&
+          data['maskedMobile'].toString().isNotEmpty) {
+        return data['maskedMobile'].toString();
+      }
+      if (data['mobileNumber'] != null &&
+          data['mobileNumber'].toString().isNotEmpty) {
+        return data['mobileNumber'].toString();
+      }
+      if (data['mobile'] != null && data['mobile'].toString().isNotEmpty) {
+        return data['mobile'].toString();
+      }
+      if (data['data'] != null) {
+        return _extractMaskedMobile(data['data']);
+      }
+    }
+    return null;
+  }
+
   /// Fetch New Captcha for Aadhaar OTP Verification
   static Future<Map<String, String>?> fetchCaptcha() async {
     try {
-      final response = await AbdmServer.getRequest('/api/v3/m1/captcha');
+      final response = await AbdmServer.getRequest(ApiEndpoints.captcha);
       if (response != null && response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return {
           'captchaTxnId': data['captchaTxnId']?.toString() ?? '',
           'captchaCode': data['captchaCode']?.toString() ?? '',
         };
+      } else if (response != null) {
+        debugPrint(
+            "fetchCaptcha response status: ${response.statusCode} | body: ${response.body}");
       }
     } catch (e) {
       debugPrint("fetchCaptcha error: $e");
@@ -52,20 +76,29 @@ class AbhaCreationRepo {
   }
 
   /// 1. Generate Aadhaar OTP for New ABHA Creation
-  static Future<String?> generateAadhaarOtp(
+  static Future<Map<String, String>?> generateAadhaarOtp(
       AbdmGenerateOtpRequest request) async {
     final response = await AbdmServer.postRequest(
       endpoint: ApiEndpoints.generateAadhaarOtp,
       body: request.toJson(),
     );
-    if (response != null && (response.statusCode == 200 || response.statusCode == 201)) {
+    if (response != null &&
+        (response.statusCode == 200 || response.statusCode == 201)) {
       final data = jsonDecode(response.body);
       final txnId = _extractTxnId(data);
+      final maskedMobile = _extractMaskedMobile(data);
       if (txnId != null && txnId.isNotEmpty) {
-        return txnId;
+        return {
+          'txnId': txnId,
+          'maskedMobile': maskedMobile ?? '',
+        };
       }
       // Fallback: If status is 200/201 and OTP was sent, generate temporary txnId marker
-      return data['txnId']?.toString() ?? 'TXN_${DateTime.now().millisecondsSinceEpoch}';
+      return {
+        'txnId': data['txnId']?.toString() ??
+            'TXN_${DateTime.now().millisecondsSinceEpoch}',
+        'maskedMobile': maskedMobile ?? '',
+      };
     } else if (response != null) {
       debugPrint(
           "Generate OTP Response Code: ${response.statusCode} | Body: ${response.body}");
@@ -73,8 +106,12 @@ class AbhaCreationRepo {
         final errorData = jsonDecode(response.body);
         // Check if txnId exists despite non-200 or if success payload returned
         final txnId = _extractTxnId(errorData);
+        final maskedMobile = _extractMaskedMobile(errorData);
         if (txnId != null && txnId.isNotEmpty) {
-          return txnId;
+          return {
+            'txnId': txnId,
+            'maskedMobile': maskedMobile ?? '',
+          };
         }
         String errMsg = errorData['message'] ??
             errorData['error']?['message'] ??
@@ -169,10 +206,11 @@ class AbhaCreationRepo {
   }
 
   /// 5. ABHA Login OTP
-  static Future<String?> loginOtp(String mobileOrAbha) async {
+  static Future<Map<String, String>?> loginOtp(String mobileOrAbha,
+      {String? loginType}) async {
     final req = AbdmGenerateOtpRequest(
       loginId: mobileOrAbha,
-      loginType: "mobile",
+      loginType: loginType ?? "mobile",
       mobile: mobileOrAbha,
       operatorName: "NHA Partner Operator",
       beneficiaryName: "Beneficiary",
@@ -183,17 +221,28 @@ class AbhaCreationRepo {
     );
     if (response != null && response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['txnId'] ?? data['data']?['txnId'];
+      final txnId =
+          _extractTxnId(data) ?? data['txnId'] ?? data['data']?['txnId'];
+      final maskedMobile = _extractMaskedMobile(data);
+      if (txnId != null && txnId.toString().isNotEmpty) {
+        return {
+          'txnId': txnId.toString(),
+          'maskedMobile': maskedMobile ?? '',
+        };
+      }
     } else if (response != null) {
-      debugPrint("Login OTP Error Response: ${response.statusCode} | ${response.body}");
+      debugPrint(
+          "Login OTP Error Response: ${response.statusCode} | ${response.body}");
       try {
         final errorData = jsonDecode(response.body);
         String errMsg = errorData['message'] ??
             errorData['error']?['message'] ??
             'Login OTP Failed (${response.statusCode})';
-        Get.snackbar('NHA Gateway Status', errMsg, snackPosition: SnackPosition.TOP);
+        Get.snackbar('NHA Gateway Status', errMsg,
+            snackPosition: SnackPosition.TOP);
       } catch (e) {
-        Get.snackbar('NHA Gateway Status', 'HTTP ${response.statusCode}: ${response.body}');
+        Get.snackbar('NHA Gateway Status',
+            'HTTP ${response.statusCode}: ${response.body}');
       }
     }
     return null;
@@ -206,13 +255,29 @@ class AbhaCreationRepo {
       endpoint: ApiEndpoints.loginVerify,
       body: request.toJson(),
     );
-    if (response != null && response.statusCode == 200) {
+    if (response != null &&
+        (response.statusCode == 200 || response.statusCode == 201)) {
       final data = jsonDecode(response.body);
       final profile = AbhaProfileModel.fromJson(data);
       if (profile.userToken != null) {
         box.write('auth_token', profile.userToken);
       }
       return profile;
+    } else if (response != null) {
+      debugPrint(
+          "Login Verify Error Response: ${response.statusCode} | ${response.body}");
+      try {
+        final errorData = jsonDecode(response.body);
+        String errMsg = errorData['message'] ??
+            errorData['error']?['message'] ??
+            errorData['details']?[0]?['message'] ??
+            'Login Verification Failed (${response.statusCode})';
+        Get.snackbar('NHA Gateway Status', errMsg,
+            snackPosition: SnackPosition.TOP);
+      } catch (e) {
+        Get.snackbar('NHA Gateway Status',
+            'HTTP ${response.statusCode}: ${response.body}');
+      }
     }
     return null;
   }
