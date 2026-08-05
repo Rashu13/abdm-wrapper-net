@@ -277,12 +277,15 @@ class PatientRegistryView extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               ElevatedButton.icon(
-                onPressed: () => _showLinkCareContextDialog(Get.context!, p, Get.find<PatientRegistryController>()),
+                onPressed: () => _showLinkCareContextDialog(
+                    Get.context!, p, Get.find<PatientRegistryController>()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF10B981),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                   elevation: 0,
                 ),
                 icon: const Icon(Icons.add_link_rounded, size: 16),
@@ -298,12 +301,14 @@ class PatientRegistryView extends StatelessWidget {
     );
   }
 
-  void _showLinkCareContextDialog(
-      BuildContext context, PatientRegistryModel patient, PatientRegistryController controller) {
+  void _showLinkCareContextDialog(BuildContext context,
+      PatientRegistryModel patient, PatientRegistryController controller) {
     final visitRefCtrl = TextEditingController(
-        text: 'VISIT-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}');
+        text:
+            'VISIT-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}');
     final displayCtrl = TextEditingController(
-        text: 'OPD Consultation - ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}');
+        text:
+            'OPD Consultation - ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}');
     String selectedHiType = 'OPConsultation';
 
     Get.dialog(
@@ -325,7 +330,8 @@ class PatientRegistryView extends StatelessWidget {
                       color: const Color(0xFF10B981).withOpacity(0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.add_link_rounded, color: Color(0xFF10B981), size: 20),
+                    child: const Icon(Icons.add_link_rounded,
+                        color: Color(0xFF10B981), size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -337,8 +343,10 @@ class PatientRegistryView extends StatelessWidget {
                                 color: AppColor.textPrimary,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold)),
-                        Text('Patient: ${patient.name} (${patient.abhaAddress})',
-                            style: TextStyle(color: AppColor.textSecondary, fontSize: 12),
+                        Text(
+                            'Patient: ${patient.name} (${patient.abhaAddress})',
+                            style: TextStyle(
+                                color: AppColor.textSecondary, fontSize: 12),
                             overflow: TextOverflow.ellipsis),
                       ],
                     ),
@@ -347,7 +355,10 @@ class PatientRegistryView extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Text('Visit Reference Number',
-                  style: TextStyle(color: AppColor.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+                  style: TextStyle(
+                      color: AppColor.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
               TextField(
                 controller: visitRefCtrl,
@@ -359,12 +370,16 @@ class PatientRegistryView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide(color: AppColor.border),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 ),
               ),
               const SizedBox(height: 14),
               Text('Visit Display Title',
-                  style: TextStyle(color: AppColor.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+                  style: TextStyle(
+                      color: AppColor.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
               TextField(
                 controller: displayCtrl,
@@ -376,11 +391,16 @@ class PatientRegistryView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide(color: AppColor.border),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 ),
+              ),
               const SizedBox(height: 14),
               Text('Health Information (HI) Type & SNOMED CT Code',
-                  style: TextStyle(color: AppColor.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+                  style: TextStyle(
+                      color: AppColor.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
               StatefulBuilder(
                 builder: (context, setState) {
@@ -396,35 +416,43 @@ class PatientRegistryView extends StatelessWidget {
                         value: selectedHiType,
                         isExpanded: true,
                         dropdownColor: AppColor.surface,
-                        style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                        style: TextStyle(
+                            color: AppColor.textPrimary, fontSize: 13),
                         items: const [
                           DropdownMenuItem(
                             value: 'OPConsultation',
-                            child: Text('OPConsultation (SNOMED: 371530004 - OP Note)'),
+                            child: Text(
+                                'OPConsultation (SNOMED: 371530004 - OP Note)'),
                           ),
                           DropdownMenuItem(
                             value: 'Prescription',
-                            child: Text('Prescription (SNOMED: 440545006 - Rx Record)'),
+                            child: Text(
+                                'Prescription (SNOMED: 440545006 - Rx Record)'),
                           ),
                           DropdownMenuItem(
                             value: 'DiagnosticReport',
-                            child: Text('DiagnosticReport (SNOMED: 721981007 - Lab/Rad)'),
+                            child: Text(
+                                'DiagnosticReport (SNOMED: 721981007 - Lab/Rad)'),
                           ),
                           DropdownMenuItem(
                             value: 'DischargeSummary',
-                            child: Text('DischargeSummary (SNOMED: 371535009 - Discharge)'),
+                            child: Text(
+                                'DischargeSummary (SNOMED: 371535009 - Discharge)'),
                           ),
                           DropdownMenuItem(
                             value: 'ImmunizationRecord',
-                            child: Text('ImmunizationRecord (SNOMED: 41000179103 - Vaccine)'),
+                            child: Text(
+                                'ImmunizationRecord (SNOMED: 41000179103 - Vaccine)'),
                           ),
                           DropdownMenuItem(
                             value: 'HealthDocumentRecord',
-                            child: Text('HealthDocumentRecord (SNOMED: 419891008 - Health Doc)'),
+                            child: Text(
+                                'HealthDocumentRecord (SNOMED: 419891008 - Health Doc)'),
                           ),
                           DropdownMenuItem(
                             value: 'WellnessRecord',
-                            child: Text('WellnessRecord (SNOMED: 409073007 - Wellness)'),
+                            child: Text(
+                                'WellnessRecord (SNOMED: 409073007 - Wellness)'),
                           ),
                         ],
                         onChanged: (val) {
@@ -441,7 +469,8 @@ class PatientRegistryView extends StatelessWidget {
                 children: [
                   TextButton(
                     onPressed: () => Get.back(),
-                    child: Text('Cancel', style: TextStyle(color: AppColor.textSecondary)),
+                    child: Text('Cancel',
+                        style: TextStyle(color: AppColor.textSecondary)),
                   ),
                   const SizedBox(width: 12),
                   ElevatedButton.icon(
@@ -449,7 +478,8 @@ class PatientRegistryView extends StatelessWidget {
                       final ref = visitRefCtrl.text.trim();
                       final disp = displayCtrl.text.trim();
                       if (ref.isEmpty) {
-                        Get.snackbar('Error', 'Visit Reference cannot be empty.');
+                        Get.snackbar(
+                            'Error', 'Visit Reference cannot be empty.');
                         return;
                       }
                       Get.back();
@@ -464,11 +494,14 @@ class PatientRegistryView extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF10B981),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                     icon: const Icon(Icons.send_rounded, size: 16),
-                    label: const Text('Submit to ABDM Gateway', style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: const Text('Submit to ABDM Gateway',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),

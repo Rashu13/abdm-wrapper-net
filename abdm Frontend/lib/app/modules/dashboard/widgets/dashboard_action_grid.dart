@@ -100,12 +100,12 @@ class DashboardActionGrid extends StatelessWidget {
                       onTap: () => onNavigateTab(2), // M2 HIP Discovery
                     ),
 
-                    // Card 3: Link Health Records
+                    // Card 3: Link Health Records (EMR Studio)
                     _DashboardActionCard(
-                      icon: Icons.link,
-                      title: "Link Health Records",
-                      subtitle: "Link existing health records to ABHA",
-                      onTap: () => onNavigateTab(2), // M2 Care Context
+                      icon: Icons.medical_services_outlined,
+                      title: "EMR Health Record Studio",
+                      subtitle: "Build Prescriptions, Diagnostic & Discharge FHIR bundles",
+                      onTap: () => Get.toNamed(Routes.M3_HEALTH_RECORDS),
                     ),
 
                     // Card 4: Consent Management

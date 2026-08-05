@@ -15,7 +15,7 @@ import '../modules/m2_hip/bindings/hip_binding.dart';
 import '../modules/m2_hip/views/discovery_view.dart';
 import '../modules/m3_hiu/bindings/hiu_binding.dart';
 import '../modules/m3_hiu/views/consent_request_view.dart';
-import '../modules/m3_hiu/views/health_record_viewer_page.dart';
+import '../modules/m3_hiu/views/emr_health_records_page.dart';
 
 import '../modules/m2_hip/views/scan_share_view.dart';
 import '../modules/m2_hip/views/patient_registry_view.dart';
@@ -85,7 +85,7 @@ class AppPages {
     ),
     GetPage(
       name: Routes.M3_HEALTH_RECORDS,
-      page: () => const HealthRecordViewerPage(),
+      page: () => const EmrHealthRecordsPage(),
       binding: HiuBinding(),
     ),
   ];
