@@ -2,6 +2,7 @@ class ApiEndpoints {
   static String baseUrl = "https://sbx.wati.digital";
 
   // ─── M1: ABHA Creation & Auth (AbdmM1Controller) ─────────────────────────
+  static String captcha = "$baseUrl/api/v3/m1/captcha";
   static String generateAadhaarOtp = "$baseUrl/api/v3/m1/generate-otp";
   static String verifyAadhaarOtp = "$baseUrl/api/v3/m1/verify-otp";
   static String loginOtp = "$baseUrl/api/v3/m1/login-otp";

@@ -7,6 +7,7 @@ abstract class Routes {
   static const M1_VERIFY_OTP = '/m1/verify-otp';
   static const M1_SELECT_ABHA = '/m1/select-abha';
   static const M1_ABHA_CARD = '/m1/abha-card';
+  static const M1_SEARCH_ABHA = '/m1/search-abha';
   static const GALAXY_ABHA = '/galaxy-abha';
 
   // Milestone M2 Routes

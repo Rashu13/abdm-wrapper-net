@@ -9,6 +9,7 @@ import '../modules/m1_abha/views/create_abha_view.dart';
 import '../modules/m1_abha/views/verify_otp_view.dart';
 import '../modules/m1_abha/views/select_abha_address_view.dart';
 import '../modules/m1_abha/views/abha_card_view.dart';
+import '../modules/m1_abha/views/search_abha_card_view.dart';
 import '../modules/m1_abha/views/galaxy_health_abha_view.dart';
 import '../modules/m2_hip/bindings/hip_binding.dart';
 import '../modules/m2_hip/views/discovery_view.dart';
@@ -48,6 +49,11 @@ class AppPages {
     GetPage(
       name: Routes.M1_ABHA_CARD,
       page: () => const AbhaCardView(),
+      binding: AbhaBinding(),
+    ),
+    GetPage(
+      name: Routes.M1_SEARCH_ABHA,
+      page: () => const SearchAbhaCardView(),
       binding: AbhaBinding(),
     ),
     GetPage(

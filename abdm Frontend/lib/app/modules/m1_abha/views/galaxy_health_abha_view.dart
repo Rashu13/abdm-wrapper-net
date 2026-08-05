@@ -575,14 +575,89 @@ class GalaxyHealthAbhaView extends GetView<AbhaCreationController> {
                 ),
                 const SizedBox(height: 14),
 
-                // Resend Timer
-                Text(
-                  'Resend in 00:56',
-                  style: fontSmall.copyWith(
-                    color: const Color(0xFF94A3B8),
-                    fontSize: 13,
+                // Communication Mobile Input Field
+                TextFormField(
+                  initialValue: controller.communicationMobile.value,
+                  keyboardType: TextInputType.phone,
+                  maxLength: 10,
+                  onChanged: (v) => controller.communicationMobile.value = v.trim(),
+                  style: fontMedium.copyWith(fontSize: 14),
+                  decoration: InputDecoration(
+                    labelText: 'Communication Mobile Number',
+                    hintText: 'Enter 10-digit Mobile Number',
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                    counterText: '',
+                    prefixIcon: const Icon(Icons.phone_android, size: 18, color: Color(0xFF0F4C81)),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide:
+                          const BorderSide(color: AppColor.accent, width: 2),
+                    ),
                   ),
                 ),
+                const SizedBox(height: 14),
+
+                // Resend Timer & Action Button
+                Obx(() {
+                  if (controller.resendCount.value >= 2) {
+                    return Text(
+                      'Maximum resend limit reached (2/2)',
+                      style: fontSmall.copyWith(
+                        color: Colors.red,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    );
+                  }
+
+                  final isTimerActive = controller.resendSeconds.value > 0;
+                  final secFormatted = controller.resendSeconds.value.toString().padLeft(2, '0');
+
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        isTimerActive
+                            ? 'Resend in 00:$secFormatted'
+                            : 'Didn\'t receive OTP?',
+                        style: fontSmall.copyWith(
+                          color: const Color(0xFF94A3B8),
+                          fontSize: 13,
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: controller.canResend.value && !controller.isLoading.value
+                            ? () => controller.handleResendOtp()
+                            : null,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        icon: Icon(
+                          Icons.refresh,
+                          size: 14,
+                          color: controller.canResend.value ? AppColor.accent : Colors.grey,
+                        ),
+                        label: Text(
+                          controller.resendCount.value == 0
+                              ? 'Resend OTP'
+                              : 'Resend OTP (${controller.resendCount.value}/2)',
+                          style: fontMedium.copyWith(
+                            color: controller.canResend.value ? AppColor.accent : Colors.grey,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }),
                 const SizedBox(height: 24),
 
                 // Verify Action Button
@@ -798,38 +873,66 @@ class GalaxyHealthAbhaView extends GetView<AbhaCreationController> {
         ),
         const SizedBox(height: 20),
 
-        // Download Button
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: Obx(() => ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              elevation: 4,
-            ),
-            onPressed: controller.isDownloadingCard.value
-                ? null
-                : () => controller.downloadAbhaCard(),
-            icon: controller.isDownloadingCard.value
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        // Action Buttons Row: View ABHA Card & Download ABHA Card
+        Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 50,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F4C81),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  )
-                : const Icon(Icons.file_download_outlined, color: Colors.white, size: 22),
-            label: Text(
-              controller.isDownloadingCard.value
-                  ? 'Downloading...'
-                  : 'Download ABHA Card (PNG)',
-              style: fontBold.copyWith(color: Colors.white, fontSize: 15),
+                    elevation: 4,
+                  ),
+                  onPressed: () {
+                    Get.toNamed(Routes.M1_ABHA_CARD);
+                  },
+                  icon: const Icon(Icons.credit_card, color: Colors.white, size: 20),
+                  label: Text(
+                    'View ABHA Card',
+                    style: fontBold.copyWith(color: Colors.white, fontSize: 14),
+                  ),
+                ),
+              ),
             ),
-          )),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SizedBox(
+                height: 50,
+                child: Obx(() => ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 4,
+                  ),
+                  onPressed: controller.isDownloadingCard.value
+                      ? null
+                      : () => controller.downloadAbhaCard(),
+                  icon: controller.isDownloadingCard.value
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.file_download_outlined, color: Colors.white, size: 20),
+                  label: Text(
+                    controller.isDownloadingCard.value
+                        ? 'Downloading...'
+                        : 'Download Card',
+                    style: fontBold.copyWith(color: Colors.white, fontSize: 14),
+                  ),
+                )),
+              ),
+            ),
+          ],
         ),
       ],
     );

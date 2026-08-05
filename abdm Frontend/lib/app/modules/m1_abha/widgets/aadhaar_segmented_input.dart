@@ -126,11 +126,11 @@ class _AadhaarSegmentedInputState extends State<AadhaarSegmentedInput> {
                   },
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
-                    width: 52,
-                    height: 52,
+                    width: 46,
+                    height: 46,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: widget.controller.isAadhaarObscured.value
                             ? const Color(0xFFCBD5E1)
@@ -152,7 +152,7 @@ class _AadhaarSegmentedInputState extends State<AadhaarSegmentedInput> {
                       color: widget.controller.isAadhaarObscured.value
                           ? const Color(0xFF64748B)
                           : const Color(0xFF0F4C81),
-                      size: 22,
+                      size: 21,
                     ),
                   ),
                 )),
@@ -172,10 +172,10 @@ class _AadhaarSegmentedInputState extends State<AadhaarSegmentedInput> {
       bool isObscured = widget.controller.isAadhaarObscured.value;
 
       return Container(
-        height: 54,
+        height: 46,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: focusNode.hasFocus
                 ? const Color(0xFF0F4C81)
@@ -195,6 +195,7 @@ class _AadhaarSegmentedInputState extends State<AadhaarSegmentedInput> {
             controller: controller,
             focusNode: focusNode,
             textAlign: TextAlign.center,
+            textAlignVertical: TextAlignVertical.center,
             keyboardType: TextInputType.number,
             maxLength: 4,
             obscureText: isObscured,
@@ -204,14 +205,15 @@ class _AadhaarSegmentedInputState extends State<AadhaarSegmentedInput> {
               LengthLimitingTextInputFormatter(4),
             ],
             style: fontBold.copyWith(
-              fontSize: 17,
+              fontSize: 16,
               letterSpacing: 2.0,
               color: const Color(0xFF0F172A),
             ),
             decoration: InputDecoration(
+              isDense: true,
               hintText: hintText,
               hintStyle: fontRegular.copyWith(
-                fontSize: 15,
+                fontSize: 14,
                 letterSpacing: 2.0,
                 color: const Color(0xFF94A3B8),
               ),
@@ -219,7 +221,7 @@ class _AadhaarSegmentedInputState extends State<AadhaarSegmentedInput> {
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(vertical: 6),
             ),
             onChanged: onChanged,
           ),

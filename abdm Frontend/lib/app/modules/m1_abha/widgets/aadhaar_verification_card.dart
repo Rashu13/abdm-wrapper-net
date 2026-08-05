@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../routes/app_paths.dart';
 import '../controllers/abha_creation_controller.dart';
 import '../../../../util/constants.dart';
 import '../../../../util/style.dart';
@@ -35,7 +36,7 @@ class AadhaarVerificationCard extends StatelessWidget {
           // Header Bar with Integrated Back Button
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: const BoxDecoration(
               color: Color(0xFFEFF6FF), // Skyblue header bar
               borderRadius: BorderRadius.only(
@@ -77,150 +78,79 @@ class AadhaarVerificationCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: Text(
-                    'Aadhaar Verification for Creating a New ABHA',
-                    style: fontBold.copyWith(
-                        fontSize: 15, color: const Color(0xFF0F4C81)),
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'ABHA',
+                        style: fontBold.copyWith(
+                            fontSize: 12,
+                            color: const Color(0xFF2563EB),
+                            letterSpacing: 1),
+                      ),
+                      Text(
+                        'Create Ayushman Bharat Health Account',
+                        style: fontBold.copyWith(
+                            fontSize: 15, color: const Color(0xFF0F4C81)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(width: 10),
+                Obx(() => ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F4C81),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 9),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: controller.isLoading.value
+                          ? null
+                          : () => _showVerificationMethodDialog(context),
+                      child: controller.isLoading.value
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              'Verify',
+                              style: fontBold.copyWith(
+                                fontSize: 13,
+                                color: Colors.white,
+                              ),
+                            ),
+                    )),
               ],
             ),
           ),
 
           Padding(
             padding:
-                const EdgeInsets.symmetric(horizontal: 18.0, vertical: 12.0),
+                const EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Field 1 Label & 3-Segment Maskable Aadhaar Input
+                // Field 1 Label: Enter your Aadhaar Number to create ABHA
                 Text(
-                  'Enter 12-Digit Aadhaar Number',
+                  'Enter your Aadhaar Number to create ABHA',
                   style: fontMedium.copyWith(
                       color: const Color(0xFF334155),
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
 
                 // 3 Segment Input Boxes + Eye Toggle Button
                 AadhaarSegmentedInput(controller: controller),
-                const SizedBox(height: 10),
-
-                // Field 2: Communication Mobile Number
-                TextField(
-                  controller: _mobileController,
-                  style: fontMedium.copyWith(
-                      color: const Color(0xFF0F172A), fontSize: 15),
-                  keyboardType: TextInputType.phone,
-                  maxLength: 10,
-                  decoration: InputDecoration(
-                    labelText: 'Communication Mobile Number',
-                    labelStyle: fontMedium.copyWith(
-                        color: const Color(0xFF334155), fontSize: 13),
-                    hintText: 'Enter 10-digit Mobile Number',
-                    hintStyle: fontRegular.copyWith(
-                        color: const Color(0xFF94A3B8), fontSize: 13),
-                    counterText: '',
-                    filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                          color: Color(0xFFCBD5E1), width: 1.5),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                          color: Color(0xFFCBD5E1), width: 1.5),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(
-                          color: Color(0xFF0F4C81), width: 2.0),
-                    ),
-                  ),
-                  onChanged: (v) => controller.communicationMobile.value = v,
-                ),
-                const SizedBox(height: 10),
-
-                // Radio Question
-                Text(
-                  'Is the communication mobile number entered above the same as your Aadhaar-linked mobile number?',
-                  style: fontMedium.copyWith(
-                      color: const Color(0xFF334155),
-                      fontSize: 13,
-                      height: 1.35),
-                ),
-                const SizedBox(height: 4),
-
-                Obx(() => Row(
-                      children: [
-                        Radio<bool>(
-                          value: true,
-                          groupValue: controller.isSameMobileAsAadhaar.value,
-                          activeColor: const Color(0xFF0F4C81),
-                          fillColor:
-                              WidgetStateProperty.resolveWith<Color>((states) {
-                            if (states.contains(WidgetState.selected)) {
-                              return const Color(0xFF0F4C81);
-                            }
-                            return const Color(0xFF64748B);
-                          }),
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          onChanged: (val) {
-                            if (val != null)
-                              controller.isSameMobileAsAadhaar.value = val;
-                          },
-                        ),
-                        GestureDetector(
-                          onTap: () =>
-                              controller.isSameMobileAsAadhaar.value = true,
-                          child: Text(
-                            'Yes',
-                            style: fontMedium.copyWith(
-                                fontSize: 14,
-                                color: const Color(0xFF0F172A),
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        Radio<bool>(
-                          value: false,
-                          groupValue: controller.isSameMobileAsAadhaar.value,
-                          activeColor: const Color(0xFF0F4C81),
-                          fillColor:
-                              WidgetStateProperty.resolveWith<Color>((states) {
-                            if (states.contains(WidgetState.selected)) {
-                              return const Color(0xFF0F4C81);
-                            }
-                            return const Color(0xFF64748B);
-                          }),
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          onChanged: (val) {
-                            if (val != null)
-                              controller.isSameMobileAsAadhaar.value = val;
-                          },
-                        ),
-                        GestureDetector(
-                          onTap: () =>
-                              controller.isSameMobileAsAadhaar.value = false,
-                          child: Text(
-                            'No',
-                            style: fontMedium.copyWith(
-                                fontSize: 14,
-                                color: const Color(0xFF0F172A),
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    )),
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
 
                 // Select All Consents Row Header
                 Obx(() => Container(
@@ -415,7 +345,7 @@ class AadhaarVerificationCard extends StatelessWidget {
                               text:
                                   'I confirm that I have duly informed and explained the beneficiary of the contents of consent for aforementioned purposes.',
                             )),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 10),
 
                         // Consent 7: Final informed consent
                         Obx(() => _buildSymmetricalCheckboxRow(
@@ -438,7 +368,8 @@ class AadhaarVerificationCard extends StatelessWidget {
                       children: [
                         // Captcha Box Display + Refresh Button
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: const Color(0xFFE2E8F0),
                             borderRadius: BorderRadius.circular(10),
@@ -451,7 +382,7 @@ class AadhaarVerificationCard extends StatelessWidget {
                                 controller.captchaCode.value,
                                 style: TextStyle(
                                   fontFamily: 'monospace',
-                                  fontSize: 18,
+                                  fontSize: 17,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 4.0,
                                   color: const Color(0xFF0F4C81),
@@ -460,7 +391,7 @@ class AadhaarVerificationCard extends StatelessWidget {
                                   decorationThickness: 2,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
                               IconButton(
                                 constraints: const BoxConstraints(),
                                 padding: EdgeInsets.zero,
@@ -471,9 +402,11 @@ class AadhaarVerificationCard extends StatelessWidget {
                                     ? const SizedBox(
                                         width: 14,
                                         height: 14,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                        child: CircularProgressIndicator(
+                                            strokeWidth: 2),
                                       )
-                                    : const Icon(Icons.refresh, size: 18, color: Color(0xFF0F4C81)),
+                                    : const Icon(Icons.refresh,
+                                        size: 18, color: Color(0xFF0F4C81)),
                               ),
                             ],
                           ),
@@ -484,26 +417,34 @@ class AadhaarVerificationCard extends StatelessWidget {
                         Expanded(
                           child: TextField(
                             onChanged: (v) => controller.captchaInput.value = v,
-                            style: fontMedium.copyWith(color: const Color(0xFF0F172A), fontSize: 14),
+                            style: fontMedium.copyWith(
+                                color: const Color(0xFF0F172A), fontSize: 14),
                             decoration: InputDecoration(
+                              isDense: true,
                               labelText: 'Security Captcha',
-                              labelStyle: fontMedium.copyWith(color: const Color(0xFF334155), fontSize: 12),
+                              labelStyle: fontMedium.copyWith(
+                                  color: const Color(0xFF334155), fontSize: 13),
                               hintText: 'Enter Captcha',
-                              hintStyle: fontRegular.copyWith(color: const Color(0xFF94A3B8), fontSize: 12),
+                              hintStyle: fontRegular.copyWith(
+                                  color: const Color(0xFF94A3B8), fontSize: 13),
                               filled: true,
                               fillColor: const Color(0xFFF8FAFC),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFCBD5E1), width: 1.5),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFCBD5E1), width: 1.5),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: Color(0xFF0F4C81), width: 2.0),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFF0F4C81), width: 2.0),
                               ),
                             ),
                           ),
@@ -515,7 +456,7 @@ class AadhaarVerificationCard extends StatelessWidget {
                 // Action Button: Generate OTP
                 Obx(() => SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 44,
                       child: Container(
                         decoration: BoxDecoration(
                           gradient: AppColor.primaryGradient,
@@ -600,5 +541,9 @@ class AadhaarVerificationCard extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  void _showVerificationMethodDialog(BuildContext context) {
+    Get.toNamed(Routes.M1_SEARCH_ABHA);
   }
 }
