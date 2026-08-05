@@ -10,6 +10,26 @@ import '../../../data/repository/m2/hip_care_context_repo.dart';
 import '../../../data/repository/m3/hiu_health_record_repo.dart';
 import '../../m2_hip/controllers/patient_registry_controller.dart';
 
+class SavedRecordModel {
+  final String visitRef;
+  final String patientName;
+  final String abhaAddress;
+  final String hiType;
+  final String createdTime;
+  final Map<String, dynamic> fhirPayload;
+  bool isLinked;
+
+  SavedRecordModel({
+    required this.visitRef,
+    required this.patientName,
+    required this.abhaAddress,
+    required this.hiType,
+    required this.createdTime,
+    required this.fhirPayload,
+    this.isLinked = false,
+  });
+}
+
 class HealthRecordController extends GetxController {
   var isLoadingConsents = false.obs;
   var isSubmittingConsent = false.obs;
@@ -26,6 +46,7 @@ class HealthRecordController extends GetxController {
   var patients = <PatientRegistryModel>[].obs;
   var selectedPatient = Rxn<PatientRegistryModel>();
   var isLoadingPatients = false.obs;
+  var savedLocalRecords = <SavedRecordModel>[].obs;
 
   // Active HI Type Tab ('Prescription', 'DiagnosticReport', 'DischargeSummary', 'OPConsultation', 'ImmunizationRecord', 'WellnessRecord')
   var activeHiType = 'OPConsultation'.obs;
@@ -41,9 +62,9 @@ class HealthRecordController extends GetxController {
 
   // OP Consultation State (Matching React HealthRecordsPage.tsx)
   var encounterType = 'Outpatient'.obs;
-  var opHeight = '170'.obs;
-  var opWeight = '68'.obs;
-  var opBmi = '23.5'.obs;
+  final opHeightCtrl = TextEditingController(text: '170');
+  final opWeightCtrl = TextEditingController(text: '68');
+  final opBmiCtrl = TextEditingController(text: '23.5');
 
   var vitalsList = <VitalFormItem>[].obs;
   var complaintsList = <String>[].obs;
@@ -52,6 +73,25 @@ class HealthRecordController extends GetxController {
   final opObservationResultCtrl = TextEditingController(
       text:
           'General examination normal. Chest clear, S1 S2 heard. Abdomen soft.');
+
+  // Wellness Record State
+  final wellRespRateCtrl = TextEditingController(text: '16');
+  final wellHeartRateCtrl = TextEditingController(text: '72');
+  final wellSpo2Ctrl = TextEditingController(text: '98');
+  final wellTempCtrl = TextEditingController(text: '98.6');
+  final wellSysBpCtrl = TextEditingController(text: '120');
+  final wellDiaBpCtrl = TextEditingController(text: '80');
+  final wellHeightCtrl = TextEditingController(text: '170');
+  final wellWeightCtrl = TextEditingController(text: '68');
+  final wellBmiCtrl = TextEditingController(text: '23.5');
+  final wellWaistCtrl = TextEditingController(text: '80');
+  var wellMenarcheAge = '13'.obs;
+  var wellLmpDate = ''.obs;
+  var wellDietType = 'veg'.obs;
+  var wellTobaccoUse = 'no'.obs;
+  var wellAlcoholConsumption = 'no'.obs;
+  final wellOtherObsCtrl = TextEditingController(
+      text: 'Routine health checkup. Patient is fit and healthy.');
 
   // Dynamic EMR Form Lists
   var medicines = <MedicineFormItem>[].obs;
@@ -102,15 +142,32 @@ class HealthRecordController extends GetxController {
     resetFormLists();
     fetchConsentRequests();
     fetchPatients();
+
+    ever(selectedPatient, (p) {
+      if (p != null) {
+        fetchSavedHealthRecords(p.abhaAddress);
+      }
+    });
   }
 
   void calculateBmi() {
     try {
-      final h = double.tryParse(opHeight.value) ?? 0;
-      final w = double.tryParse(opWeight.value) ?? 0;
+      final h = double.tryParse(opHeightCtrl.text) ?? 0;
+      final w = double.tryParse(opWeightCtrl.text) ?? 0;
       if (h > 0 && w > 0) {
         final hm = h / 100.0;
-        opBmi.value = (w / (hm * hm)).toStringAsFixed(1);
+        opBmiCtrl.text = (w / (hm * hm)).toStringAsFixed(1);
+      }
+    } catch (_) {}
+  }
+
+  void calculateWellBmi() {
+    try {
+      final h = double.tryParse(wellHeightCtrl.text) ?? 0;
+      final w = double.tryParse(wellWeightCtrl.text) ?? 0;
+      if (h > 0 && w > 0) {
+        final hm = h / 100.0;
+        wellBmiCtrl.text = (w / (hm * hm)).toStringAsFixed(1);
       }
     } catch (_) {}
   }
@@ -140,17 +197,17 @@ class HealthRecordController extends GetxController {
     medicines.value = [
       MedicineFormItem(
         drugName: 'Dolo 650 mg',
-        dosagePattern: '1-0-1 (After Food)',
+        dosagePattern: 'Morning & Night (1-0-1)',
         route: 'Oral',
-        method: 'Swallow with water',
+        method: 'After Food',
         reason: 'Fever & Pain relief',
         snomedCode: '322236009',
       ),
       MedicineFormItem(
         drugName: 'Pan 40 mg',
-        dosagePattern: '1-0-0 (Before Food)',
+        dosagePattern: 'Morning Only (1-0-0)',
         route: 'Oral',
-        method: 'Before Breakfast',
+        method: 'Before Food',
         reason: 'Acidity prevention',
         snomedCode: '372605007',
       ),
@@ -205,6 +262,12 @@ class HealthRecordController extends GetxController {
     if (labResults.length > 1) labResults.removeAt(index);
   }
 
+  void addImmunization() => immunizationList.add(ImmunizationFormItem());
+  void removeImmunization(int index) {
+    if (immunizationList.length > 1) immunizationList.removeAt(index);
+  }
+
+
   Future<void> fetchPatients() async {
     isLoadingPatients.value = true;
     try {
@@ -216,14 +279,70 @@ class HealthRecordController extends GetxController {
             .map(
                 (e) => PatientRegistryModel.fromJson(e as Map<String, dynamic>))
             .toList();
-        if (patients.isNotEmpty && selectedPatient.value == null) {
+        if (patients.isNotEmpty) {
           selectedPatient.value = patients.first;
+          fetchSavedHealthRecords(patients.first.abhaAddress);
         }
       }
     } catch (e) {
       debugPrint('fetchPatients error: $e');
     } finally {
       isLoadingPatients.value = false;
+    }
+  }
+
+  /// Fetches previously saved health data records from Backend DB for the selected patient
+  Future<void> fetchSavedHealthRecords(String abhaAddress) async {
+    if (abhaAddress.isEmpty) return;
+    try {
+      final endpoint =
+          "${ApiEndpoints.saveHealthDataRecord}?abhaAddress=$abhaAddress";
+      final response = await AbdmServer.getRequest(endpoint);
+      if (response != null && response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        savedLocalRecords.value = data.map((e) {
+          final map = e as Map<String, dynamic>;
+          final ref = map['careContextReference'] ??
+              map['careContextRef'] ??
+              map['visitRef'] ??
+              'VISIT-EX';
+          final hiType =
+              map['recordType'] ?? map['hiType'] ?? 'OPConsultation';
+          final isLinked =
+              map['isLinked'] == true || map['status'] == 'LINKED';
+          final rawDate =
+              map['createdAt'] ?? map['createdOn'] ?? map['authoredOn'];
+          String createdOn = 'Saved Record';
+          if (rawDate != null) {
+            try {
+              final dt = DateTime.parse(rawDate.toString()).toLocal();
+              createdOn =
+                  "${dt.day}/${dt.month}/${dt.year} ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}";
+            } catch (_) {
+              createdOn = rawDate.toString();
+            }
+          }
+
+          Map<String, dynamic> fhir = {};
+          if (map['fhirJsonPayload'] != null) {
+            try {
+              fhir = jsonDecode(map['fhirJsonPayload']) as Map<String, dynamic>;
+            } catch (_) {}
+          }
+
+          return SavedRecordModel(
+            visitRef: ref.toString(),
+            patientName: selectedPatient.value?.name ?? 'Patient',
+            abhaAddress: abhaAddress,
+            hiType: hiType.toString(),
+            createdTime: createdOn,
+            fhirPayload: fhir,
+            isLinked: isLinked,
+          );
+        }).toList();
+      }
+    } catch (e) {
+      debugPrint('fetchSavedHealthRecords error: $e');
     }
   }
 
@@ -291,8 +410,8 @@ class HealthRecordController extends GetxController {
     }
   }
 
-  /// Generates FHIR Payload and Links Care Context directly to ABDM Gateway!
-  Future<void> generateAndLinkCareContext() async {
+  /// Saves FHIR Record locally without linking to ABDM Gateway
+  Future<void> saveRecordLocally() async {
     final patient = selectedPatient.value;
     if (patient == null || patient.abhaAddress.isEmpty) {
       Get.snackbar('Error', 'Please select a registered patient first.');
@@ -303,10 +422,7 @@ class HealthRecordController extends GetxController {
     final visitRef =
         "VISIT-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}";
     final hiType = activeHiType.value;
-    final displayTitle =
-        "$hiType Record - ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}";
 
-    // Construct FHIR payload JSON structure matching React HealthRecordsPage.tsx
     final fhirPayload = {
       'careContextReference': visitRef,
       'authoredOn': DateTime.now().toUtc().toIso8601String(),
@@ -332,9 +448,108 @@ class HealthRecordController extends GetxController {
         'facilityName': 'MIDHA HOSPITAL / SONOMED CLINIC',
       },
       'bodyMeasurements': {
-        'heightCm': opHeight.value,
-        'weightKg': opWeight.value,
-        'bmi': opBmi.value,
+        'heightCm': opHeightCtrl.text,
+        'weightKg': opWeightCtrl.text,
+        'bmi': opBmiCtrl.text,
+      },
+      'vitals': vitalsList.map((v) => v.toJson()).toList(),
+      'complaints': complaintsList.where((c) => c.trim().isNotEmpty).toList(),
+      'clinicalObservation': opObservationResultCtrl.text.trim(),
+      'allergies': allergiesList.map((a) => a.toJson()).toList(),
+      'medicalHistory':
+          medicalHistoryList.where((m) => m.trim().isNotEmpty).toList(),
+      'diagnosis': diagnosisCtrl.text.trim(),
+      'prescriptions': medicines.map((m) => m.toJson()).toList(),
+      'labResults': labResults.map((l) => l.toJson()).toList(),
+      'reportTitle': reportTitleCtrl.text.trim(),
+      'dischargeSummary': dischargeNotesCtrl.text.trim(),
+      'advice': adviceCtrl.text.trim(),
+    };
+
+    try {
+      await AbdmServer.postRequest(
+        endpoint: ApiEndpoints.saveHealthDataRecord,
+        body: {
+          'abhaAddress': patient.abhaAddress,
+          'careContextReference': visitRef,
+          'fhirJsonPayload': jsonEncode(fhirPayload),
+        },
+      );
+
+      savedLocalRecords.insert(
+        0,
+        SavedRecordModel(
+          visitRef: visitRef,
+          patientName: patient.name,
+          abhaAddress: patient.abhaAddress,
+          hiType: hiType,
+          createdTime:
+              "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}",
+          fhirPayload: fhirPayload,
+          isLinked: false,
+        ),
+      );
+
+      isSavingHealthRecord.value = false;
+
+      Get.snackbar(
+        'Record Saved Locally 💾',
+        'EMR Record "$visitRef" ($hiType) saved for ${patient.name}. You can link it to ABDM anytime.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color(0xFF475569),
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
+    } catch (e) {
+      isSavingHealthRecord.value = false;
+      Get.snackbar('Error', 'Failed to save record: $e',
+          backgroundColor: Colors.redAccent, colorText: Colors.white);
+    }
+  }
+
+  /// Generates FHIR Payload and Links Care Context directly to ABDM Gateway!
+  Future<void> generateAndLinkCareContext() async {
+    final patient = selectedPatient.value;
+    if (patient == null || patient.abhaAddress.isEmpty) {
+      Get.snackbar('Error', 'Please select a registered patient first.');
+      return;
+    }
+
+    isSavingHealthRecord.value = true;
+    final visitRef =
+        "VISIT-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}";
+    final hiType = activeHiType.value;
+    final displayTitle =
+        "$hiType Record - ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}";
+
+    final fhirPayload = {
+      'careContextReference': visitRef,
+      'authoredOn': DateTime.now().toUtc().toIso8601String(),
+      'recordType': hiType,
+      'encounterType': encounterType.value,
+      'patient': {
+        'patientReference': patient.patientReference.isNotEmpty
+            ? patient.patientReference
+            : patient.abhaAddress,
+        'name': patient.name,
+        'gender': patient.gender,
+        'birthDate': patient.dateOfBirth,
+        'mobile': patient.mobile,
+      },
+      'practitioners': [
+        {
+          'practitionerId': 'DOC-NMC-998811',
+          'name': 'Dr. Sonomed Specialist',
+        }
+      ],
+      'organisation': {
+        'facilityId': patient.hipId.isNotEmpty ? patient.hipId : 'IN0610090658',
+        'facilityName': 'MIDHA HOSPITAL / SONOMED CLINIC',
+      },
+      'bodyMeasurements': {
+        'heightCm': opHeightCtrl.text,
+        'weightKg': opWeightCtrl.text,
+        'bmi': opBmiCtrl.text,
       },
       'vitals': vitalsList.map((v) => v.toJson()).toList(),
       'complaints': complaintsList.where((c) => c.trim().isNotEmpty).toList(),
@@ -369,6 +584,20 @@ class HealthRecordController extends GetxController {
       requesterId: patient.hipId,
     );
 
+    savedLocalRecords.insert(
+      0,
+      SavedRecordModel(
+        visitRef: visitRef,
+        patientName: patient.name,
+        abhaAddress: patient.abhaAddress,
+        hiType: hiType,
+        createdTime:
+            "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}",
+        fhirPayload: fhirPayload,
+        isLinked: success,
+      ),
+    );
+
     isSavingHealthRecord.value = false;
 
     if (success) {
@@ -382,12 +611,52 @@ class HealthRecordController extends GetxController {
       );
     } else {
       Get.snackbar(
-        'Linking Notice',
-        'Health record saved locally for $visitRef. Gateway notification initiated.',
+        'Linking Request Sent',
+        'Care context link request for "$visitRef" queued on ABDM Gateway.',
         snackPosition: SnackPosition.TOP,
-        backgroundColor: const Color(0xFF0F4C81),
+        backgroundColor: const Color(0xFFF59E0B),
         colorText: Colors.white,
       );
+    }
+  }
+
+  /// Links an existing saved local record to ABDM Gateway
+  Future<void> linkSingleRecordToAbdm(SavedRecordModel record) async {
+    isSavingHealthRecord.value = true;
+    try {
+      bool success = await HipCareContextRepo.linkCareContext(
+        abhaAddress: record.abhaAddress,
+        visitRef: record.visitRef,
+        display: "${record.hiType} Record - ${record.createdTime}",
+        hiType: record.hiType,
+        requesterId: 'IN0610090658',
+      );
+      isSavingHealthRecord.value = false;
+
+      if (success) {
+        record.isLinked = true;
+        savedLocalRecords.refresh();
+        Get.snackbar(
+          'Care Context Linked 🎉',
+          'Record "${record.visitRef}" (${record.hiType}) for ${record.patientName} linked to ABDM Gateway.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: const Color(0xFF10B981),
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
+      } else {
+        Get.snackbar(
+          'Linking Failed',
+          'Could not link record "${record.visitRef}" to ABDM Gateway. Check backend.',
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: const Color(0xFFEF4444),
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      isSavingHealthRecord.value = false;
+      Get.snackbar('Error', 'Failed to link: $e',
+          backgroundColor: Colors.redAccent, colorText: Colors.white);
     }
   }
 

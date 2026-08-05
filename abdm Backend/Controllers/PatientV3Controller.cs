@@ -89,6 +89,21 @@ public class PatientV3Controller : ControllerBase
     }
 
     /// <summary>
+    /// Fetches all saved health data records for a specific ABHA address from local database
+    /// </summary>
+    [HttpGet("health-data")]
+    public async Task<IActionResult> GetHealthDataByAbha([FromQuery] string abhaAddress)
+    {
+        if (string.IsNullOrEmpty(abhaAddress))
+        {
+            return BadRequest(new { Message = "AbhaAddress query parameter is required" });
+        }
+
+        var records = await _patientService.GetHealthDataRecordsByAbhaAsync(abhaAddress);
+        return Ok(records);
+    }
+
+    /// <summary>
     /// Returns all registered patients for the current HIP from local database.
     /// Used by the Patient Registry dashboard in the frontend.
     /// </summary>

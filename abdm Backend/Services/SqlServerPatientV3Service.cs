@@ -377,6 +377,14 @@ public class SqlServerPatientV3Service : IPatientV3Service
             .FirstOrDefaultAsync(h => h.AbhaAddress == abhaAddress && h.CareContextReference == careContextReference);
     }
 
+    public async Task<List<HealthDataRecord>> GetHealthDataRecordsByAbhaAsync(string abhaAddress)
+    {
+        return await _context.HealthDataRecords
+            .Where(h => h.AbhaAddress == abhaAddress)
+            .OrderByDescending(h => h.CreatedAt)
+            .ToListAsync();
+    }
+
     public async Task AddHealthDataRecordAsync(HealthDataRecord record)
     {
         var existing = await _context.HealthDataRecords

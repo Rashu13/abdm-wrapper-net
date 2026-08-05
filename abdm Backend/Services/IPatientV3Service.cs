@@ -19,6 +19,7 @@ public interface IPatientV3Service
     Task<bool> CheckCareContextsAsync(string abhaAddress, string hipId, List<CareContext> careContexts);
     Task<List<CareContext>> GetSameCareContextsAsync(string abhaAddress, string hipId, List<CareContext> careContexts);
     Task<HealthDataRecord?> GetHealthDataRecordAsync(string abhaAddress, string careContextReference);
+    Task<List<HealthDataRecord>> GetHealthDataRecordsByAbhaAsync(string abhaAddress);
     Task AddHealthDataRecordAsync(HealthDataRecord record);
     Task<bool> IsConsentValidAsync(string abhaAddress, string consentId, string hipId);
     Task<Patient?> GetPatientAsync(string abhaAddress, string hipId);

@@ -397,6 +397,11 @@ public class PatientV3Service : IPatientV3Service
         throw new NotImplementedException("Not implemented in Mongo DB Context");
     }
 
+    public Task<List<HealthDataRecord>> GetHealthDataRecordsByAbhaAsync(string abhaAddress)
+    {
+        throw new NotImplementedException("Not implemented in Mongo DB Context");
+    }
+
     public Task AddHealthDataRecordAsync(HealthDataRecord record)
     {
         throw new NotImplementedException("Not implemented in Mongo DB Context");

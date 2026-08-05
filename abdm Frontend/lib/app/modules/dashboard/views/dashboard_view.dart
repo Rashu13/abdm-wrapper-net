@@ -11,6 +11,8 @@ import '../../m2_hip/views/patient_registry_view.dart';
 import '../../../../util/constants.dart';
 import '../../../../util/style.dart';
 
+import '../../m3_hiu/views/emr_health_records_page.dart';
+
 class DashboardView extends GetView<DashboardController> {
   DashboardView({Key? key}) : super(key: key);
 
@@ -21,6 +23,7 @@ class DashboardView extends GetView<DashboardController> {
     const ConsentRequestView(),
     const ScanShareView(),
     const PatientRegistryView(),
+    const EmrHealthRecordsPage(),
   ];
 
   @override
@@ -218,6 +221,13 @@ class DashboardView extends GetView<DashboardController> {
                                     activeIcon: Icons.people_alt,
                                     title: "Patient Registry",
                                     subtitle: "Registered HIP Patients",
+                                  )),
+                              Obx(() => _buildSidebarTile(
+                                    index: 6,
+                                    icon: Icons.medical_services_outlined,
+                                    activeIcon: Icons.medical_services,
+                                    title: "EMR Health Studio",
+                                    subtitle: "FHIR Record Builder",
                                   )),
                             ],
                           ),

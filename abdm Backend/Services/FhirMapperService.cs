@@ -2700,33 +2700,112 @@ public class FhirMapperService : IFhirMapperService
             return explicitSnomedCode.Trim();
         }
 
-        if (string.IsNullOrWhiteSpace(medName)) return "410942007";
+        if (string.IsNullOrWhiteSpace(medName)) return "387517004";
 
         var clean = medName.Trim().ToLowerInvariant();
 
+        // Antipyretics & Analgesics
         if (clean.Contains("dolo") || clean.Contains("paracetamol 650") || clean.Contains("pcm 650"))
-            return "322236009"; // Paracetamol 650 mg tablet
+            return "322236009"; // Paracetamol 650 mg
         if (clean.Contains("paracetamol") || clean.Contains("pcm") || clean.Contains("crocin") || clean.Contains("calpol"))
             return "387517004"; // Paracetamol
-        if (clean.Contains("amoxicillin") || clean.Contains("moxikind") || clean.Contains("amox"))
-            return "372687004"; // Amoxicillin
-        if (clean.Contains("pantoprazole") || clean.Contains("pan 40") || clean.Contains("pan-40"))
-            return "372605007"; // Pantoprazole
-        if (clean.Contains("azithromycin") || clean.Contains("azee") || clean.Contains("zathrin"))
-            return "372522002"; // Azithromycin
-        if (clean.Contains("cetirizine") || clean.Contains("cetzine") || clean.Contains("okacet"))
-            return "372583007"; // Cetirizine
-        if (clean.Contains("metformin") || clean.Contains("glycomet"))
-            return "372567009"; // Metformin
-        if (clean.Contains("amlodipine") || clean.Contains("stamlo") || clean.Contains("amlong"))
-            return "372833007"; // Amlodipine
         if (clean.Contains("ibuprofen") || clean.Contains("brufen") || clean.Contains("combiflam"))
             return "387207008"; // Ibuprofen
+        if (clean.Contains("diclofenac") || clean.Contains("voveran"))
+            return "372572004"; // Diclofenac
+        if (clean.Contains("aceclofenac") || clean.Contains("zerodol"))
+            return "387522004"; // Aceclofenac
+        if (clean.Contains("mefenamic") || clean.Contains("meftal"))
+            return "372861001"; // Mefenamic Acid
+        if (clean.Contains("tramadol") || clean.Contains("ultram"))
+            return "387140003"; // Tramadol
+        if (clean.Contains("nimesulide") || clean.Contains("nise"))
+            return "372552003"; // Nimesulide
+
+        // Antacids & GI
+        if (clean.Contains("pantoprazole") || clean.Contains("pan 40") || clean.Contains("pan-40") || clean.Contains("pan-d"))
+            return "372605007"; // Pantoprazole
+        if (clean.Contains("omeprazole") || clean.Contains("omez"))
+            return "372722002"; // Omeprazole
+        if (clean.Contains("rabeprazole") || clean.Contains("razo") || clean.Contains("rablet"))
+            return "372619001"; // Rabeprazole
         if (clean.Contains("ranitidine") || clean.Contains("aciloc") || clean.Contains("rantac"))
             return "372765001"; // Ranitidine
-        if (clean.Contains("multivitamin") || clean.Contains("becosules"))
-            return "421689004"; // Multivitamin preparation
+        if (clean.Contains("ondansetron") || clean.Contains("emeset") || clean.Contains("vomikind"))
+            return "372561000"; // Ondansetron
+        if (clean.Contains("domperidone") || clean.Contains("vomiplus"))
+            return "372535003"; // Domperidone
+        if (clean.Contains("sucralfate") || clean.Contains("sucrafil"))
+            return "372810002"; // Sucralfate
 
-        return "410942007"; // Generic Pharmaceutical Product
+        // Antibiotics
+        if (clean.Contains("amoxicillin") || clean.Contains("moxikind") || clean.Contains("augmentin") || clean.Contains("novamox"))
+            return "372687004"; // Amoxicillin
+        if (clean.Contains("azithromycin") || clean.Contains("azee") || clean.Contains("zathrin"))
+            return "372522002"; // Azithromycin
+        if (clean.Contains("ciprofloxacin") || clean.Contains("cifran"))
+            return "372828008"; // Ciprofloxacin
+        if (clean.Contains("levofloxacin") || clean.Contains("levoquin"))
+            return "372545009"; // Levofloxacin
+        if (clean.Contains("cefixime") || clean.Contains("taxim") || clean.Contains("zifi"))
+            return "372527008"; // Cefixime
+        if (clean.Contains("cefpodoxime") || clean.Contains("gudcef"))
+            return "372530006"; // Cefpodoxime
+        if (clean.Contains("ceftriaxone") || clean.Contains("monocef"))
+            return "372528003"; // Ceftriaxone
+        if (clean.Contains("doxycycline") || clean.Contains("dox"))
+            return "372827003"; // Doxycycline
+        if (clean.Contains("metronidazole") || clean.Contains("flagyl"))
+            return "372594002"; // Metronidazole
+
+        // Antihistamines & Respiratory
+        if (clean.Contains("cetirizine") || clean.Contains("cetzine") || clean.Contains("okacet"))
+            return "372583007"; // Cetirizine
+        if (clean.Contains("levocetirizine") || clean.Contains("lecope") || clean.Contains("1-al") || clean.Contains("montek"))
+            return "372583007"; // Levocetirizine
+        if (clean.Contains("fexofenadine") || clean.Contains("allegra"))
+            return "372541005"; // Fexofenadine
+        if (clean.Contains("salbutamol") || clean.Contains("asthalin") || clean.Contains("ascoril"))
+            return "372599007"; // Salbutamol
+        if (clean.Contains("budesonide") || clean.Contains("budecort"))
+            return "372825006"; // Budesonide
+
+        // Diabetes
+        if (clean.Contains("metformin") || clean.Contains("glycomet") || clean.Contains("obimet"))
+            return "372567009"; // Metformin
+        if (clean.Contains("glimepiride") || clean.Contains("amaryl"))
+            return "372548006"; // Glimepiride
+        if (clean.Contains("teneligliptin") || clean.Contains("tenglyn"))
+            return "712398001"; // Teneligliptin
+        if (clean.Contains("sitagliptin") || clean.Contains("januvia"))
+            return "702543004"; // Sitagliptin
+        if (clean.Contains("dapagliflozin") || clean.Contains("forxiga"))
+            return "703663004"; // Dapagliflozin
+        if (clean.Contains("insulin") || clean.Contains("mixtard"))
+            return "372560004"; // Insulin
+
+        // Cardiovascular
+        if (clean.Contains("amlodipine") || clean.Contains("stamlo") || clean.Contains("amlong"))
+            return "372833007"; // Amlodipine
+        if (clean.Contains("telmisartan") || clean.Contains("telma") || clean.Contains("tazloc"))
+            return "372862008"; // Telmisartan
+        if (clean.Contains("losartan") || clean.Contains("repace") || clean.Contains("losar"))
+            return "372860000"; // Losartan
+        if (clean.Contains("atenolol") || clean.Contains("aten"))
+            return "372836004"; // Atenolol
+        if (clean.Contains("atorvastatin") || clean.Contains("atorva"))
+            return "372854002"; // Atorvastatin
+        if (clean.Contains("rosuvastatin") || clean.Contains("rosuvas"))
+            return "372856000"; // Rosuvastatin
+        if (clean.Contains("aspirin") || clean.Contains("ecosprin"))
+            return "387170009"; // Aspirin
+        if (clean.Contains("clopidogrel") || clean.Contains("clopilet"))
+            return "372850006"; // Clopidogrel
+
+        // Supplements
+        if (clean.Contains("calcium") || clean.Contains("shelcal") || clean.Contains("vitamin") || clean.Contains("becosules") || clean.Contains("neurobion"))
+            return "421689004"; // Vitamin / Calcium Supplement
+
+        return "387517004"; // Standard Active Pharmaceutical Product
     }
 }
