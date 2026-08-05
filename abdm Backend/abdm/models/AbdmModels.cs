@@ -102,8 +102,14 @@ namespace ABDM.Models
         public string RefreshToken   { get; set; }
         public string TxnId          { get; set; }
         public bool   IsNew          { get; set; }
-        public string AbhaNumber { get; internal set; }
+        public string AbhaNumber     { get; set; }
         public string AadharNo       { get; set; }
+        // Extended address fields from GET /profile/account
+        public string Pincode        { get; set; }
+        public string StateName      { get; set; }
+        public string StateCode      { get; set; }
+        public string DistrictName   { get; set; }
+        public string DistrictCode   { get; set; }
 
         public SavedSession ToSession(string token = null)
         {
