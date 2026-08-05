@@ -1111,6 +1111,42 @@ namespace ABDM.Api
                         }
                     }
 
+                    // Backfill missing fields (mobile, abhaNumber, abhaAddress) from JWT token payload
+                    if (!string.IsNullOrEmpty(loginResp.Token) && loginResp.Accounts.Count > 0)
+                    {
+                        try
+                        {
+                            // Decode JWT payload (base64url, middle segment)
+                            var parts = loginResp.Token.Split('.');
+                            if (parts.Length >= 2)
+                            {
+                                string base64Payload = parts[1];
+                                // Fix base64url padding
+                                base64Payload = base64Payload.Replace('-', '+').Replace('_', '/');
+                                while (base64Payload.Length % 4 != 0) base64Payload += "=";
+                                var jsonBytes = Convert.FromBase64String(base64Payload);
+                                var tokenPayload = System.Text.Encoding.UTF8.GetString(jsonBytes);
+                                var claims = SimpleJson.Deserialize(tokenPayload);
+
+                                string jwtMobile = claims.ContainsKey("mobile") ? claims["mobile"]?.ToString() : null;
+                                string jwtAbhaNum = claims.ContainsKey("abhaNumber") ? claims["abhaNumber"]?.ToString()
+                                    : claims.ContainsKey("sub") ? claims["sub"]?.ToString() : null;
+                                string jwtAbhaAddr = claims.ContainsKey("preferredAbhaAddress") ? claims["preferredAbhaAddress"]?.ToString() : null;
+
+                                foreach (var profile in loginResp.Accounts)
+                                {
+                                    if (string.IsNullOrEmpty(profile.Mobile) && !string.IsNullOrEmpty(jwtMobile))
+                                        profile.Mobile = jwtMobile;
+                                    if (string.IsNullOrEmpty(profile.HealthIdNumber) && !string.IsNullOrEmpty(jwtAbhaNum))
+                                        profile.HealthIdNumber = jwtAbhaNum;
+                                    if (string.IsNullOrEmpty(profile.AbhaAddress) && !string.IsNullOrEmpty(jwtAbhaAddr))
+                                        profile.AbhaAddress = jwtAbhaAddr;
+                                }
+                            }
+                        }
+                        catch { /* If JWT decode fails, ignore and continue with what we have */ }
+                    }
+
                     // Exchanging temporary T-token for final X-token
                     if (!string.IsNullOrEmpty(loginResp.Token) && loginResp.Accounts.Count > 0)
                     {
@@ -1157,6 +1193,59 @@ namespace ABDM.Api
                         finally
                         {
                             _http.DefaultRequestHeaders.Remove("T-token");
+                        }
+                    }
+
+                    // Fetch full profile using X-token (GET /profile/account) to get mobile, address, pincode, etc.
+                    if (!string.IsNullOrEmpty(loginResp.Token) && loginResp.Accounts.Count > 0)
+                    {
+                        try
+                        {
+                            AddCommonHeaders(token);
+                            _http.DefaultRequestHeaders.Remove("X-token");
+                            _http.DefaultRequestHeaders.TryAddWithoutValidation("X-token", $"Bearer {loginResp.Token}");
+
+                            var profileResp = await _http.GetAsync($"{_cfg.AbhaServiceUrl}/profile/account");
+                            var profileBody = await profileResp.Content.ReadAsStringAsync();
+                            LogResponse("GetProfileAfterLogin", profileBody);
+
+                            if (profileResp.IsSuccessStatusCode)
+                            {
+                                var profileDict = SimpleJson.Deserialize(profileBody);
+                                var firstAccount = loginResp.Accounts[0];
+
+                                // Merge profile fields into account
+                                if (string.IsNullOrEmpty(firstAccount.Mobile))
+                                    firstAccount.Mobile = GetFirst(profileDict, "mobile", "maskedMobile");
+                                if (string.IsNullOrEmpty(firstAccount.Email))
+                                    firstAccount.Email = GetFirst(profileDict, "email");
+                                if (string.IsNullOrEmpty(firstAccount.Address))
+                                    firstAccount.Address = GetFirst(profileDict, "address");
+                                if (string.IsNullOrEmpty(firstAccount.Pincode))
+                                    firstAccount.Pincode = GetFirst(profileDict, "pincode");
+                                if (string.IsNullOrEmpty(firstAccount.StateName))
+                                    firstAccount.StateName = GetFirst(profileDict, "stateName");
+                                if (string.IsNullOrEmpty(firstAccount.StateCode))
+                                    firstAccount.StateCode = GetFirst(profileDict, "stateCode");
+                                if (string.IsNullOrEmpty(firstAccount.DistrictName))
+                                    firstAccount.DistrictName = GetFirst(profileDict, "districtName");
+                                if (string.IsNullOrEmpty(firstAccount.DistrictCode))
+                                    firstAccount.DistrictCode = GetFirst(profileDict, "districtCode");
+                                if (string.IsNullOrEmpty(firstAccount.ProfilePhoto))
+                                    firstAccount.ProfilePhoto = GetFirst(profileDict, "profilePhoto", "kycPhoto");
+                                // Also update name if not already set from accounts
+                                string profileName = GetFirst(profileDict, "name");
+                                if (!string.IsNullOrEmpty(profileName) && (string.IsNullOrEmpty(firstAccount.Name) || firstAccount.Name == "ABHA Holder"))
+                                    firstAccount.Name = profileName;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine("Error fetching profile after login: " + ex.Message);
+                        }
+                        finally
+                        {
+                            _http.DefaultRequestHeaders.Remove("X-token");
                         }
                     }
 
