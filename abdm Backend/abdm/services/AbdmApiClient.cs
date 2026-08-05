@@ -767,40 +767,70 @@ namespace ABDM.Api
                     string reqTypeUpper = request.LoginType?.ToUpper().Trim() ?? "";
                     string loginIdToEncrypt = request.LoginId?.Trim() ?? "";
 
-                    if (reqTypeUpper == "AADHAAR" || (loginIdClean.Length == 12 && System.Text.RegularExpressions.Regex.IsMatch(loginIdClean, "^[0-9]+$")))
+                    // Step 1: Detect loginHint from loginId format (format takes priority over loginType)
+                    bool wantsAadhaarOtp = reqTypeUpper.Contains("AADHAAR");
+
+                    if (loginIdClean.Contains("@") || (request.LoginId?.Contains("@") == true))
                     {
+                        // ABHA Address
+                        loginHint = "abha-address";
+                        loginIdToEncrypt = request.LoginId.Trim();
+                        if (!loginIdToEncrypt.Contains("@"))
+                            loginIdToEncrypt = loginIdToEncrypt + "@sbx";
+
+                        if (wantsAadhaarOtp)
+                        {
+                            otpSystem = "aadhaar";
+                            scope = new[] { "abha-login", "aadhaar-verify" };
+                        }
+                        else
+                        {
+                            otpSystem = "abdm";
+                            scope = new[] { "abha-login", "mobile-verify" };
+                        }
+                    }
+                    else if (loginIdClean.Length == 14 && System.Text.RegularExpressions.Regex.IsMatch(loginIdClean, "^[0-9]+$"))
+                    {
+                        // ABHA Number (14 digits) - format as 91-XXXX-XXXX-XXXX
+                        loginHint = "abha-number";
+                        loginIdToEncrypt = $"{loginIdClean.Substring(0, 2)}-{loginIdClean.Substring(2, 4)}-{loginIdClean.Substring(6, 4)}-{loginIdClean.Substring(10, 4)}";
+
+                        if (wantsAadhaarOtp)
+                        {
+                            otpSystem = "aadhaar";
+                            scope = new[] { "abha-login", "aadhaar-verify" };
+                        }
+                        else
+                        {
+                            otpSystem = "abdm";
+                            scope = new[] { "abha-login", "mobile-verify" };
+                        }
+                    }
+                    else if (loginIdClean.Length == 12 && System.Text.RegularExpressions.Regex.IsMatch(loginIdClean, "^[0-9]+$"))
+                    {
+                        // Aadhaar Number (12 digits) - always uses aadhaar OTP
                         loginHint = "aadhaar";
                         otpSystem = "aadhaar";
                         scope = new[] { "abha-login", "aadhaar-verify" };
                         loginIdToEncrypt = loginIdClean;
                     }
-                    else if (loginIdClean.Length == 14 && System.Text.RegularExpressions.Regex.IsMatch(loginIdClean, "^[0-9]+$"))
+                    else if (loginIdClean.Length == 10 && System.Text.RegularExpressions.Regex.IsMatch(loginIdClean, "^[0-9]+$"))
                     {
-                        loginHint = "abha-number";
-                        // Format ABHA Number as 91-XXXX-XXXX-XXXX for NHA validator
-                        loginIdToEncrypt = $"{loginIdClean.Substring(0, 2)}-{loginIdClean.Substring(2, 4)}-{loginIdClean.Substring(6, 4)}-{loginIdClean.Substring(10, 4)}";
-                        
-                        if (reqTypeUpper.Contains("AADHAAR"))
-                        {
-                            otpSystem = "aadhaar";
-                            scope = new[] { "abha-login", "aadhaar-verify" };
-                        }
-                        else
-                        {
-                            otpSystem = "abdm";
-                            scope = new[] { "abha-login", "mobile-verify" };
-                        }
+                        // Mobile Number (10 digits)
+                        loginHint = "mobile";
+                        otpSystem = "abdm";
+                        scope = new[] { "abha-login", "mobile-verify" };
+                        loginIdToEncrypt = loginIdClean;
                     }
-                    else if (loginIdClean.Contains("@") || reqTypeUpper.Contains("ABHA-ADDRESS") || reqTypeUpper.Contains("ABHA ADDRESS"))
+                    else if (!string.IsNullOrEmpty(loginIdClean))
                     {
+                        // Fallback: treat as ABHA address if it contains non-digit chars
                         loginHint = "abha-address";
                         loginIdToEncrypt = request.LoginId.Trim();
                         if (!loginIdToEncrypt.Contains("@"))
-                        {
                             loginIdToEncrypt = loginIdToEncrypt + "@sbx";
-                        }
 
-                        if (reqTypeUpper.Contains("AADHAAR"))
+                        if (wantsAadhaarOtp)
                         {
                             otpSystem = "aadhaar";
                             scope = new[] { "abha-login", "aadhaar-verify" };
@@ -810,13 +840,6 @@ namespace ABDM.Api
                             otpSystem = "abdm";
                             scope = new[] { "abha-login", "mobile-verify" };
                         }
-                    }
-                    else if (loginIdClean.Length == 10)
-                    {
-                        loginHint = "mobile";
-                        loginIdToEncrypt = loginIdClean;
-                        otpSystem = "abdm";
-                        scope = new[] { "abha-login", "mobile-verify" };
                     }
 
                     var encrypted = Encrypt(loginIdToEncrypt, publicKey);
