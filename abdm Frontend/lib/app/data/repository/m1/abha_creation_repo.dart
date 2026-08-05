@@ -258,7 +258,19 @@ class AbhaCreationRepo {
     if (response != null &&
         (response.statusCode == 200 || response.statusCode == 201)) {
       final data = jsonDecode(response.body);
+      debugPrint("=== LOGIN VERIFY RAW RESPONSE ===");
+      debugPrint(response.body);
+      debugPrint("=================================");
       final profile = AbhaProfileModel.fromJson(data);
+      debugPrint("=== PARSED PROFILE ===");
+      debugPrint("name: ${profile.name}");
+      debugPrint("abhaNumber: ${profile.abhaNumber}");
+      debugPrint("abhaAddress: ${profile.abhaAddress}");
+      debugPrint("gender: ${profile.gender}");
+      debugPrint("dob: ${profile.dob}");
+      debugPrint("mobile: ${profile.mobile}");
+      debugPrint("address: ${profile.address}");
+      debugPrint("=====================");
       if (profile.userToken != null) {
         box.write('auth_token', profile.userToken);
       }

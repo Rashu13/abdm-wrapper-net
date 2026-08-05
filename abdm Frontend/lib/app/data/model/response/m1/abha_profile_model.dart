@@ -60,9 +60,29 @@ class AbhaProfileModel {
       }
     }
 
+    // Helper to pick first non-empty string value across sources and keys
+    String? pickVal(List<Map<String, dynamic>> sources, List<String> keys) {
+      for (var source in sources) {
+        for (var key in keys) {
+          if (source.containsKey(key) && source[key] != null) {
+            var val = source[key].toString().trim();
+            if (val.isNotEmpty) {
+              return val;
+            }
+          }
+        }
+      }
+      return null;
+    }
+
+    var sources = [firstAccount, data, json];
+
     // Extract full name
-    String fullName = data['name'] ?? firstAccount['name'] ??
-        '${data['firstName'] ?? firstAccount['firstName'] ?? ''} ${data['middleName'] ?? ''} ${data['lastName'] ?? firstAccount['lastName'] ?? ''}'.trim();
+    String? nameVal = pickVal(sources, ['name', 'Name']);
+    String? fn = pickVal(sources, ['firstName', 'FirstName']);
+    String? mn = pickVal(sources, ['middleName', 'MiddleName']);
+    String? ln = pickVal(sources, ['lastName', 'LastName']);
+    String fullName = nameVal ?? '${fn ?? ''} ${mn ?? ''} ${ln ?? ''}'.trim();
     if (fullName.isEmpty) fullName = 'ABHA Holder';
 
     // Extract existing ABHA addresses
@@ -71,76 +91,63 @@ class AbhaProfileModel {
       existingAddrs = List<String>.from(data['mappedPhrAddress']);
     } else if (data['accounts'] is List) {
       for (var acc in data['accounts']) {
-        if (acc is Map && acc['abhaAddress'] != null) {
-          existingAddrs.add(acc['abhaAddress'].toString());
-        } else if (acc is Map && acc['preferredAbhaAddress'] != null) {
-          existingAddrs.add(acc['preferredAbhaAddress'].toString());
-        } else if (acc is String) {
-          existingAddrs.add(acc);
+        if (acc is Map && acc['abhaAddress'] != null && acc['abhaAddress'].toString().trim().isNotEmpty) {
+          existingAddrs.add(acc['abhaAddress'].toString().trim());
+        } else if (acc is Map && acc['preferredAbhaAddress'] != null && acc['preferredAbhaAddress'].toString().trim().isNotEmpty) {
+          existingAddrs.add(acc['preferredAbhaAddress'].toString().trim());
+        } else if (acc is String && acc.trim().isNotEmpty) {
+          existingAddrs.add(acc.trim());
         }
       }
     }
 
-    // Token extraction — NHA ABDM returns xToken at different levels
-    String? token = data['xToken'] ??
-        data['token'] ??
-        data['ABHAToken'] ??
-        json['xToken'] ??
-        json['token'] ??
-        json['ABHAToken'];
+    String? token = pickVal(sources, ['xToken', 'token', 'ABHAToken', 'userToken', 'UserToken']);
+    String? abhaNum = pickVal(sources, ['healthIdNumber', 'abhaNumber', 'ABHANumber', 'HealthIdNumber', 'AbhaNumber']);
+    String? abhaAddr = pickVal(sources, ['abhaAddress', 'healthId', 'phrAddress', 'preferredAbhaAddress', 'AbhaAddress', 'PreferredAbhaAddress']);
+    String? gender = pickVal(sources, ['gender', 'Gender']) ?? 'N/A';
+    String? dob = pickVal(sources, ['dob', 'dateOfBirth', 'dayOfBirth', 'Dob', 'DateOfBirth']);
 
-    String? abhaNum = data['healthIdNumber'] ??
-        data['abhaNumber'] ??
-        data['ABHANumber'] ??
-        firstAccount['ABHANumber'] ??
-        firstAccount['healthIdNumber'] ??
-        firstAccount['abhaNumber'];
-
-    String? abhaAddr = data['abhaAddress'] ??
-        data['healthId'] ??
-        data['phrAddress'] ??
-        data['preferredAbhaAddress'] ??
-        firstAccount['preferredAbhaAddress'] ??
-        firstAccount['abhaAddress'];
-
-    String? gender = data['gender'] ?? firstAccount['gender'] ?? 'N/A';
-    String? dob = data['dob'] ??
-        data['dateOfBirth'] ??
-        data['dayOfBirth'] ??
-        firstAccount['dob'] ??
-        firstAccount['dateOfBirth'];
-
-    if (dob == null && (data['yearOfBirth'] != null || firstAccount['yearOfBirth'] != null)) {
-      dob = '${data['dayOfBirth'] ?? '01'}/${data['monthOfBirth'] ?? '01'}/${data['yearOfBirth'] ?? firstAccount['yearOfBirth']}';
+    if (dob == null) {
+      String? yob = pickVal(sources, ['yearOfBirth', 'YearOfBirth']);
+      if (yob != null) {
+        String? mob = pickVal(sources, ['monthOfBirth', 'MonthOfBirth']) ?? '01';
+        String? dobDay = pickVal(sources, ['dayOfBirth', 'DayOfBirth']) ?? '01';
+        dob = '$dobDay/$mob/$yob';
+      }
     }
 
-    String? mobile = data['mobile'] ??
-        data['phoneNumber'] ??
-        data['maskedMobile'] ??
-        firstAccount['mobile'] ??
-        firstAccount['maskedMobile'];
+    String? mobile = pickVal(sources, ['mobile', 'phoneNumber', 'maskedMobile', 'Mobile', 'PhoneNumber', 'MaskedMobile']);
+    String? email = pickVal(sources, ['email', 'Email']);
+    String? photo = pickVal(sources, ['profilePhoto', 'photo', 'kycPhoto', 'ProfilePhoto', 'Photo', 'KycPhoto']);
+    String? address = pickVal(sources, ['address', 'Address', 'fullAddress', 'FullAddress']);
+    String? pincode = pickVal(sources, ['pincode', 'pinCode', 'Pincode', 'PinCode']);
+    String? districtName = pickVal(sources, ['districtName', 'district', 'DistrictName', 'District']);
+    String? stateName = pickVal(sources, ['stateName', 'state', 'StateName', 'State']);
+    String? stateCode = pickVal(sources, ['stateCode', 'StateCode']);
+    String? districtCode = pickVal(sources, ['districtCode', 'DistrictCode']);
 
     return AbhaProfileModel(
       abhaNumber: abhaNum,
       abhaAddress: abhaAddr,
       existingAbhaAddresses: existingAddrs,
       name: fullName,
-      firstName: data['firstName'] ?? firstAccount['firstName'],
-      middleName: data['middleName'],
-      lastName: data['lastName'] ?? firstAccount['lastName'],
+      firstName: fn,
+      middleName: mn,
+      lastName: ln,
       gender: gender,
       dob: dob ?? 'N/A',
-      yearOfBirth: data['yearOfBirth'] ?? firstAccount['yearOfBirth'],
+      yearOfBirth: pickVal(sources, ['yearOfBirth', 'YearOfBirth']),
       mobile: mobile ?? 'N/A',
-      email: data['email'] ?? firstAccount['email'],
-      profilePhoto: data['profilePhoto'] ?? data['photo'] ?? firstAccount['profilePhoto'] ?? firstAccount['photo'],
+      email: email,
+      profilePhoto: photo,
       userToken: token,
-      address: data['address'] ?? firstAccount['address'],
-      pincode: data['pincode'] ?? data['pinCode'] ?? firstAccount['pincode'],
-      districtName: data['districtName'] ?? firstAccount['districtName'],
-      stateName: data['stateName'] ?? firstAccount['stateName'],
-      stateCode: data['stateCode'] ?? firstAccount['stateCode'],
-      districtCode: data['districtCode'] ?? firstAccount['districtCode'],
+      address: address,
+      pincode: pincode,
+      districtName: districtName,
+      stateName: stateName,
+      stateCode: stateCode,
+      districtCode: districtCode,
     );
   }
 }
+

@@ -1055,7 +1055,7 @@ namespace ABDM.Api
                     var encOtp    = Encrypt(request.Otp, publicKey);
 
                     string[] scope = new[] { "abha-login", "mobile-verify" };
-                    if (request.LoginType?.ToUpper() == "AADHAAR")
+                    if (request.LoginType?.ToUpper().Contains("AADHAAR") == true)
                     {
                         scope = new[] { "abha-login", "aadhaar-verify" };
                     }

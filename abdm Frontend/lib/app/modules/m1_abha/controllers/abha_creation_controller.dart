@@ -15,6 +15,7 @@ class AbhaCreationController extends GetxController {
 
   // Mode selection: true = Create ABHA, false = ABHA Login
   var isCreateMode = true.obs;
+  var selectedLoginType = 'mobile'.obs;
 
   var isLoading = false.obs;
   var isFetchingSuggestions = false.obs;
@@ -84,6 +85,20 @@ class AbhaCreationController extends GetxController {
   var resendSeconds = 60.obs;
   var canResend = false.obs;
   Timer? _resendTimer;
+
+  /// Resets login state for "Verify Another" flow
+  void resetLoginState() {
+    txnId.value = '';
+    otp.value = '';
+    maskedMobile.value = '';
+    inputNumber.value = '';
+    isLoading.value = false;
+    abhaProfile.value = null;
+    isCreateMode.value = false;
+    resendCount.value = 0;
+    canResend.value = false;
+    _resendTimer?.cancel();
+  }
 
   void startResendTimer() {
     _resendTimer?.cancel();
@@ -338,7 +353,7 @@ class AbhaCreationController extends GetxController {
     var req = AbdmVerifyOtpRequest(
       otp: otp.value,
       txnId: txnId.value,
-      loginType: isCreateMode.value ? "aadhaar" : "mobile",
+      loginType: isCreateMode.value ? "aadhaar" : selectedLoginType.value,
       mobile: mobileVal,
     );
 
