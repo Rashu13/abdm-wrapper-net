@@ -1563,17 +1563,18 @@ public class FhirMapperService : IFhirMapperService
         var labResultsElement = GetProperty(root, "labResults");
         if (labResultsElement.ValueKind == JsonValueKind.Array && labResultsElement.GetArrayLength() > 0)
         {
+            var reportTitle = GetString(root, "reportTitle") ?? "Diagnostic Report";
             var diagnosticReport = new DiagnosticReport
             {
                 Id = "DiagnosticReport-1",
-                Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/DiagnosticReport"),
+                Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/DiagnosticReportLab"),
                 Status = DiagnosticReport.DiagnosticReportStatus.Final,
                 Code = new CodeableConcept
                 {
-                    Text = "Diagnostic Report",
+                    Text = reportTitle,
                     Coding = new List<Coding>
                     {
-                        new Coding(SNOMED_URL, "721981007", "Diagnostic Report")
+                        new Coding(SNOMED_URL, "721981007", reportTitle)
                     }
                 },
                 Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
@@ -1585,13 +1586,41 @@ public class FhirMapperService : IFhirMapperService
                 diagnosticReport.Performer.Add(new ResourceReference($"Practitioner/{practitioner.Id}") { Display = practitionerName });
             }
 
+            // Map documents to presentedForm attachment if present
+            var docElement = GetProperty(root, "documents");
+            if (docElement.ValueKind == JsonValueKind.Array && docElement.GetArrayLength() > 0)
+            {
+                foreach (var d in docElement.EnumerateArray())
+                {
+                    var contentType = GetString(d, "contentType") ?? "application/pdf";
+                    var dataBase64 = GetString(d, "data") ?? "";
+                    if (!string.IsNullOrEmpty(dataBase64))
+                    {
+                        try
+                        {
+                            var rawData = Convert.FromBase64String(dataBase64);
+                            diagnosticReport.PresentedForm.Add(new Attachment
+                            {
+                                ContentType = contentType,
+                                Data = rawData,
+                                CreationElement = new FhirDateTime(DateTimeOffset.UtcNow)
+                            });
+                        }
+                        catch { }
+                    }
+                }
+            }
+
             int obsIndex = 1;
             foreach (var r in labResultsElement.EnumerateArray())
             {
                 var tName = GetString(r, "testName") ?? "Unknown Test";
                 var tVal = GetString(r, "value") ?? "";
                 var tUnit = GetString(r, "unit") ?? "";
+                var explicitCode = GetString(r, "snomedCode") ?? GetString(r, "code");
+                var obsCode = !string.IsNullOrEmpty(explicitCode) ? explicitCode : "261665006";
 
+                var isDouble = decimal.TryParse(tVal, out var doubleVal);
                 var observation = new Observation
                 {
                     Id = $"Observation-{obsIndex}",
@@ -1602,12 +1631,26 @@ public class FhirMapperService : IFhirMapperService
                         Text = tName,
                         Coding = new List<Coding>
                         {
-                            new Coding(SNOMED_URL, "261665006", tName)
+                            new Coding(SNOMED_URL, obsCode, tName)
                         }
                     },
-                    Subject = new ResourceReference($"Patient/{patient.Id}"),
-                    Value = new FhirString(string.IsNullOrEmpty(tUnit) ? tVal : $"{tVal} {tUnit}")
+                    Subject = new ResourceReference($"Patient/{patient.Id}")
                 };
+
+                if (isDouble)
+                {
+                    observation.Value = new Quantity
+                    {
+                        Value = doubleVal,
+                        Unit = tUnit,
+                        System = "http://unitsofmeasure.org",
+                        Code = tUnit
+                    };
+                }
+                else
+                {
+                    observation.Value = new FhirString(string.IsNullOrEmpty(tUnit) ? tVal : $"{tVal} {tUnit}");
+                }
 
                 entries.Add(new Bundle.EntryComponent { FullUrl = $"Observation/{observation.Id}", Resource = observation });
                 diagnosticReport.Result.Add(new ResourceReference($"Observation/{observation.Id}"));
@@ -1838,19 +1881,6 @@ public class FhirMapperService : IFhirMapperService
         };
         composition.Author.Add(new ResourceReference($"Practitioner/{practitioner.Id}") { Display = practitionerName });
 
-        var docSection = new Composition.SectionComponent
-        {
-            Title = "Discharge summary",
-            Code = new CodeableConcept
-            {
-                Text = "Discharge summary",
-                Coding = new List<Coding>
-                {
-                    new Coding(SNOMED_URL, "373942005", "Discharge summary")
-                }
-            }
-        };
-
         var entries = new List<Bundle.EntryComponent>
         {
             new Bundle.EntryComponent { FullUrl = $"Composition/{composition.Id}", Resource = composition },
@@ -1860,7 +1890,471 @@ public class FhirMapperService : IFhirMapperService
             new Bundle.EntryComponent { FullUrl = $"Encounter/{encounter.Id}", Resource = encounter }
         };
 
-        // 6. Create DocumentReference entries if present
+        // 5a. Map dischargeSummary notes to an Observation under a "Discharge Details" section
+        var dischargeSummary = GetString(root, "dischargeSummary");
+        if (!string.IsNullOrEmpty(dischargeSummary))
+        {
+            var dischargeSection = new Composition.SectionComponent
+            {
+                Title = "Discharge Details",
+                Code = new CodeableConcept
+                {
+                    Text = "Discharge Details",
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "373942005", "Discharge summary")
+                    }
+                }
+            };
+
+            var dischargeObs = new Observation
+            {
+                Id = "Observation-DischargeSummary-Notes",
+                Meta = CreateMeta(PROFILE_OBSERVATION),
+                Status = ObservationStatus.Final,
+                Code = new CodeableConcept
+                {
+                    Text = "Discharge Summary Clinical Notes",
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "373942005", "Discharge summary")
+                    }
+                },
+                Subject = new ResourceReference($"Patient/{patient.Id}"),
+                Value = new FhirString(dischargeSummary)
+            };
+
+            dischargeSection.Entry.Add(new ResourceReference($"Observation/{dischargeObs.Id}"));
+            entries.Add(new Bundle.EntryComponent { FullUrl = $"Observation/{dischargeObs.Id}", Resource = dischargeObs });
+            composition.Section.Add(dischargeSection);
+        }
+
+        // 6. Clinical consultation parameters (complaints, allergies, medicalHistory, diagnosis)
+        var complaintsElement = GetProperty(root, "complaints");
+        if (complaintsElement.ValueKind == JsonValueKind.Array && complaintsElement.GetArrayLength() > 0)
+        {
+            var complaintSection = new Composition.SectionComponent
+            {
+                Title = "Chief Complaints",
+                Code = new CodeableConcept
+                {
+                    Text = "Chief Complaints",
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "404684003", "Chief Complaints")
+                    }
+                }
+            };
+
+            int complaintIndex = 1;
+            foreach (var c in complaintsElement.EnumerateArray())
+            {
+                var text = GetString(c, "text") ?? GetString(c, "complaint") ?? "";
+                if (!string.IsNullOrEmpty(text))
+                {
+                    var condition = new Condition
+                    {
+                        Id = $"Condition-Complaint-{complaintIndex}",
+                        Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/Condition"),
+                        ClinicalStatus = new CodeableConcept
+                        {
+                            Coding = new List<Coding>
+                            {
+                                new Coding("http://terminology.hl7.org/CodeSystem/condition-clinical", "active", "Active")
+                            }
+                        },
+                        Code = new CodeableConcept
+                        {
+                            Text = text,
+                            Coding = new List<Coding>
+                            {
+                                new Coding(SNOMED_URL, "404684003", text)
+                            }
+                        },
+                        Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName }
+                    };
+
+                    complaintSection.Entry.Add(new ResourceReference($"Condition/{condition.Id}"));
+                    entries.Add(new Bundle.EntryComponent { FullUrl = $"Condition/{condition.Id}", Resource = condition });
+                    complaintIndex++;
+                }
+            }
+
+            if (complaintSection.Entry.Count > 0)
+            {
+                composition.Section.Add(complaintSection);
+            }
+        }
+
+        var allergiesElement = GetProperty(root, "allergies");
+        if (allergiesElement.ValueKind == JsonValueKind.Array && allergiesElement.GetArrayLength() > 0)
+        {
+            var allergySection = new Composition.SectionComponent
+            {
+                Title = "Allergies",
+                Code = new CodeableConcept
+                {
+                    Text = "Allergies",
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "716186003", "Allergies")
+                    }
+                }
+            };
+
+            int allergyIndex = 1;
+            foreach (var a in allergiesElement.EnumerateArray())
+            {
+                var substance = GetString(a, "substance") ?? "";
+                var manifestation = GetString(a, "manifestation") ?? "";
+                if (!string.IsNullOrEmpty(substance))
+                {
+                    var allergy = new AllergyIntolerance
+                    {
+                        Id = $"AllergyIntolerance-{allergyIndex}",
+                        Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/AllergyIntolerance"),
+                        ClinicalStatus = new CodeableConcept
+                        {
+                            Coding = new List<Coding>
+                            {
+                                new Coding("http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical", "active", "Active")
+                            }
+                        },
+                        VerificationStatus = new CodeableConcept
+                        {
+                            Coding = new List<Coding>
+                            {
+                                new Coding("http://terminology.hl7.org/CodeSystem/allergyintolerance-verification", "confirmed", "Confirmed")
+                            }
+                        },
+                        Code = new CodeableConcept
+                        {
+                            Text = substance,
+                            Coding = new List<Coding>
+                            {
+                                new Coding(SNOMED_URL, "716186003", substance)
+                            }
+                        },
+                        Patient = new ResourceReference($"Patient/{patient.Id}") { Display = patientName }
+                    };
+
+                    if (!string.IsNullOrEmpty(manifestation))
+                    {
+                        allergy.Reaction = new List<AllergyIntolerance.ReactionComponent>
+                        {
+                            new AllergyIntolerance.ReactionComponent
+                            {
+                                Manifestation = new List<CodeableConcept>
+                                {
+                                    new CodeableConcept { Text = manifestation }
+                                }
+                            }
+                        };
+                    }
+
+                    allergySection.Entry.Add(new ResourceReference($"AllergyIntolerance/{allergy.Id}"));
+                    entries.Add(new Bundle.EntryComponent { FullUrl = $"AllergyIntolerance/{allergy.Id}", Resource = allergy });
+                    allergyIndex++;
+                }
+            }
+
+            if (allergySection.Entry.Count > 0)
+            {
+                composition.Section.Add(allergySection);
+            }
+        }
+
+        var medicalHistoryElement = GetProperty(root, "medicalHistory");
+        if (medicalHistoryElement.ValueKind == JsonValueKind.Array && medicalHistoryElement.GetArrayLength() > 0)
+        {
+            var historySection = new Composition.SectionComponent
+            {
+                Title = "Medical History",
+                Code = new CodeableConcept
+                {
+                    Text = "Medical History",
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "392521001", "Medical History")
+                    }
+                }
+            };
+
+            int historyIndex = 1;
+            foreach (var h in medicalHistoryElement.EnumerateArray())
+            {
+                var text = h.ValueKind == JsonValueKind.String ? h.GetString() : GetString(h, "text");
+                if (!string.IsNullOrEmpty(text))
+                {
+                    var condition = new Condition
+                    {
+                        Id = $"Condition-History-{historyIndex}",
+                        Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/Condition"),
+                        ClinicalStatus = new CodeableConcept
+                        {
+                            Coding = new List<Coding>
+                            {
+                                new Coding("http://terminology.hl7.org/CodeSystem/condition-clinical", "active", "Active")
+                            }
+                        },
+                        Code = new CodeableConcept
+                        {
+                            Text = text,
+                            Coding = new List<Coding>
+                            {
+                                new Coding(SNOMED_URL, "392521001", text)
+                            }
+                        },
+                        Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName }
+                    };
+
+                    historySection.Entry.Add(new ResourceReference($"Condition/{condition.Id}"));
+                    entries.Add(new Bundle.EntryComponent { FullUrl = $"Condition/{condition.Id}", Resource = condition });
+                    historyIndex++;
+                }
+            }
+
+            if (historySection.Entry.Count > 0)
+            {
+                composition.Section.Add(historySection);
+            }
+        }
+
+        var diagnosisStr = GetString(root, "diagnosis");
+        if (!string.IsNullOrEmpty(diagnosisStr))
+        {
+            var diagCondition = new Condition
+            {
+                Id = "Condition-Diagnosis",
+                Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/Condition"),
+                ClinicalStatus = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding("http://terminology.hl7.org/CodeSystem/condition-clinical", "active", "Active")
+                    }
+                },
+                Code = new CodeableConcept
+                {
+                    Text = diagnosisStr,
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "439401001", diagnosisStr)
+                    }
+                },
+                Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName }
+            };
+
+            encounter.Diagnosis.Add(new Encounter.DiagnosisComponent
+            {
+                Condition = new ResourceReference($"Condition/{diagCondition.Id}"),
+                Use = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "39154008", "Clinical diagnosis")
+                    }
+                }
+            });
+
+            var diagnosisSection = new Composition.SectionComponent
+            {
+                Title = "Diagnosis",
+                Code = new CodeableConcept
+                {
+                    Text = "Diagnosis",
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "439401001", "Diagnosis")
+                    }
+                }
+            };
+
+            diagnosisSection.Entry.Add(new ResourceReference($"Condition/{diagCondition.Id}"));
+            composition.Section.Add(diagnosisSection);
+            entries.Add(new Bundle.EntryComponent { FullUrl = $"Condition/{diagCondition.Id}", Resource = diagCondition });
+        }
+
+        // 6a. Add Prescriptions if present
+        var prescriptionsElement = GetProperty(root, "prescriptions");
+        if (prescriptionsElement.ValueKind == JsonValueKind.Array && prescriptionsElement.GetArrayLength() > 0)
+        {
+            var medSection = new Composition.SectionComponent
+            {
+                Title = "Medication summary document",
+                Code = new CodeableConcept
+                {
+                    Text = "Medication summary document",
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "721912009", "Medication summary document")
+                    }
+                }
+            };
+
+            int medIndex = 1;
+            foreach (var p in prescriptionsElement.EnumerateArray())
+            {
+                var medName = GetString(p, "medicine") ?? GetString(p, "name") ?? "Unknown Medicine";
+                var dosage = GetString(p, "dosage") ?? "";
+
+                var medReq = new MedicationRequest
+                {
+                    Id = $"MedicationRequest-{medIndex}",
+                    Meta = CreateMeta(PROFILE_MEDICATION_REQUEST),
+                    Status = MedicationRequest.MedicationrequestStatus.Completed,
+                    Intent = MedicationRequest.MedicationRequestIntent.Order,
+                    Medication = new CodeableConcept
+                    {
+                        Text = medName,
+                        Coding = new List<Coding>
+                        {
+                            new Coding(SNOMED_URL, "261665006", medName)
+                        }
+                    },
+                    Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
+                    AuthoredOnElement = new FhirDateTime(authoredOn),
+                    Requester = new ResourceReference($"Practitioner/{practitioner.Id}") { Display = practitionerName }
+                };
+
+                if (!string.IsNullOrEmpty(dosage))
+                {
+                    medReq.DosageInstruction = new List<Dosage>
+                    {
+                        new Dosage { Text = dosage }
+                    };
+                }
+
+                medSection.Entry.Add(new ResourceReference($"MedicationRequest/{medReq.Id}"));
+                entries.Add(new Bundle.EntryComponent { FullUrl = $"MedicationRequest/{medReq.Id}", Resource = medReq });
+                medIndex++;
+            }
+            composition.Section.Add(medSection);
+        }
+
+        // 6b. Add Vitals & Body Measurements if present
+        var vitalsElement = GetProperty(root, "vitals");
+        var hasVitals = vitalsElement.ValueKind == JsonValueKind.Array && vitalsElement.GetArrayLength() > 0;
+        var bodyMeasurementsElement = GetProperty(root, "bodyMeasurements");
+        var hasBody = bodyMeasurementsElement.ValueKind == JsonValueKind.Object;
+
+        if (hasVitals || hasBody)
+        {
+            var physicalSection = new Composition.SectionComponent
+            {
+                Title = "Physical Findings",
+                Code = new CodeableConcept
+                {
+                    Text = "Physical Findings",
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "2931005", "Physical Findings")
+                    }
+                }
+            };
+
+            int obsIdx = 2;
+
+            if (hasVitals)
+            {
+                foreach (var v in vitalsElement.EnumerateArray())
+                {
+                    var vitalName = GetString(v, "vitalName");
+                    var val = GetString(v, "value");
+                    var unit = GetString(v, "unit");
+
+                    if (!string.IsNullOrEmpty(vitalName) && !string.IsNullOrEmpty(val))
+                    {
+                        var vitalObs = new Observation
+                        {
+                            Id = $"Observation-Vital-{obsIdx}",
+                            Meta = CreateMeta(PROFILE_OBSERVATION),
+                            Status = ObservationStatus.Final,
+                            Code = new CodeableConcept
+                            {
+                                Text = vitalName,
+                                Coding = new List<Coding>
+                                {
+                                    new Coding(SNOMED_URL, "118247008", vitalName)
+                                }
+                            },
+                            Subject = new ResourceReference($"Patient/{patient.Id}"),
+                            Value = new FhirString(string.IsNullOrEmpty(unit) ? val : $"{val} {unit}")
+                        };
+
+                        physicalSection.Entry.Add(new ResourceReference($"Observation/{vitalObs.Id}"));
+                        entries.Add(new Bundle.EntryComponent { FullUrl = $"Observation/{vitalObs.Id}", Resource = vitalObs });
+                        obsIdx++;
+                    }
+                }
+            }
+
+            if (hasBody)
+            {
+                var height = GetString(bodyMeasurementsElement, "heightCm");
+                var weight = GetString(bodyMeasurementsElement, "weightKg");
+
+                if (!string.IsNullOrEmpty(height))
+                {
+                    var heightObs = new Observation
+                    {
+                        Id = $"Observation-Height-{obsIdx}",
+                        Meta = CreateMeta(PROFILE_OBSERVATION),
+                        Status = ObservationStatus.Final,
+                        Code = new CodeableConcept
+                        {
+                            Text = "Height",
+                            Coding = new List<Coding> { new Coding(SNOMED_URL, "50373000", "Height") }
+                        },
+                        Subject = new ResourceReference($"Patient/{patient.Id}"),
+                        Value = new FhirString($"{height} cm")
+                    };
+                    physicalSection.Entry.Add(new ResourceReference($"Observation/{heightObs.Id}"));
+                    entries.Add(new Bundle.EntryComponent { FullUrl = $"Observation/{heightObs.Id}", Resource = heightObs });
+                    obsIdx++;
+                }
+
+                if (!string.IsNullOrEmpty(weight))
+                {
+                    var weightObs = new Observation
+                    {
+                        Id = $"Observation-Weight-{obsIdx}",
+                        Meta = CreateMeta(PROFILE_OBSERVATION),
+                        Status = ObservationStatus.Final,
+                        Code = new CodeableConcept
+                        {
+                            Text = "Weight",
+                            Coding = new List<Coding> { new Coding(SNOMED_URL, "27113001", "Weight") }
+                        },
+                        Subject = new ResourceReference($"Patient/{patient.Id}"),
+                        Value = new FhirString($"{weight} kg")
+                    };
+                    physicalSection.Entry.Add(new ResourceReference($"Observation/{weightObs.Id}"));
+                    entries.Add(new Bundle.EntryComponent { FullUrl = $"Observation/{weightObs.Id}", Resource = weightObs });
+                    obsIdx++;
+                }
+            }
+
+            if (physicalSection.Entry.Count > 0)
+            {
+                composition.Section.Add(physicalSection);
+            }
+        }
+
+        // 7. Handle Attached Documents
+        var docSection = new Composition.SectionComponent
+        {
+            Title = "Clinical consultation report",
+            Code = new CodeableConcept
+            {
+                Text = "Clinical consultation report",
+                Coding = new List<Coding>
+                {
+                    new Coding(SNOMED_URL, "371530004", "Clinical consultation report")
+                }
+            }
+        };
+
         var documentsElement = GetProperty(root, "documents");
         int docIndex = 1;
         if (documentsElement.ValueKind == JsonValueKind.Array)
@@ -1925,9 +2419,12 @@ public class FhirMapperService : IFhirMapperService
             }
         }
 
-        composition.Section.Add(docSection);
+        if (docSection.Entry.Count > 0)
+        {
+            composition.Section.Add(docSection);
+        }
 
-        // 7. Assemble Bundle with Meta/Security
+        // 8. Assemble Bundle with Meta/Security
         var bundle = new Bundle
         {
             Id = Guid.NewGuid().ToString(),
@@ -1944,7 +2441,7 @@ public class FhirMapperService : IFhirMapperService
         };
         bundle.Meta.Security.Add(new Coding(PROFILE_CONFIDENTIALITY, "V", "very restricted"));
 
-        // 8. Serialize
+        // 9. Serialize
         var serializer = new FhirJsonSerializer();
         var fhirJson = serializer.SerializeToString(bundle);
 

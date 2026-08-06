@@ -51,7 +51,16 @@ class FhirRecordItem {
       title = 'Observation: ' + (r['code']?['text'] ?? 'Clinical Observation');
       date = r['effectiveDateTime'] ?? '';
       doctorName = r['performer']?[0]?['display'] ?? 'Dr. Sonomed Specialist';
-      summary = 'Result: ' + (r['valueString'] ?? r['valueQuantity']?['value']?.toString() ?? 'Completed');
+      final qVal = r['valueQuantity']?['value']?.toString();
+      final qUnit = r['valueQuantity']?['unit']?.toString() ?? '';
+      final valStr = r['valueString'] ?? (qVal != null ? '$qVal $qUnit' : 'Completed');
+      summary = 'Result: ' + valStr;
+    } else if (type == 'DiagnosticReport') {
+      title = 'Diagnostic Report: ' + (r['code']?['text'] ?? 'Lab Report');
+      date = r['issued'] ?? '';
+      doctorName = r['performer']?[0]?['display'] ?? 'Diagnostic Lab';
+      final results = r['result'] as List? ?? [];
+      summary = 'Status: ' + (r['status'] ?? 'Final') + ' | Results Count: ' + results.length.toString();
     } else if (type == 'Immunization') {
       title = 'Immunization: ' + (r['vaccineCode']?['text'] ?? 'Vaccine');
       date = r['occurrenceDateTime'] ?? '';
