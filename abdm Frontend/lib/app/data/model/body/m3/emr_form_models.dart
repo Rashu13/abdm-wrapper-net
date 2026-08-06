@@ -8,6 +8,7 @@ class MedicineFormItem {
   late final TextEditingController drugNameCtrl;
   late final TextEditingController reasonCtrl;
   late final TextEditingController snomedCodeCtrl;
+  late final FocusNode focusNode;
 
   MedicineFormItem({
     String drugName = '',
@@ -20,6 +21,7 @@ class MedicineFormItem {
     drugNameCtrl = TextEditingController(text: drugName);
     reasonCtrl = TextEditingController(text: reason);
     snomedCodeCtrl = TextEditingController(text: snomedCode);
+    focusNode = FocusNode();
   }
 
   String get drugName => drugNameCtrl.text;
@@ -45,6 +47,7 @@ class MedicineFormItem {
     drugNameCtrl.dispose();
     reasonCtrl.dispose();
     snomedCodeCtrl.dispose();
+    focusNode.dispose();
   }
 }
 
@@ -162,17 +165,20 @@ class ImmunizationFormItem {
   late final TextEditingController lotNumberCtrl;
   late final TextEditingController doseNumberCtrl;
   late final TextEditingController dateCtrl;
+  late final TextEditingController manufacturerCtrl;
 
   ImmunizationFormItem({
     String vaccineName = '',
     String lotNumber = '',
     String doseNumber = '1',
     String date = '',
+    String manufacturer = '',
   }) {
     vaccineNameCtrl = TextEditingController(text: vaccineName);
     lotNumberCtrl = TextEditingController(text: lotNumber);
     doseNumberCtrl = TextEditingController(text: doseNumber);
     dateCtrl = TextEditingController(text: date);
+    manufacturerCtrl = TextEditingController(text: manufacturer);
   }
 
   String get vaccineName => vaccineNameCtrl.text;
@@ -187,11 +193,15 @@ class ImmunizationFormItem {
   String get date => dateCtrl.text;
   set date(String val) => dateCtrl.text = val;
 
+  String get manufacturer => manufacturerCtrl.text;
+  set manufacturer(String val) => manufacturerCtrl.text = val;
+
   Map<String, dynamic> toJson() => {
         'vaccineName': vaccineNameCtrl.text,
         'lotNumber': lotNumberCtrl.text,
-        'doseNumber': doseNumberCtrl.text,
+        'doseNumber': int.tryParse(doseNumberCtrl.text) ?? 1,
         'date': dateCtrl.text,
+        'manufacturer': manufacturerCtrl.text,
       };
 
   void dispose() {
@@ -199,5 +209,6 @@ class ImmunizationFormItem {
     lotNumberCtrl.dispose();
     doseNumberCtrl.dispose();
     dateCtrl.dispose();
+    manufacturerCtrl.dispose();
   }
 }

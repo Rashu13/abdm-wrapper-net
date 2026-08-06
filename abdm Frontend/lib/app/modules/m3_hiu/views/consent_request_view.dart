@@ -11,8 +11,6 @@ class ConsentRequestView extends GetView<HealthRecordController> {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(HealthRecordController());
-
     return Scaffold(
       backgroundColor: AppColor.background,
       body: Padding(

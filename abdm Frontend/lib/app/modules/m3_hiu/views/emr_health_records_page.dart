@@ -289,8 +289,6 @@ class EmrHealthRecordsPage extends GetView<HealthRecordController> {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(HealthRecordController());
-
     final hiCards = [
       _HiCard(
         icon: Icons.local_hospital_rounded,
@@ -626,6 +624,95 @@ class EmrFormShell extends GetView<HealthRecordController> {
                   children: [
                     formBody,
                     const SizedBox(height: 16),
+                    // PDF Attachment Section
+                    Obx(() {
+                      final hasPdf = controller.attachedPdfName.value.isNotEmpty;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: AppColor.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: hasPdf ? AppColor.accent : AppColor.border,
+                            width: hasPdf ? 1.5 : 1.0,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              hasPdf
+                                  ? Icons.picture_as_pdf_rounded
+                                  : Icons.picture_as_pdf_outlined,
+                              color: hasPdf
+                                  ? Colors.redAccent
+                                  : AppColor.textSecondary,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    hasPdf
+                                        ? 'Manual PDF Attached'
+                                        : 'Attach Manual Record PDF (Optional)',
+                                    style: fontBold.copyWith(
+                                        fontSize: 13,
+                                        color: AppColor.textPrimary),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    hasPdf
+                                        ? controller.attachedPdfName.value
+                                        : 'If not attached, a default clinical summary PDF will be linked.',
+                                    style: fontSmall.copyWith(
+                                      color: hasPdf
+                                          ? AppColor.textPrimary
+                                          : AppColor.textSecondary,
+                                      fontWeight: hasPdf
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (hasPdf)
+                              IconButton(
+                                icon: const Icon(Icons.clear_rounded,
+                                    color: Colors.grey, size: 20),
+                                onPressed: controller.clearAttachedPdf,
+                              )
+                            else
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      AppColor.accent.withOpacity(0.12),
+                                  foregroundColor: AppColor.accent,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                ),
+                                icon: const Icon(Icons.attach_file_rounded,
+                                    size: 16),
+                                label: const Text('Attach PDF',
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold)),
+                                onPressed: controller.selectPdfFile,
+                              ),
+                          ],
+                        ),
+                      );
+                    }),
                     // 2 Separate Action Buttons: Save Locally vs Save & Link to ABDM Gateway
                     Obx(() {
                       final isSaving = controller.isSavingHealthRecord.value;
@@ -872,10 +959,7 @@ class _OpConsultationBody extends StatelessWidget {
                   children: [
                     Expanded(
                       child: EmrCompactTextField(
-                        controller: TextEditingController(
-                            text: controller.complaintsList[idx])
-                          ..selection = TextSelection.collapsed(
-                              offset: controller.complaintsList[idx].length),
+                        controller: controller.complaintsList[idx],
                         labelText: 'Chief Complaint',
                         hintText:
                             'Enter complaint details (e.g. Fever with chills for 2 days)',
@@ -983,11 +1067,7 @@ class _OpConsultationBody extends StatelessWidget {
                   children: [
                     Expanded(
                       child: EmrCompactTextField(
-                        controller: TextEditingController(
-                            text: controller.medicalHistoryList[idx])
-                          ..selection = TextSelection.collapsed(
-                              offset:
-                                  controller.medicalHistoryList[idx].length),
+                        controller: controller.medicalHistoryList[idx],
                         labelText: 'Medical History',
                         hintText:
                             'Medical condition (e.g. Type 2 Diabetes Mellitus)',
@@ -1125,7 +1205,7 @@ class _PrescriptionBody extends StatelessWidget {
                                 flex: 3,
                                 child: RawAutocomplete<SnomedDrugConcept>(
                                   textEditingController: med.drugNameCtrl,
-                                  focusNode: FocusNode(),
+                                  focusNode: med.focusNode,
                                   optionsBuilder: (TextEditingValue val) {
                                     if (val.text.trim().isEmpty) {
                                       return const Iterable<
@@ -1134,16 +1214,12 @@ class _PrescriptionBody extends StatelessWidget {
                                     final q = val.text.toLowerCase().trim();
                                     return snomedDrugMasterList.where((d) =>
                                         d.name.toLowerCase().contains(q) ||
-                                        d.category
-                                            .toLowerCase()
-                                            .contains(q) ||
+                                        d.category.toLowerCase().contains(q) ||
                                         d.snomedCode.contains(q));
                                   },
                                   displayStringForOption:
-                                      (SnomedDrugConcept option) =>
-                                          option.name,
-                                  onSelected:
-                                      (SnomedDrugConcept selection) {
+                                      (SnomedDrugConcept option) => option.name,
+                                  onSelected: (SnomedDrugConcept selection) {
                                     med.drugNameCtrl.text = selection.name;
                                     med.snomedCodeCtrl.text =
                                         selection.snomedCode;
@@ -1165,8 +1241,7 @@ class _PrescriptionBody extends StatelessWidget {
                                       child: Material(
                                         elevation: 6,
                                         color: AppColor.surface,
-                                        borderRadius:
-                                            BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(8),
                                         child: Container(
                                           width: 320,
                                           height: 220,
@@ -1178,8 +1253,7 @@ class _PrescriptionBody extends StatelessWidget {
                                                 color: AppColor.border),
                                           ),
                                           child: ListView.separated(
-                                            padding:
-                                                const EdgeInsets.all(4),
+                                            padding: const EdgeInsets.all(4),
                                             shrinkWrap: true,
                                             itemCount: options.length,
                                             separatorBuilder: (_, __) =>
@@ -1188,8 +1262,7 @@ class _PrescriptionBody extends StatelessWidget {
                                               final option =
                                                   options.elementAt(index);
                                               return InkWell(
-                                                onTap: () =>
-                                                    onSelected(option),
+                                                onTap: () => onSelected(option),
                                                 child: Padding(
                                                   padding: const EdgeInsets
                                                       .symmetric(
@@ -1526,36 +1599,55 @@ class EmrImmunizationPage extends GetView<HealthRecordController> {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: AppColor.border),
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            flex: 3,
-                            child: EmrCompactTextField(
-                              controller: item.vaccineNameCtrl,
-                              labelText:
-                                  'Vaccine Name (Covishield, Hepatitis B)',
-                            ),
+                          Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: EmrCompactTextField(
+                                  controller: item.vaccineNameCtrl,
+                                  labelText:
+                                      'Vaccine Name (Covishield, Hepatitis B)',
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                flex: 2,
+                                child: EmrCompactTextField(
+                                  controller: item.lotNumberCtrl,
+                                  labelText: 'Lot / Batch No.',
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            flex: 2,
-                            child: EmrCompactTextField(
-                              controller: item.lotNumberCtrl,
-                              labelText: 'Lot / Batch No.',
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            flex: 1,
-                            child: EmrCompactTextField(
-                              controller: item.doseNumberCtrl,
-                              labelText: 'Dose No.',
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline_rounded,
-                                color: Colors.redAccent, size: 20),
-                            onPressed: () => controller.removeImmunization(idx),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: EmrCompactTextField(
+                                  controller: item.manufacturerCtrl,
+                                  labelText: 'Manufacturer / Brand',
+                                  hintText: 'e.g. Serum Institute of India',
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                flex: 1,
+                                child: EmrCompactTextField(
+                                  controller: item.doseNumberCtrl,
+                                  labelText: 'Dose No.',
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded,
+                                    color: Colors.redAccent, size: 20),
+                                onPressed: () =>
+                                    controller.removeImmunization(idx),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -2266,15 +2358,14 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
                           if (!rec.isLinked) ...[
                             const SizedBox(height: 8),
                             EmrPrimaryButton(
-                              label: 'Link to ABDM Gateway 🚀',
+                              label: 'Link to ABDM Gateway',
                               icon: Icons.cloud_upload_rounded,
                               backgroundColor: const Color(0xFF10B981),
                               height: 32,
                               isLoading:
                                   widget.controller.isSavingHealthRecord.value,
-                              onPressed: () => widget
-                                  .controller
-                                  .linkSingleRecordToAbdm(rec),
+                              onPressed: () =>
+                                  widget.controller.linkSingleRecordToAbdm(rec),
                             ),
                           ],
                         ],
@@ -2290,5 +2381,3 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
     );
   }
 }
-
-
