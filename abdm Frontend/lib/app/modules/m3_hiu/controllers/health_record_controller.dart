@@ -215,11 +215,11 @@ class HealthRecordController extends GetxController {
 
     labResults.value = [
       LabResultFormItem(
-          testName: 'Hemoglobin (Hb)', value: '14.2', unit: 'g/dL'),
+          testName: 'Hemoglobin (Hb)', value: '14.2', unit: 'g/dL', snomedCode: '721981007'),
       LabResultFormItem(
-          testName: 'Total WBC Count', value: '7,500', unit: '/cu mm'),
+          testName: 'Total WBC Count', value: '7,500', unit: '/cu mm', snomedCode: '26604007'),
       LabResultFormItem(
-          testName: 'Platelet Count', value: '2.5', unit: 'lakhs/cu mm'),
+          testName: 'Platelet Count', value: '2.5', unit: 'lakhs/cu mm', snomedCode: '14784000'),
     ];
 
     immunizationList.value = [

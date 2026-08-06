@@ -67,8 +67,117 @@ class GalaxyHealthAbhaView extends GetView<AbhaCreationController> {
     );
   }
 
-  // Interactive Form Widget
+  Widget _buildStepIndicator(int currentStep) {
+    final steps = ['Aadhaar', 'OTP Verify', 'ABHA Address', 'Success'];
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.015),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: List.generate(steps.length, (index) {
+          final stepNum = index + 1;
+          final isCompleted = stepNum < currentStep;
+          final isActive = stepNum == currentStep;
+
+          return Expanded(
+            child: Row(
+              children: [
+                // Step Circle
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: isCompleted
+                        ? const Color(0xFF10B981)
+                        : (isActive ? const Color(0xFF2563EB) : const Color(0xFFF1F5F9)),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isActive ? const Color(0xFF2563EB) : Colors.transparent,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Center(
+                    child: isCompleted
+                        ? const Icon(Icons.check, color: Colors.white, size: 14)
+                        : Text(
+                            '$stepNum',
+                            style: TextStyle(
+                              color: isActive ? Colors.white : const Color(0xFF64748B),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Step Title
+                Expanded(
+                  child: Text(
+                    steps[index],
+                    style: TextStyle(
+                      color: isActive
+                          ? const Color(0xFF0F172A)
+                          : (isCompleted ? const Color(0xFF10B981) : const Color(0xFF94A3B8)),
+                      fontSize: 12.5,
+                      fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (index < steps.length - 1) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 20,
+                    height: 2,
+                    color: isCompleted ? const Color(0xFF10B981) : const Color(0xFFE2E8F0),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  // Interactive Form Widget Wrapper
   Widget _buildAbhaFormWidget(BuildContext context) {
+    return Obx(() {
+      int currentStep = 1;
+      if (controller.isCardCompleted.value) {
+        currentStep = 4;
+      } else if (controller.txnId.value.isNotEmpty &&
+          controller.suggestionsList.isNotEmpty) {
+        currentStep = 3;
+      } else if (controller.txnId.value.isNotEmpty) {
+        currentStep = 2;
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStepIndicator(currentStep),
+          const SizedBox(height: 16),
+          _buildAbhaFormWidgetInner(context),
+        ],
+      );
+    });
+  }
+
+  Widget _buildAbhaFormWidgetInner(BuildContext context) {
     return Container(
       padding: EdgeInsets.zero,
       child: Obx(() {

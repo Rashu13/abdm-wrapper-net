@@ -12,7 +12,8 @@ class DashboardActionGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFFEBF5FB), // Light blue background matching screenshot
+      color:
+          const Color(0xFFEBF5FB), // Light blue background matching screenshot
       width: double.infinity,
       height: double.infinity,
       child: SingleChildScrollView(
@@ -53,12 +54,12 @@ class DashboardActionGrid extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  onPressed: () => Get.toNamed(Routes.GALAXY_ABHA),
+                  onPressed: () => onNavigateTab(1),
                   icon: const Icon(Icons.add, color: Colors.white, size: 18),
                   label: Text(
                     "New ABHA Registration",
-                    style: fontMedium.copyWith(
-                        color: Colors.white, fontSize: 13),
+                    style:
+                        fontMedium.copyWith(color: Colors.white, fontSize: 13),
                   ),
                 ),
               ],
@@ -89,7 +90,7 @@ class DashboardActionGrid extends StatelessWidget {
                       title: "Create ABHA Number & Link",
                       subtitle:
                           "Generate a new ABHA number and link patient records",
-                      onTap: () => Get.toNamed(Routes.GALAXY_ABHA),
+                      onTap: () => onNavigateTab(1),
                     ),
 
                     // Card 2: Patients List
@@ -104,7 +105,8 @@ class DashboardActionGrid extends StatelessWidget {
                     _DashboardActionCard(
                       icon: Icons.medical_services_outlined,
                       title: "EMR Health Record Studio",
-                      subtitle: "Build Prescriptions, Diagnostic & Discharge FHIR bundles",
+                      subtitle:
+                          "Build Prescriptions, Diagnostic & Discharge FHIR bundles",
                       onTap: () => Get.toNamed(Routes.M3_HEALTH_RECORDS),
                     ),
 
@@ -120,8 +122,10 @@ class DashboardActionGrid extends StatelessWidget {
                     _DashboardActionCard(
                       icon: Icons.qr_code_scanner,
                       title: "Scan & Share OPD Engine",
-                      subtitle: "Generate OPD Counter QR & manage patient token queue",
-                      onTap: () => onNavigateTab(4), // Tab index 4: ScanShareView
+                      subtitle:
+                          "Generate OPD Counter QR & manage patient token queue",
+                      onTap: () =>
+                          onNavigateTab(4), // Tab index 4: ScanShareView
                     ),
 
                     // Card 6: Token History
@@ -278,8 +282,8 @@ class DashboardActionGrid extends StatelessWidget {
                       ),
                       child: Text(
                         status,
-                        style: fontBold.copyWith(
-                            fontSize: 10, color: statusColor),
+                        style:
+                            fontBold.copyWith(fontSize: 10, color: statusColor),
                       ),
                     ),
                   ],
@@ -369,7 +373,8 @@ class _DashboardActionCardState extends State<_DashboardActionCard> {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9), // Light grey matching screenshot
+                  color:
+                      const Color(0xFFF1F5F9), // Light grey matching screenshot
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(

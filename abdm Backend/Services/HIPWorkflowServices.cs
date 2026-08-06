@@ -500,6 +500,8 @@ public class ProfileShareV3Service : IProfileShareV3Service
             // Send on-share acknowledgement to gateway conforming to V3 Schema
             var onShare = new
             {
+                requestId = Guid.NewGuid().ToString(),
+                timestamp = Utils.GetCurrentTimeStamp(),
                 response = new { requestId = incomingRequestId.ToString() },
                 acknowledgement = new
                 {

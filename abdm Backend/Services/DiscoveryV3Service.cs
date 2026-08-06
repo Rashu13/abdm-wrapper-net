@@ -42,22 +42,36 @@ public class DiscoveryV3Service : IDiscoveryV3Service
         if (discoverRequest?.Patient == null)
             return new GenericV3Response { HttpStatus = "BadRequest", Status = "Error" };
 
-        string abhaAddress = discoverRequest.Patient.Id;
+        string abhaAddress = discoverRequest.Patient.Id ?? "";
         string hipId = discoverRequest.HipId;
 
         headers.TryGetValue("REQUEST-ID", out var incomingRequestId);
 
-        var patient = await _patientService.GetPatientAsync(abhaAddress, hipId);
+        Patient? patient = null;
+        if (!string.IsNullOrWhiteSpace(abhaAddress))
+        {
+            patient = await _patientService.GetPatientAsync(abhaAddress, hipId);
+        }
+
+        if (patient == null && discoverRequest.Patient.VerifiedIdentifiers != null)
+        {
+            var mobileIdent = discoverRequest.Patient.VerifiedIdentifiers
+                .FirstOrDefault(i => i.Type != null && i.Type.Equals("MOBILE", StringComparison.OrdinalIgnoreCase));
+            if (mobileIdent != null && !string.IsNullOrWhiteSpace(mobileIdent.Value))
+            {
+                patient = await _patientService.GetPatientAsync(mobileIdent.Value, hipId);
+            }
+        }
 
         if (patient != null)
         {
-            _logger.LogInformation($"Patient found in DB: {patient.Name} / {abhaAddress}");
+            _logger.LogInformation($"Patient found in DB for discovery: {patient.Name} / {patient.AbhaAddress}");
             await SendOnDiscoverAsync(discoverRequest, patient, incomingRequestId.ToString(), hipId);
             return new GenericV3Response { HttpStatus = "OK", Status = "SUCCESS" };
         }
 
         // Patient not in DB → send on-discover with "not found" error
-        _logger.LogWarning($"Patient not found for abhaAddress: {abhaAddress}");
+        _logger.LogWarning($"Patient not found for abhaAddress: '{abhaAddress}' in facility: {hipId}");
         await SendOnDiscoverErrorAsync(discoverRequest, incomingRequestId.ToString(), hipId);
         return new GenericV3Response { HttpStatus = "OK", Status = "NOT_FOUND" };
     }

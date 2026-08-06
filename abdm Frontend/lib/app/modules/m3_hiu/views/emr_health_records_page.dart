@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../controllers/health_record_controller.dart';
+import '../widgets/emr_components.dart';
 import '../../../../util/constants.dart';
 import '../../../../util/style.dart';
 
@@ -633,74 +634,30 @@ class EmrFormShell extends GetView<HealthRecordController> {
                           // Button 1: Save Local EMR Record
                           Expanded(
                             flex: 1,
-                            child: SizedBox(
+                            child: EmrPrimaryButton(
+                              label: 'Save Record 💾',
+                              icon: Icons.save_rounded,
+                              backgroundColor: AppColor.surface,
+                              foregroundColor: const Color(0xFF334155),
                               height: 44,
-                              child: OutlinedButton.icon(
-                                onPressed: isSaving
-                                    ? null
-                                    : controller.saveRecordLocally,
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: const Color(0xFF334155),
-                                  side: const BorderSide(
-                                      color: Color(0xFF64748B), width: 1.5),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)),
-                                ),
-                                icon: isSaving
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Color(0xFF475569)),
-                                      )
-                                    : const Icon(Icons.save_rounded,
-                                        size: 18, color: Color(0xFF475569)),
-                                label: const Text(
-                                  'Save Record 💾',
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
+                              isLoading: isSaving,
+                              onPressed: controller.saveRecordLocally,
                             ),
                           ),
                           const SizedBox(width: 12),
                           // Button 2: Save & Link to ABDM Gateway
                           Expanded(
                             flex: 2,
-                            child: SizedBox(
+                            child: EmrPrimaryButton(
+                              label: isSaving
+                                  ? 'Processing ABDM Link...'
+                                  : 'Link to ABDM Gateway 🚀',
+                              icon: Icons.cloud_upload_rounded,
+                              backgroundColor: hiGradient.last,
+                              foregroundColor: Colors.white,
                               height: 44,
-                              child: ElevatedButton.icon(
-                                onPressed: isSaving
-                                    ? null
-                                    : controller.generateAndLinkCareContext,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: hiGradient.last,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)),
-                                  elevation: 2,
-                                ),
-                                icon: isSaving
-                                    ? const SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white),
-                                      )
-                                    : const Icon(Icons.cloud_upload_rounded,
-                                        size: 18),
-                                label: Text(
-                                  isSaving
-                                      ? 'Processing ABDM Link...'
-                                      : 'Link to ABDM Gateway 🚀',
-                                  style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
+                              isLoading: isSaving,
+                              onPressed: controller.generateAndLinkCareContext,
                             ),
                           ),
                         ],
@@ -808,60 +765,27 @@ class _OpConsultationBody extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: TextField(
+              child: EmrCompactTextField(
                 controller: controller.opHeightCtrl,
-                onChanged: (_) => controller.calculateBmi(),
+                labelText: 'HEIGHT (CM)',
+                hintText: '170',
                 keyboardType: TextInputType.number,
-                style: TextStyle(color: AppColor.textPrimary, fontSize: 12),
-                decoration: InputDecoration(
-                  labelText: 'HEIGHT (CM)',
-                  labelStyle: const TextStyle(fontSize: 11),
-                  hintText: '170',
-                  filled: true,
-                  fillColor: AppColor.background,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: TextField(
+              child: EmrCompactTextField(
                 controller: controller.opWeightCtrl,
-                onChanged: (_) => controller.calculateBmi(),
+                labelText: 'WEIGHT (KG)',
+                hintText: '68',
                 keyboardType: TextInputType.number,
-                style: TextStyle(color: AppColor.textPrimary, fontSize: 12),
-                decoration: InputDecoration(
-                  labelText: 'WEIGHT (KG)',
-                  labelStyle: const TextStyle(fontSize: 11),
-                  hintText: '68',
-                  filled: true,
-                  fillColor: AppColor.background,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: TextField(
+              child: EmrCompactTextField(
                 controller: controller.opBmiCtrl,
-                style: TextStyle(
-                    color: AppColor.textPrimary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold),
-                decoration: InputDecoration(
-                  labelText: 'BMI (KG/M²)',
-                  labelStyle: const TextStyle(fontSize: 11),
-                  filled: true,
-                  fillColor: AppColor.surface,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                ),
+                labelText: 'BMI (KG/M²)',
               ),
             ),
           ],
@@ -873,13 +797,9 @@ class _OpConsultationBody extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('VITALS', style: fontBold.copyWith(fontSize: 14)),
-            TextButton.icon(
+            EmrAddButton(
+              label: '+ Add Vital',
               onPressed: controller.addVital,
-              icon: const Icon(Icons.add_circle_outline_rounded,
-                  size: 18, color: Color(0xFF10B981)),
-              label: const Text('+ Add Vital',
-                  style: TextStyle(
-                      color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -895,61 +815,28 @@ class _OpConsultationBody extends StatelessWidget {
                   children: [
                     Expanded(
                       flex: 3,
-                      child: TextField(
+                      child: EmrCompactTextField(
                         controller: v.vitalNameCtrl,
-                        style: TextStyle(
-                            color: AppColor.textPrimary, fontSize: 12),
-                        decoration: InputDecoration(
-                          labelText: 'Vital Name',
-                          labelStyle: const TextStyle(fontSize: 11),
-                          hintText: 'e.g. Blood Pressure',
-                          filled: true,
-                          fillColor: AppColor.background,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                        ),
+                        labelText: 'Vital Name',
+                        hintText: 'e.g. Blood Pressure',
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       flex: 2,
-                      child: TextField(
+                      child: EmrCompactTextField(
                         controller: v.valueCtrl,
-                        style: TextStyle(
-                            color: AppColor.textPrimary, fontSize: 12),
-                        decoration: InputDecoration(
-                          labelText: 'Value',
-                          labelStyle: const TextStyle(fontSize: 11),
-                          hintText: '120/80',
-                          filled: true,
-                          fillColor: AppColor.background,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                        ),
+                        labelText: 'Value',
+                        hintText: '120/80',
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       flex: 1,
-                      child: TextField(
+                      child: EmrCompactTextField(
                         controller: v.unitCtrl,
-                        style: TextStyle(
-                            color: AppColor.textPrimary, fontSize: 12),
-                        decoration: InputDecoration(
-                          labelText: 'Unit',
-                          labelStyle: const TextStyle(fontSize: 11),
-                          hintText: 'mmHg',
-                          filled: true,
-                          fillColor: AppColor.background,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                        ),
+                        labelText: 'Unit',
+                        hintText: 'mmHg',
                       ),
                     ),
                     IconButton(
@@ -968,13 +855,9 @@ class _OpConsultationBody extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('CHIEF COMPLAINTS', style: fontBold.copyWith(fontSize: 14)),
-            TextButton.icon(
+            EmrAddButton(
+              label: '+ Add Complaint',
               onPressed: controller.addComplaint,
-              icon: const Icon(Icons.add_circle_outline_rounded,
-                  size: 18, color: Color(0xFF10B981)),
-              label: const Text('+ Add Complaint',
-                  style: TextStyle(
-                      color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -988,25 +871,14 @@ class _OpConsultationBody extends StatelessWidget {
                 return Row(
                   children: [
                     Expanded(
-                      child: TextField(
+                      child: EmrCompactTextField(
                         controller: TextEditingController(
                             text: controller.complaintsList[idx])
                           ..selection = TextSelection.collapsed(
                               offset: controller.complaintsList[idx].length),
-                        onChanged: (val) =>
-                            controller.complaintsList[idx] = val,
-                        style: TextStyle(
-                            color: AppColor.textPrimary, fontSize: 13),
-                        decoration: InputDecoration(
-                          hintText:
-                              'Enter complaint details (e.g. Fever with chills for 2 days)',
-                          filled: true,
-                          fillColor: AppColor.background,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 10),
-                        ),
+                        labelText: 'Chief Complaint',
+                        hintText:
+                            'Enter complaint details (e.g. Fever with chills for 2 days)',
                       ),
                     ),
                     IconButton(
@@ -1024,17 +896,11 @@ class _OpConsultationBody extends StatelessWidget {
         Text('CLINICAL OBSERVATION / EXAMINATION RESULT',
             style: fontBold.copyWith(fontSize: 14)),
         const SizedBox(height: 8),
-        TextField(
+        EmrCompactTextField(
           controller: controller.opObservationResultCtrl,
+          labelText: 'CLINICAL OBSERVATION / EXAMINATION RESULT',
+          hintText: 'Enter clinical examination notes or test results...',
           maxLines: 2,
-          style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
-          decoration: InputDecoration(
-            hintText: 'Enter clinical examination notes or test results...',
-            filled: true,
-            fillColor: AppColor.background,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-            contentPadding: const EdgeInsets.all(12),
-          ),
         ),
 
         const Divider(height: 32),
@@ -1043,13 +909,9 @@ class _OpConsultationBody extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('ALLERGIES', style: fontBold.copyWith(fontSize: 14)),
-            TextButton.icon(
+            EmrAddButton(
+              label: '+ Add Allergy',
               onPressed: controller.addAllergy,
-              icon: const Icon(Icons.add_circle_outline_rounded,
-                  size: 18, color: Color(0xFF10B981)),
-              label: const Text('+ Add Allergy',
-                  style: TextStyle(
-                      color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -1065,47 +927,23 @@ class _OpConsultationBody extends StatelessWidget {
                   children: [
                     Expanded(
                       flex: 3,
-                      child: TextField(
+                      child: EmrCompactTextField(
                         controller: allergy.allergyNameCtrl,
-                        style: TextStyle(
-                            color: AppColor.textPrimary, fontSize: 12),
-                        decoration: InputDecoration(
-                          labelText: 'Allergy / Substance',
-                          labelStyle: const TextStyle(fontSize: 11),
-                          hintText: 'e.g. Penicillin',
-                          filled: true,
-                          fillColor: AppColor.background,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                        ),
+                        labelText: 'Allergy / Substance',
+                        hintText: 'e.g. Penicillin',
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       flex: 2,
-                      child: DropdownButtonFormField<String>(
+                      child: EmrSelectBox<String>(
+                        labelText: 'Type',
                         value: allergy.type,
-                        style: TextStyle(
-                            color: AppColor.textPrimary, fontSize: 12),
-                        decoration: InputDecoration(
-                          labelText: 'Type',
-                          filled: true,
-                          fillColor: AppColor.background,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                        ),
                         items: const [
-                          DropdownMenuItem(
-                              value: 'medication', child: Text('medication')),
-                          DropdownMenuItem(value: 'food', child: Text('food')),
-                          DropdownMenuItem(
-                              value: 'environment', child: Text('environment')),
-                          DropdownMenuItem(
-                              value: 'biologic', child: Text('biologic')),
+                          'medication',
+                          'food',
+                          'environment',
+                          'biologic'
                         ],
                         onChanged: (val) {
                           if (val != null) allergy.type = val;
@@ -1128,13 +966,9 @@ class _OpConsultationBody extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('MEDICAL HISTORY', style: fontBold.copyWith(fontSize: 14)),
-            TextButton.icon(
+            EmrAddButton(
+              label: '+ Add Condition',
               onPressed: controller.addMedicalHistory,
-              icon: const Icon(Icons.add_circle_outline_rounded,
-                  size: 18, color: Color(0xFF10B981)),
-              label: const Text('+ Add Condition',
-                  style: TextStyle(
-                      color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -1148,26 +982,15 @@ class _OpConsultationBody extends StatelessWidget {
                 return Row(
                   children: [
                     Expanded(
-                      child: TextField(
+                      child: EmrCompactTextField(
                         controller: TextEditingController(
                             text: controller.medicalHistoryList[idx])
                           ..selection = TextSelection.collapsed(
                               offset:
                                   controller.medicalHistoryList[idx].length),
-                        onChanged: (val) =>
-                            controller.medicalHistoryList[idx] = val,
-                        style: TextStyle(
-                            color: AppColor.textPrimary, fontSize: 13),
-                        decoration: InputDecoration(
-                          hintText:
-                              'Medical condition (e.g. Type 2 Diabetes Mellitus)',
-                          filled: true,
-                          fillColor: AppColor.background,
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 10),
-                        ),
+                        labelText: 'Medical History',
+                        hintText:
+                            'Medical condition (e.g. Type 2 Diabetes Mellitus)',
                       ),
                     ),
                     IconButton(
@@ -1253,13 +1076,9 @@ class _PrescriptionBody extends StatelessWidget {
           children: [
             Text('PRESCRIPTION MEDICINES (RX)',
                 style: fontBold.copyWith(fontSize: 14)),
-            TextButton.icon(
+            EmrAddButton(
+              label: '+ Add Medicine',
               onPressed: controller.addMedicine,
-              icon: const Icon(Icons.add_circle_outline_rounded,
-                  size: 18, color: Color(0xFF10B981)),
-              label: const Text('+ Add Medicine',
-                  style: TextStyle(
-                      color: Color(0xFF10B981), fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -1304,285 +1123,119 @@ class _PrescriptionBody extends StatelessWidget {
                             children: [
                               Expanded(
                                 flex: 3,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('MEDICINE / DRUG NAME',
-                                        style: TextStyle(
-                                            color: AppColor.textSecondary,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 0.5)),
-                                    const SizedBox(height: 4),
-                                    RawAutocomplete<SnomedDrugConcept>(
-                                      textEditingController: med.drugNameCtrl,
-                                      focusNode: FocusNode(),
-                                      optionsBuilder: (TextEditingValue val) {
-                                        if (val.text.trim().isEmpty) {
-                                          return const Iterable<
-                                              SnomedDrugConcept>.empty();
-                                        }
-                                        final q = val.text.toLowerCase().trim();
-                                        return snomedDrugMasterList.where((d) =>
-                                            d.name.toLowerCase().contains(q) ||
-                                            d.category
-                                                .toLowerCase()
-                                                .contains(q) ||
-                                            d.snomedCode.contains(q));
-                                      },
-                                      displayStringForOption:
-                                          (SnomedDrugConcept option) =>
-                                              option.name,
-                                      onSelected:
-                                          (SnomedDrugConcept selection) {
-                                        med.drugNameCtrl.text = selection.name;
-                                        med.snomedCodeCtrl.text =
-                                            selection.snomedCode;
-                                        setMedState(() {});
-                                      },
-                                      fieldViewBuilder: (context, controller,
-                                          focusNode, onFieldSubmitted) {
-                                        return TextField(
-                                          controller: controller,
-                                          focusNode: focusNode,
-                                          onChanged: (v) {
-                                            final match =
-                                                snomedDrugMasterList.firstWhere(
-                                              (d) =>
-                                                  d.name.toLowerCase() ==
-                                                  v.trim().toLowerCase(),
-                                              orElse: () =>
-                                                  const SnomedDrugConcept(
-                                                      name: '',
-                                                      snomedCode: '',
-                                                      category: ''),
-                                            );
-                                            if (match.snomedCode.isNotEmpty) {
-                                              med.snomedCodeCtrl.text =
-                                                  match.snomedCode;
-                                            }
-                                          },
-                                          style: TextStyle(
-                                              color: AppColor.textPrimary,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600),
-                                          decoration: InputDecoration(
-                                            hintText:
-                                                'Search Drug / SNOMED (e.g. Telma, Pan)',
-                                            hintStyle: TextStyle(
-                                                color: AppColor.textSecondary
-                                                    .withOpacity(0.6),
-                                                fontSize: 11.5),
-                                            filled: true,
-                                            fillColor: AppColor.background,
-                                            border: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(8)),
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 10,
-                                                    vertical: 6),
-                                          ),
-                                        );
-                                      },
-                                      optionsViewBuilder:
-                                          (context, onSelected, options) {
-                                        return Align(
-                                          alignment: Alignment.topLeft,
-                                          child: Material(
-                                            elevation: 6,
+                                child: RawAutocomplete<SnomedDrugConcept>(
+                                  textEditingController: med.drugNameCtrl,
+                                  focusNode: FocusNode(),
+                                  optionsBuilder: (TextEditingValue val) {
+                                    if (val.text.trim().isEmpty) {
+                                      return const Iterable<
+                                          SnomedDrugConcept>.empty();
+                                    }
+                                    final q = val.text.toLowerCase().trim();
+                                    return snomedDrugMasterList.where((d) =>
+                                        d.name.toLowerCase().contains(q) ||
+                                        d.category
+                                            .toLowerCase()
+                                            .contains(q) ||
+                                        d.snomedCode.contains(q));
+                                  },
+                                  displayStringForOption:
+                                      (SnomedDrugConcept option) =>
+                                          option.name,
+                                  onSelected:
+                                      (SnomedDrugConcept selection) {
+                                    med.drugNameCtrl.text = selection.name;
+                                    med.snomedCodeCtrl.text =
+                                        selection.snomedCode;
+                                    setMedState(() {});
+                                  },
+                                  fieldViewBuilder: (context, controller,
+                                      focusNode, onFieldSubmitted) {
+                                    return EmrCompactTextField(
+                                      controller: controller,
+                                      labelText: 'MEDICINE / DRUG NAME',
+                                      hintText:
+                                          'Search Drug / SNOMED (e.g. Telma, Pan)',
+                                    );
+                                  },
+                                  optionsViewBuilder:
+                                      (context, onSelected, options) {
+                                    return Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Material(
+                                        elevation: 6,
+                                        color: AppColor.surface,
+                                        borderRadius:
+                                            BorderRadius.circular(8),
+                                        child: Container(
+                                          width: 320,
+                                          height: 220,
+                                          decoration: BoxDecoration(
                                             color: AppColor.surface,
                                             borderRadius:
                                                 BorderRadius.circular(8),
-                                            child: Container(
-                                              width: 320,
-                                              height: 220,
-                                              decoration: BoxDecoration(
-                                                color: AppColor.surface,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                border: Border.all(
-                                                    color: AppColor.border),
-                                              ),
-                                              child: ListView.separated(
-                                                padding:
-                                                    const EdgeInsets.all(4),
-                                                shrinkWrap: true,
-                                                itemCount: options.length,
-                                                separatorBuilder: (_, __) =>
-                                                    const Divider(height: 1),
-                                                itemBuilder: (context, index) {
-                                                  final option =
-                                                      options.elementAt(index);
-                                                  return InkWell(
-                                                    onTap: () =>
-                                                        onSelected(option),
-                                                    child: Padding(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 10,
-                                                          vertical: 8),
-                                                      child: Row(
-                                                        children: [
-                                                          Expanded(
-                                                            child: Column(
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .start,
-                                                              children: [
-                                                                Text(
-                                                                  option.name,
-                                                                  style: TextStyle(
-                                                                      color: AppColor
-                                                                          .textPrimary,
-                                                                      fontSize:
-                                                                          12,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .bold),
-                                                                ),
-                                                                Text(
-                                                                  'Category: ${option.category}',
-                                                                  style: TextStyle(
-                                                                      color: AppColor
-                                                                          .textSecondary,
-                                                                      fontSize:
-                                                                          10.5),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                          Container(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .symmetric(
-                                                                    horizontal:
-                                                                        6,
-                                                                    vertical:
-                                                                        2),
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: const Color(
-                                                                      0xFF2563EB)
-                                                                  .withOpacity(
-                                                                      0.1),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          4),
-                                                            ),
-                                                            child: Text(
-                                                              'SCT: ${option.snomedCode}',
-                                                              style: const TextStyle(
-                                                                  color: Color(
-                                                                      0xFF2563EB),
-                                                                  fontSize: 10,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            ),
+                                            border: Border.all(
+                                                color: AppColor.border),
                                           ),
-                                        );
-                                      },
-                                    ),
-                                  ],
+                                          child: ListView.separated(
+                                            padding:
+                                                const EdgeInsets.all(4),
+                                            shrinkWrap: true,
+                                            itemCount: options.length,
+                                            separatorBuilder: (_, __) =>
+                                                const Divider(height: 1),
+                                            itemBuilder: (context, index) {
+                                              final option =
+                                                  options.elementAt(index);
+                                              return InkWell(
+                                                onTap: () =>
+                                                    onSelected(option),
+                                                child: Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 8),
+                                                  child: Text(
+                                                    option.name,
+                                                    style: TextStyle(
+                                                        color: AppColor
+                                                            .textPrimary,
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                               const SizedBox(width: 10),
                               Expanded(
                                 flex: 2,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('DOSAGE PATTERN',
-                                        style: TextStyle(
-                                            color: AppColor.textSecondary,
-                                            fontSize: 10.5,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 0.5)),
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      height: 36,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8),
-                                      decoration: BoxDecoration(
-                                          color: AppColor.background,
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          border: Border.all(
-                                              color: AppColor.border)),
-                                      child: DropdownButtonHideUnderline(
-                                        child: DropdownButton<String>(
-                                          value: currentDosage,
-                                          isExpanded: true,
-                                          dropdownColor: AppColor.surface,
-                                          style: TextStyle(
-                                              color: AppColor.textPrimary,
-                                              fontSize: 12),
-                                          items: dosageOptions
-                                              .map((opt) =>
-                                                  DropdownMenuItem<String>(
-                                                      value: opt,
-                                                      child: Text(opt,
-                                                          overflow: TextOverflow
-                                                              .ellipsis)))
-                                              .toList(),
-                                          onChanged: (val) {
-                                            if (val != null) {
-                                              med.dosagePattern = val;
-                                              setMedState(() {});
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                child: EmrSelectBox<String>(
+                                  labelText: 'DOSAGE',
+                                  value: currentDosage,
+                                  items: dosageOptions,
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      med.dosagePattern = val;
+                                      setMedState(() {});
+                                    }
+                                  },
                                 ),
                               ),
                               const SizedBox(width: 10),
                               Expanded(
                                 flex: 1,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('SNOMED CODE',
-                                        style: TextStyle(
-                                            color: AppColor.textSecondary,
-                                            fontSize: 10.5,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 0.5)),
-                                    const SizedBox(height: 4),
-                                    TextField(
-                                      controller: med.snomedCodeCtrl,
-                                      style: TextStyle(
-                                          color: AppColor.textPrimary,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold),
-                                      decoration: InputDecoration(
-                                        hintText: '322236009',
-                                        hintStyle: TextStyle(
-                                            color: AppColor.textSecondary
-                                                .withOpacity(0.6),
-                                            fontSize: 12),
-                                        filled: true,
-                                        fillColor: AppColor.background,
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8)),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 10, vertical: 6),
-                                      ),
-                                    ),
-                                  ],
+                                child: EmrCompactTextField(
+                                  controller: med.snomedCodeCtrl,
+                                  labelText: 'SNOMED CODE',
+                                  hintText: '322236009',
                                 ),
                               ),
                             ],
@@ -1593,138 +1246,40 @@ class _PrescriptionBody extends StatelessWidget {
                             children: [
                               Expanded(
                                 flex: 2,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('ROUTE',
-                                        style: TextStyle(
-                                            color: AppColor.textSecondary,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 0.5)),
-                                    const SizedBox(height: 6),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12),
-                                      decoration: BoxDecoration(
-                                          color: AppColor.background,
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                              color: AppColor.border)),
-                                      child: DropdownButtonHideUnderline(
-                                        child: DropdownButton<String>(
-                                          value: currentRoute,
-                                          isExpanded: true,
-                                          dropdownColor: AppColor.surface,
-                                          style: TextStyle(
-                                              color: AppColor.textPrimary,
-                                              fontSize: 13),
-                                          items: routeOptions
-                                              .map((opt) =>
-                                                  DropdownMenuItem<String>(
-                                                      value: opt,
-                                                      child: Text(opt,
-                                                          overflow: TextOverflow
-                                                              .ellipsis)))
-                                              .toList(),
-                                          onChanged: (val) {
-                                            if (val != null) {
-                                              med.route = val;
-                                              setMedState(() {});
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                child: EmrSelectBox<String>(
+                                  labelText: 'ROUTE',
+                                  value: currentRoute,
+                                  items: routeOptions,
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      med.route = val;
+                                      setMedState(() {});
+                                    }
+                                  },
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 flex: 2,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('METHOD',
-                                        style: TextStyle(
-                                            color: AppColor.textSecondary,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 0.5)),
-                                    const SizedBox(height: 6),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12),
-                                      decoration: BoxDecoration(
-                                          color: AppColor.background,
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                              color: AppColor.border)),
-                                      child: DropdownButtonHideUnderline(
-                                        child: DropdownButton<String>(
-                                          value: currentMethod,
-                                          isExpanded: true,
-                                          dropdownColor: AppColor.surface,
-                                          style: TextStyle(
-                                              color: AppColor.textPrimary,
-                                              fontSize: 13),
-                                          items: methodOptions
-                                              .map((opt) =>
-                                                  DropdownMenuItem<String>(
-                                                      value: opt,
-                                                      child: Text(opt,
-                                                          overflow: TextOverflow
-                                                              .ellipsis)))
-                                              .toList(),
-                                          onChanged: (val) {
-                                            if (val != null) {
-                                              med.method = val;
-                                              setMedState(() {});
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                child: EmrSelectBox<String>(
+                                  labelText: 'METHOD',
+                                  value: currentMethod,
+                                  items: methodOptions,
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      med.method = val;
+                                      setMedState(() {});
+                                    }
+                                  },
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 flex: 3,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('REASON',
-                                        style: TextStyle(
-                                            color: AppColor.textSecondary,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 0.5)),
-                                    const SizedBox(height: 6),
-                                    TextField(
-                                      controller: med.reasonCtrl,
-                                      style: TextStyle(
-                                          color: AppColor.textPrimary,
-                                          fontSize: 12),
-                                      decoration: InputDecoration(
-                                        hintText: 'Reason (e.g. Fever & Pain)',
-                                        hintStyle: TextStyle(
-                                            color: AppColor.textSecondary
-                                                .withOpacity(0.6),
-                                            fontSize: 12),
-                                        filled: true,
-                                        fillColor: AppColor.background,
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8)),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 10, vertical: 6),
-                                      ),
-                                    ),
-                                  ],
+                                child: EmrCompactTextField(
+                                  controller: med.reasonCtrl,
+                                  labelText: 'REASON',
+                                  hintText: 'Reason (e.g. Fever & Pain)',
                                 ),
                               ),
                               if (controller.medicines.length > 1) ...[
@@ -1749,23 +1304,12 @@ class _PrescriptionBody extends StatelessWidget {
               },
             )),
         const SizedBox(height: 20),
-        Text('Doctor Advice & Instructions',
-            style: fontBold.copyWith(fontSize: 13)),
-        const SizedBox(height: 6),
-        TextField(
+        EmrCompactTextField(
           controller: controller.adviceCtrl,
+          labelText: 'Doctor Advice & Instructions',
+          hintText:
+              'Rest for 3 days, drink plenty of fluids. Review after 1 week.',
           maxLines: 3,
-          style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
-          decoration: InputDecoration(
-            hintText:
-                'Rest for 3 days, drink plenty of fluids. Review after 1 week.',
-            hintStyle: TextStyle(
-                color: AppColor.textSecondary.withOpacity(0.6), fontSize: 13),
-            filled: true,
-            fillColor: AppColor.background,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-            contentPadding: const EdgeInsets.all(12),
-          ),
         ),
       ],
     );
@@ -1801,23 +1345,10 @@ class EmrDiagnosticPage extends GetView<HealthRecordController> {
               ],
             ),
             const SizedBox(height: 16),
-            Text('REPORT TITLE',
-                style: TextStyle(
-                    color: AppColor.textSecondary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5)),
-            const SizedBox(height: 6),
-            TextField(
+            EmrCompactTextField(
               controller: controller.reportTitleCtrl,
-              style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: AppColor.background,
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                contentPadding: const EdgeInsets.all(12),
-              ),
+              labelText: 'REPORT TITLE',
+              hintText: 'e.g. Blood Test Report',
             ),
             const SizedBox(height: 18),
             Row(
@@ -1825,14 +1356,9 @@ class EmrDiagnosticPage extends GetView<HealthRecordController> {
               children: [
                 Text('Lab Test Observations & Results',
                     style: fontBold.copyWith(fontSize: 14)),
-                TextButton.icon(
+                EmrAddButton(
+                  label: 'Add Test Result',
                   onPressed: controller.addLabResult,
-                  icon: const Icon(Icons.add_circle_outline_rounded,
-                      size: 18, color: Color(0xFF10B981)),
-                  label: const Text('Add Test Result',
-                      style: TextStyle(
-                          color: Color(0xFF10B981),
-                          fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -1855,54 +1381,36 @@ class EmrDiagnosticPage extends GetView<HealthRecordController> {
                         children: [
                           Expanded(
                             flex: 3,
-                            child: TextField(
+                            child: EmrCompactTextField(
                               controller: lab.testNameCtrl,
-                              style: TextStyle(
-                                  color: AppColor.textPrimary, fontSize: 12),
-                              decoration: InputDecoration(
-                                labelText: 'Test Name',
-                                labelStyle: const TextStyle(fontSize: 11),
-                                hintText: 'e.g. Hemoglobin',
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8)),
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 6),
-                              ),
+                              labelText: 'Test Name',
+                              hintText: 'e.g. Hemoglobin',
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
                           Expanded(
                             flex: 2,
-                            child: TextField(
-                              controller: lab.valueCtrl,
-                              style: TextStyle(
-                                  color: AppColor.textPrimary, fontSize: 12),
-                              decoration: InputDecoration(
-                                labelText: 'Value',
-                                labelStyle: const TextStyle(fontSize: 11),
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8)),
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 6),
-                              ),
+                            child: EmrCompactTextField(
+                              controller: lab.snomedCodeCtrl,
+                              labelText: 'SNOMED/LOINC',
+                              hintText: 'e.g. 721981007',
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            flex: 2,
+                            child: EmrCompactTextField(
+                              controller: lab.valueCtrl,
+                              labelText: 'Value',
+                            ),
+                          ),
+                          const SizedBox(width: 6),
                           Expanded(
                             flex: 1,
-                            child: TextField(
+                            child: EmrCompactTextField(
                               controller: lab.unitCtrl,
-                              style: TextStyle(
-                                  color: AppColor.textPrimary, fontSize: 12),
-                              decoration: InputDecoration(
-                                labelText: 'Unit',
-                                labelStyle: const TextStyle(fontSize: 11),
-                                hintText: 'g/dL',
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8)),
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 6),
-                              ),
+                              labelText: 'Unit',
+                              hintText: 'g/dL',
                             ),
                           ),
                           IconButton(
@@ -1951,29 +1459,12 @@ class EmrDischargeSummaryPage extends GetView<HealthRecordController> {
               ],
             ),
             const SizedBox(height: 12),
-            Text('HOSPITALIZATION SUMMARY & DISCHARGE NOTES',
-                style: TextStyle(
-                    color: AppColor.textSecondary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5)),
-            const SizedBox(height: 6),
-            TextField(
+            EmrCompactTextField(
               controller: controller.dischargeNotesCtrl,
+              labelText: 'HOSPITALIZATION SUMMARY & DISCHARGE NOTES',
+              hintText:
+                  'Enter hospitalization summary, admission findings, treatment given & discharge condition...',
               maxLines: 4,
-              style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
-              decoration: InputDecoration(
-                hintText:
-                    'Enter hospitalization summary, admission findings, treatment given & discharge condition...',
-                hintStyle: TextStyle(
-                    color: AppColor.textSecondary.withOpacity(0.6),
-                    fontSize: 13),
-                filled: true,
-                fillColor: AppColor.background,
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                contentPadding: const EdgeInsets.all(12),
-              ),
             ),
             const SizedBox(height: 20),
             const Divider(),
@@ -2014,14 +1505,9 @@ class EmrImmunizationPage extends GetView<HealthRecordController> {
               children: [
                 Text('Vaccination & Immunization Record',
                     style: fontBold.copyWith(fontSize: 16)),
-                TextButton.icon(
+                EmrAddButton(
+                  label: '+ Add Vaccine',
                   onPressed: controller.addImmunization,
-                  icon: const Icon(Icons.add_circle_outline_rounded,
-                      size: 18, color: Color(0xFF10B981)),
-                  label: const Text('+ Add Vaccine',
-                      style: TextStyle(
-                          color: Color(0xFF10B981),
-                          fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -2044,50 +1530,26 @@ class EmrImmunizationPage extends GetView<HealthRecordController> {
                         children: [
                           Expanded(
                             flex: 3,
-                            child: TextField(
+                            child: EmrCompactTextField(
                               controller: item.vaccineNameCtrl,
-                              style: TextStyle(
-                                  color: AppColor.textPrimary, fontSize: 13),
-                              decoration: InputDecoration(
-                                labelText:
-                                    'Vaccine Name (Covishield, Hepatitis B)',
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8)),
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 8),
-                              ),
+                              labelText:
+                                  'Vaccine Name (Covishield, Hepatitis B)',
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             flex: 2,
-                            child: TextField(
+                            child: EmrCompactTextField(
                               controller: item.lotNumberCtrl,
-                              style: TextStyle(
-                                  color: AppColor.textPrimary, fontSize: 13),
-                              decoration: InputDecoration(
-                                labelText: 'Lot / Batch No.',
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8)),
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 8),
-                              ),
+                              labelText: 'Lot / Batch No.',
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             flex: 1,
-                            child: TextField(
+                            child: EmrCompactTextField(
                               controller: item.doseNumberCtrl,
-                              style: TextStyle(
-                                  color: AppColor.textPrimary, fontSize: 13),
-                              decoration: InputDecoration(
-                                labelText: 'Dose No.',
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8)),
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 8),
-                              ),
+                              labelText: 'Dose No.',
                             ),
                           ),
                           IconButton(
@@ -2278,19 +1740,12 @@ class EmrWellnessPage extends GetView<HealthRecordController> {
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5)),
             const SizedBox(height: 4),
-            TextField(
+            EmrCompactTextField(
               controller: controller.wellOtherObsCtrl,
+              labelText: 'OTHER HEALTH OBSERVATIONS & NOTES',
+              hintText:
+                  'Enter general health assessment or doctor wellness notes...',
               maxLines: 2,
-              style: TextStyle(color: AppColor.textPrimary, fontSize: 12),
-              decoration: InputDecoration(
-                hintText:
-                    'Enter general health assessment or doctor wellness notes...',
-                filled: true,
-                fillColor: AppColor.background,
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding: const EdgeInsets.all(10),
-              ),
             ),
           ],
         ),
@@ -2299,26 +1754,10 @@ class EmrWellnessPage extends GetView<HealthRecordController> {
   }
 
   Widget _wellField(String label, TextEditingController ctrl, String hint) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style:
-                const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 4),
-        TextField(
-          controller: ctrl,
-          style: const TextStyle(fontSize: 12),
-          decoration: InputDecoration(
-            hintText: hint,
-            filled: true,
-            fillColor: AppColor.background,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          ),
-        ),
-      ],
+    return EmrCompactTextField(
+      controller: ctrl,
+      labelText: label,
+      hintText: hint,
     );
   }
 
@@ -2566,42 +2005,10 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
             // Search Field Input
             Padding(
               padding: const EdgeInsets.all(10),
-              child: TextField(
+              child: EmrCompactTextField(
                 controller: _searchCtrl,
-                onChanged: (val) =>
-                    setState(() => _query = val.trim().toLowerCase()),
-                style: TextStyle(color: AppColor.textPrimary, fontSize: 12.5),
-                decoration: InputDecoration(
-                  hintText: 'Search Name, ABHA, Mobile...',
-                  hintStyle: TextStyle(
-                      color: AppColor.textSecondary.withOpacity(0.6),
-                      fontSize: 12),
-                  prefixIcon: const Icon(Icons.search_rounded,
-                      color: Color(0xFF64748B), size: 18),
-                  suffixIcon: _searchCtrl.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.cancel_rounded,
-                              color: Color(0xFF64748B), size: 16),
-                          onPressed: () {
-                            _searchCtrl.clear();
-                            setState(() => _query = '');
-                          },
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: AppColor.background,
-                  isDense: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColor.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide:
-                        const BorderSide(color: Color(0xFF475569), width: 1.5),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                ),
+                labelText: 'Search Patient',
+                hintText: 'Search Name, ABHA, Mobile...',
               ),
             ),
 
@@ -2858,31 +2265,16 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
                           ),
                           if (!rec.isLinked) ...[
                             const SizedBox(height: 8),
-                            SizedBox(
-                              width: double.infinity,
+                            EmrPrimaryButton(
+                              label: 'Link to ABDM Gateway 🚀',
+                              icon: Icons.cloud_upload_rounded,
+                              backgroundColor: const Color(0xFF10B981),
                               height: 32,
-                              child: ElevatedButton.icon(
-                                onPressed:
-                                    widget.controller.isSavingHealthRecord.value
-                                        ? null
-                                        : () => widget.controller
-                                            .linkSingleRecordToAbdm(rec),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF10B981),
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(6)),
-                                  elevation: 1,
-                                ),
-                                icon: const Icon(Icons.cloud_upload_rounded,
-                                    size: 14),
-                                label: const Text(
-                                  'Link to ABDM Gateway 🚀',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ),
+                              isLoading:
+                                  widget.controller.isSavingHealthRecord.value,
+                              onPressed: () => widget
+                                  .controller
+                                  .linkSingleRecordToAbdm(rec),
                             ),
                           ],
                         ],
@@ -2898,3 +2290,5 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
     );
   }
 }
+
+

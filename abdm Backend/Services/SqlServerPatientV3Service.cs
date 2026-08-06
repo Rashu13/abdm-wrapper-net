@@ -368,7 +368,14 @@ public class SqlServerPatientV3Service : IPatientV3Service
 
     public async Task<Patient?> GetPatientAsync(string abhaAddress, string hipId)
     {
-        return await GetPatientDetailsAsync(abhaAddress, hipId);
+        if (string.IsNullOrWhiteSpace(abhaAddress)) return null;
+
+        var patient = await GetPatientDetailsAsync(abhaAddress, hipId);
+        if (patient != null) return patient;
+
+        // Try searching by Mobile Number
+        return await _context.Patients
+            .FirstOrDefaultAsync(p => p.PatientMobile == abhaAddress && p.HipId == hipId);
     }
 
     public async Task<HealthDataRecord?> GetHealthDataRecordAsync(string abhaAddress, string careContextReference)

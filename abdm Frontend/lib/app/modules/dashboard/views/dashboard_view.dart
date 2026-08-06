@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/dashboard_controller.dart';
 import '../widgets/dashboard_action_grid.dart';
-import '../../m1_abha/views/create_abha_view.dart';
+import '../../m1_abha/views/galaxy_health_abha_view.dart';
 import '../../m2_hip/views/discovery_view.dart';
 import '../../m3_hiu/views/consent_request_view.dart';
 import '../../m2_hip/views/scan_share_view.dart';
@@ -18,7 +18,7 @@ class DashboardView extends GetView<DashboardController> {
 
   late final List<Widget> _pages = [
     DashboardActionGrid(onNavigateTab: controller.changeTab),
-    CreateAbhaView(),
+    GalaxyHealthAbhaView(),
     const DiscoveryView(),
     const ConsentRequestView(),
     const ScanShareView(),
@@ -133,7 +133,7 @@ class DashboardView extends GetView<DashboardController> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
                           ),
-                          onPressed: () => Get.toNamed(Routes.GALAXY_ABHA),
+                          onPressed: () => controller.changeTab(1),
                           icon: const Icon(Icons.open_in_new,
                               color: AppColor.accent, size: 14),
                           label: Text("Galaxy Health ABHA Page",

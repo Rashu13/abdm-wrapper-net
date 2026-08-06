@@ -973,6 +973,8 @@ namespace ABDM.Api
 
                     var payload = SimpleJson.Serialize(new Dictionary<string, object>
                     {
+                        ["requestId"] = Guid.NewGuid().ToString(),
+                        ["timestamp"] = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
                         ["acknowledgement"] = new Dictionary<string, object>
                         {
                             ["abhaAddress"] = abhaAddress,

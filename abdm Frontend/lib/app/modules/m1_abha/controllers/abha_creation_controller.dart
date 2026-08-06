@@ -14,7 +14,7 @@ import 'dart:js' as js;
 
 class AbhaCreationController extends GetxController {
   // Navigation State
-  var isFormActive = false.obs;
+  var isFormActive = true.obs;
 
   // Mode selection: true = Create ABHA, false = ABHA Login
   var isCreateMode = true.obs;

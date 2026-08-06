@@ -52,15 +52,18 @@ class LabResultFormItem {
   late final TextEditingController testNameCtrl;
   late final TextEditingController valueCtrl;
   late final TextEditingController unitCtrl;
+  late final TextEditingController snomedCodeCtrl;
 
   LabResultFormItem({
     String testName = '',
     String value = '',
     String unit = '',
+    String snomedCode = '',
   }) {
     testNameCtrl = TextEditingController(text: testName);
     valueCtrl = TextEditingController(text: value);
     unitCtrl = TextEditingController(text: unit);
+    snomedCodeCtrl = TextEditingController(text: snomedCode);
   }
 
   String get testName => testNameCtrl.text;
@@ -72,16 +75,21 @@ class LabResultFormItem {
   String get unit => unitCtrl.text;
   set unit(String val) => unitCtrl.text = val;
 
+  String get snomedCode => snomedCodeCtrl.text;
+  set snomedCode(String val) => snomedCodeCtrl.text = val;
+
   Map<String, dynamic> toJson() => {
         'testName': testNameCtrl.text,
         'value': valueCtrl.text,
         'unit': unitCtrl.text,
+        if (snomedCodeCtrl.text.isNotEmpty) 'snomedCode': snomedCodeCtrl.text,
       };
 
   void dispose() {
     testNameCtrl.dispose();
     valueCtrl.dispose();
     unitCtrl.dispose();
+    snomedCodeCtrl.dispose();
   }
 }
 
