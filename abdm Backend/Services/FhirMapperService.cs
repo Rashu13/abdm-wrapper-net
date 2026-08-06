@@ -249,79 +249,60 @@ public class FhirMapperService : IFhirMapperService
                         };
                     }
 
-                    var route = GetString(p, "route");
+                    var route = GetString(p, "route") ?? "";
                     if (!string.IsNullOrEmpty(route))
                     {
+                        string rCode = "26643006"; // Default Oral
+                        if (route.Equals("IV", StringComparison.OrdinalIgnoreCase)) rCode = "47625008";
+                        else if (route.Equals("IM", StringComparison.OrdinalIgnoreCase)) rCode = "78421000";
+                        else if (route.Equals("Topical", StringComparison.OrdinalIgnoreCase)) rCode = "6064005";
+                        else if (route.Equals("Inhalation", StringComparison.OrdinalIgnoreCase)) rCode = "418187005";
+                        else if (route.Equals("Sublingual", StringComparison.OrdinalIgnoreCase)) rCode = "372473007";
+
                         dosageInst.Route = new CodeableConcept
                         {
                             Coding = new List<Coding>
                             {
-                                new Coding(SNOMED_URL, "26643006", route)
+                                new Coding(SNOMED_URL, rCode, route)
                             }
                         };
                     }
 
-                    var method = GetString(p, "method");
+                    var method = GetString(p, "method") ?? "";
                     if (!string.IsNullOrEmpty(method))
                     {
-                        dosageInst.Method = new CodeableConcept
+                        string mCode = "311504000"; // Default With or after food
+                        if (method.Equals("Before Food", StringComparison.OrdinalIgnoreCase) || method.Equals("Before Meal", StringComparison.OrdinalIgnoreCase)) mCode = "252160004";
+                        else if (method.Equals("After Food", StringComparison.OrdinalIgnoreCase) || method.Equals("After Meal", StringComparison.OrdinalIgnoreCase)) mCode = "262235003";
+                        else if (method.Equals("Empty Stomach", StringComparison.OrdinalIgnoreCase)) mCode = "252161000";
+
+                        if (dosageInst.AdditionalInstruction == null)
+                        {
+                            dosageInst.AdditionalInstruction = new List<CodeableConcept>();
+                        }
+                        dosageInst.AdditionalInstruction.Add(new CodeableConcept
                         {
                             Coding = new List<Coding>
                             {
-                                new Coding(SNOMED_URL, "421521004", method)
+                                new Coding(SNOMED_URL, mCode, method)
                             }
-                        };
+                        });
                     }
 
-                    var timing = GetString(p, "timing");
-                    if (!string.IsNullOrEmpty(timing))
+                    // Parse dosagePattern to get the frequency, period, and unit
+                    int freq = 1;
+                    if (dosage.Contains("1-0-1")) freq = 2;
+                    else if (dosage.Contains("1-1-1")) freq = 3;
+
+                    dosageInst.Timing = new Timing
                     {
-                        try
+                        Repeat = new Timing.RepeatComponent
                         {
-                            var parts = timing.Split('-');
-                            if (parts.Length == 3 && int.TryParse(parts[0], out int freq) && int.TryParse(parts[1], out int period))
-                            {
-                                var unitStr = parts[2].ToUpperInvariant();
-                                Timing.UnitsOfTime? unit = null;
-                                if (unitStr == "S") unit = Timing.UnitsOfTime.S;
-                                else if (unitStr == "MIN") unit = Timing.UnitsOfTime.Min;
-                                else if (unitStr == "H") unit = Timing.UnitsOfTime.H;
-                                else if (unitStr == "D") unit = Timing.UnitsOfTime.D;
-                                else if (unitStr == "WK") unit = Timing.UnitsOfTime.Wk;
-                                else if (unitStr == "MO") unit = Timing.UnitsOfTime.Mo;
-
-                                if (unit.HasValue)
-                                {
-                                    dosageInst.Timing = new Timing
-                                    {
-                                        Repeat = new Timing.RepeatComponent
-                                        {
-                                            Frequency = freq,
-                                            Period = (decimal)period,
-                                            PeriodUnit = unit.Value
-                                        }
-                                    };
-                                }
-                            }
-                            else
-                            {
-                                // Fallback: put timing text in additionalInstruction SNOMED code
-                                string tCode = timing.ToLower().Contains("twice") ? "229799001" :
-                                               timing.ToLower().Contains("thrice") || timing.ToLower().Contains("three") ? "229798009" :
-                                               timing.ToLower().Contains("once") ? "229797004" :
-                                               timing.ToLower().Contains("four") ? "307439001" : "229799001";
-                                
-                                if (dosageInst.AdditionalInstruction == null)
-                                    dosageInst.AdditionalInstruction = new List<CodeableConcept>();
-                                
-                                dosageInst.AdditionalInstruction.Add(new CodeableConcept
-                                {
-                                    Coding = new List<Coding> { new Coding(SNOMED_URL, tCode, timing) }
-                                });
-                            }
+                            Frequency = freq,
+                            Period = 1,
+                            PeriodUnit = Timing.UnitsOfTime.D
                         }
-                        catch { }
-                    }
+                    };
 
                     medReq.DosageInstruction = new List<Dosage> { dosageInst };
                 }
@@ -339,6 +320,31 @@ public class FhirMapperService : IFhirMapperService
                             }
                         }
                     };
+
+                    var reasonCondition = new Condition
+                    {
+                        Id = $"Condition-PrescriptionReason-{medIndex}",
+                        Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/Condition"),
+                        ClinicalStatus = new CodeableConcept
+                        {
+                            Coding = new List<Coding>
+                            {
+                                new Coding("http://terminology.hl7.org/CodeSystem/condition-clinical", "active", "Active")
+                            }
+                        },
+                        Code = new CodeableConcept
+                        {
+                            Text = reason,
+                            Coding = new List<Coding>
+                            {
+                                new Coding(SNOMED_URL, "404684003", reason)
+                            }
+                        },
+                        Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName }
+                    };
+
+                    medReq.ReasonReference.Add(new ResourceReference($"Condition/{reasonCondition.Id}") { Display = reason });
+                    entries.Add(new Bundle.EntryComponent { FullUrl = $"Condition/{reasonCondition.Id}", Resource = reasonCondition });
                 }
 
                 medicationSection.Entry.Add(new ResourceReference($"MedicationRequest/{medReq.Id}"));

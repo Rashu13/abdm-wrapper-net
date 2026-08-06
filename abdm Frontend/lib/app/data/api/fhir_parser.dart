@@ -67,6 +67,11 @@ class FhirRecordItem {
       date = r['content']?[0]?['attachment']?['creation'] ?? '';
       doctorName = 'ABDM Provider';
       summary = 'Type: ' + (r['content']?[0]?['attachment']?['contentType'] ?? 'application/pdf') + ' (Decrypted Attachment PDF)';
+    } else if (type == 'Binary') {
+      title = 'Prescription Scanned PDF / Copy';
+      date = '';
+      doctorName = 'ABDM Provider';
+      summary = 'Type: ' + (r['contentType'] ?? 'application/pdf') + ' (Decrypted Binary PDF Attachment)';
     } else if (type == 'Condition') {
       title = 'Condition / Diagnosis: ' + (r['code']?['text'] ?? 'Clinical Finding');
       date = '';
