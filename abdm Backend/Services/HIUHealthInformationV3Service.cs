@@ -77,7 +77,7 @@ public class HIUHealthInformationV3Service
                 try
                 {
                     var consentDetails = await _patientService.GetConsentDetailsAsync(
-                        consentMapping.PatientId, clientRequest.ConsentId, hiuId);
+                        consentMapping.AbhaAddress, clientRequest.ConsentId, hiuId);
                     if (consentDetails?.ConsentDetail?.Permission?.DateRange != null)
                     {
                         var dr = consentDetails.ConsentDetail.Permission.DateRange;
