@@ -15,6 +15,12 @@ public class Patient
     [BsonElement("abhaAddress")]
     public string AbhaAddress { get; set; } = string.Empty;
 
+    [BsonElement("abhaNumber")]
+    public string AbhaNumber { get; set; } = string.Empty;
+
+    [BsonElement("pincode")]
+    public string Pincode { get; set; } = string.Empty;
+
     [BsonElement("name")]
     public string Name { get; set; } = string.Empty;
 

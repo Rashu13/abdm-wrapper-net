@@ -118,6 +118,8 @@ public class PatientV3Controller : ControllerBase
         var result = patients.Select(p => new
         {
             abhaAddress      = p.AbhaAddress,
+            abhaNumber       = p.AbhaNumber,
+            pincode          = p.Pincode,
             name             = p.Name,
             patientReference = p.PatientReference,
             patientDisplay   = p.PatientDisplay,
@@ -129,5 +131,38 @@ public class PatientV3Controller : ControllerBase
         });
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Returns all care contexts registered across all patients for the current HIP from local database.
+    /// Used to show the linked records feed in the Care Context tab.
+    /// </summary>
+    [HttpGet("care-contexts")]
+    public async Task<IActionResult> GetAllCareContexts([FromQuery] string? hipId = null)
+    {
+        var resolvedHipId = hipId ?? _abdmConfig.HipId;
+        _logger.LogInformation($"Fetching all care contexts for HIP: {resolvedHipId}");
+
+        var patients = await _patientService.GetAllPatientsByHipIdAsync(resolvedHipId);
+        var list = new List<object>();
+
+        foreach (var p in patients)
+        {
+            if (p.CareContexts != null)
+            {
+                foreach (var cc in p.CareContexts)
+                {
+                    list.Add(new
+                    {
+                        referenceNumber = cc.ReferenceNumber,
+                        display = $"{cc.Display} - {p.Name} ({p.AbhaAddress})",
+                        type = cc.HiType,
+                        date = DateTime.UtcNow.ToString("yyyy-MM-dd")
+                    });
+                }
+            }
+        }
+
+        return Ok(list);
     }
 }

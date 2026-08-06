@@ -622,6 +622,132 @@ class EmrFormShell extends GetView<HealthRecordController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Dynamic Authored Visit Date Selector Card
+                    Obx(() {
+                      final date = controller.selectedVisitDate.value;
+                      final formattedDate =
+                          "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: AppColor.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColor.border),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.02),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.calendar_today_rounded,
+                                    color: Color(0xFF2563EB), size: 20),
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "Authored Visit Date & Time",
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF1E293B)),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      formattedDate,
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF64748B)),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                final selectedDate = await showDatePicker(
+                                  context: context,
+                                  initialDate: date,
+                                  firstDate: DateTime(2000),
+                                  lastDate: DateTime.now()
+                                      .add(const Duration(days: 365)),
+                                  builder: (context, child) {
+                                    return Theme(
+                                      data: Theme.of(context).copyWith(
+                                        colorScheme: const ColorScheme.light(
+                                          primary: Color(0xFF2563EB),
+                                          onPrimary: Colors.white,
+                                          onSurface: Color(0xFF1E293B),
+                                        ),
+                                      ),
+                                      child: child!,
+                                    );
+                                  },
+                                );
+                                if (selectedDate != null) {
+                                  if (!context.mounted) return;
+                                  final selectedTime = await showTimePicker(
+                                    context: context,
+                                    initialTime:
+                                        TimeOfDay.fromDateTime(date),
+                                  );
+                                  if (selectedTime != null) {
+                                    controller.selectedVisitDate.value =
+                                        DateTime(
+                                      selectedDate.year,
+                                      selectedDate.month,
+                                      selectedDate.day,
+                                      selectedTime.hour,
+                                      selectedTime.minute,
+                                    );
+                                  } else {
+                                    controller.selectedVisitDate.value =
+                                        DateTime(
+                                      selectedDate.year,
+                                      selectedDate.month,
+                                      selectedDate.day,
+                                      date.hour,
+                                      date.minute,
+                                    );
+                                  }
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    const Color(0xFF2563EB).withOpacity(0.12),
+                                foregroundColor: const Color(0xFF2563EB),
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 8),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(8)),
+                              ),
+                              icon: const Icon(Icons.edit_calendar_rounded,
+                                  size: 16),
+                              label: const Text(
+                                "Change Date",
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
                     formBody,
                     const SizedBox(height: 16),
                     // PDF Attachment Section
@@ -2101,7 +2227,7 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
                   );
                 }
 
-                final patients = widget.controller.patients;
+                final patients = widget.controller.groupedPatientsList;
                 final selected = widget.controller.selectedPatient.value;
 
                 if (patients.isEmpty) {
@@ -2119,9 +2245,8 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
                 final filtered = patients.where((p) {
                   if (_query.isEmpty) return true;
                   return p.name.toLowerCase().contains(_query) ||
-                      p.abhaAddress.toLowerCase().contains(_query) ||
                       p.mobile.toLowerCase().contains(_query) ||
-                      p.gender.toLowerCase().contains(_query);
+                      p.models.any((m) => m.abhaAddress.toLowerCase().contains(_query));
                 }).toList();
 
                 if (filtered.isEmpty) {
@@ -2142,84 +2267,154 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
                   separatorBuilder: (_, __) => const SizedBox(height: 6),
                   itemBuilder: (context, idx) {
                     final p = filtered[idx];
-                    final isSelected = selected?.abhaAddress == p.abhaAddress;
 
-                    return InkWell(
-                      onTap: () {
-                        widget.controller.selectedPatient.value = p;
-                      },
-                      borderRadius: BorderRadius.circular(8),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFF475569).withOpacity(0.12)
-                              : AppColor.background,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
+                    return Obx(() {
+                      final activeModel = p.selectedModel;
+                      final isSelected = selected?.abhaAddress.toLowerCase() == activeModel.abhaAddress.toLowerCase();
+
+                      return InkWell(
+                        onTap: () {
+                          widget.controller.selectedPatient.value = activeModel;
+                          widget.controller.fetchSavedHealthRecords(activeModel.abhaAddress);
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
                             color: isSelected
-                                ? const Color(0xFF475569)
-                                : AppColor.border,
-                            width: isSelected ? 1.5 : 1.0,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 15,
-                              backgroundColor: isSelected
+                                ? const Color(0xFF475569).withOpacity(0.12)
+                                : AppColor.background,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected
                                   ? const Color(0xFF475569)
-                                  : const Color(0xFF64748B).withOpacity(0.15),
-                              child: Text(
-                                p.name.isNotEmpty
-                                    ? p.name[0].toUpperCase()
-                                    : 'P',
-                                style: TextStyle(
-                                  color: isSelected
-                                      ? Colors.white
-                                      : const Color(0xFF334155),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
+                                  : AppColor.border,
+                              width: isSelected ? 1.5 : 1.0,
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
                                 children: [
-                                  Text(
-                                    p.name,
-                                    style: TextStyle(
-                                      color: AppColor.textPrimary,
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.w600,
-                                      fontSize: 12.5,
+                                  CircleAvatar(
+                                    radius: 14,
+                                    backgroundColor: isSelected
+                                        ? const Color(0xFF475569)
+                                        : const Color(0xFF64748B).withOpacity(0.15),
+                                    child: Text(
+                                      p.name.isNotEmpty
+                                          ? p.name[0].toUpperCase()
+                                          : 'P',
+                                      style: TextStyle(
+                                        color: isSelected
+                                            ? Colors.white
+                                            : const Color(0xFF334155),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11,
+                                      ),
                                     ),
-                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    p.abhaAddress,
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      p.name,
+                                      style: TextStyle(
+                                        color: AppColor.textPrimary,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.w600,
+                                        fontSize: 12.5,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (isSelected)
+                                    const Icon(Icons.check_circle_rounded,
+                                        color: Color(0xFF475569), size: 16),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              if (p.models.length > 1) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.6),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: AppColor.border),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: p.selectedAbhaAddress,
+                                      isDense: true,
+                                      isExpanded: true,
+                                      style: fontMedium.copyWith(fontSize: 11, color: const Color(0xFF2563EB)),
+                                      items: p.models.map((m) {
+                                        return DropdownMenuItem<String>(
+                                          value: m.abhaAddress,
+                                          child: Text(m.abhaAddress, overflow: TextOverflow.ellipsis),
+                                        );
+                                      }).toList(),
+                                      onChanged: (val) {
+                                        if (val != null) {
+                                          p.selectedAbhaAddress = val;
+                                          widget.controller.selectedPatient.value = p.selectedModel;
+                                          widget.controller.fetchSavedHealthRecords(val);
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ] else ...[
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 4.0),
+                                  child: Text(
+                                    p.selectedAbhaAddress,
                                     style: const TextStyle(
                                       color: Color(0xFF2563EB),
-                                      fontSize: 10.5,
+                                      fontSize: 11,
                                       fontWeight: FontWeight.w500,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                ],
-                              ),
-                            ),
-                            if (isSelected)
-                              const Icon(Icons.check_circle_rounded,
-                                  color: Color(0xFF475569), size: 18),
-                          ],
+                                ),
+                              ],
+                              if (activeModel.abhaNumber.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 4.0),
+                                  child: Text(
+                                    "No: ${activeModel.abhaNumber}",
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                              if (activeModel.pincode.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 4.0),
+                                  child: Text(
+                                    "Pin: ${activeModel.pincode}",
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    });
                   },
                 );
               }),

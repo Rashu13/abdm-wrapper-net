@@ -85,6 +85,7 @@ public class HIUFacadeConsentV3Controller : ControllerBase
                 lastUpdated = r.LastUpdated,
                 requestDetails = r.RequestDetails,
                 responseDetails = r.ResponseDetails,
+                consentId = r.ConsentId,
             });
 
         return Ok(logs);

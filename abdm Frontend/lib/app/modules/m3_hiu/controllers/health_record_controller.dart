@@ -37,6 +37,7 @@ class HealthRecordController extends GetxController {
   // PDF Attachment fields
   var attachedPdfName = ''.obs;
   var attachedPdfBase64 = ''.obs;
+  var selectedVisitDate = DateTime.now().obs;
 
   var isLoadingConsents = false.obs;
   var isSubmittingConsent = false.obs;
@@ -51,6 +52,7 @@ class HealthRecordController extends GetxController {
 
   // Patient Selection for EMR Record Creation
   var patients = <PatientRegistryModel>[].obs;
+  var groupedPatientsList = <GroupedPatient>[].obs;
   var selectedPatient = Rxn<PatientRegistryModel>();
   var isLoadingPatients = false.obs;
   var savedLocalRecords = <SavedRecordModel>[].obs;
@@ -391,9 +393,10 @@ class HealthRecordController extends GetxController {
             .map(
                 (e) => PatientRegistryModel.fromJson(e as Map<String, dynamic>))
             .toList();
-        if (patients.isNotEmpty) {
-          selectedPatient.value = patients.first;
-          fetchSavedHealthRecords(patients.first.abhaAddress);
+        groupFetchedPatients();
+        if (groupedPatientsList.isNotEmpty) {
+          selectedPatient.value = groupedPatientsList.first.selectedModel;
+          fetchSavedHealthRecords(selectedPatient.value!.abhaAddress);
         }
       }
     } catch (e) {
@@ -401,6 +404,37 @@ class HealthRecordController extends GetxController {
     } finally {
       isLoadingPatients.value = false;
     }
+  }
+
+  void groupFetchedPatients() {
+    final Map<String, GroupedPatient> grouped = {};
+    for (var p in patients) {
+      final nameLower = p.name.trim().toLowerCase();
+      // Skip empty names, test names, dummy names, and unknown names!
+      if (nameLower.isEmpty || 
+          nameLower == 'unknown' || 
+          nameLower.contains('test') || 
+          nameLower.contains('dummy')) {
+        continue;
+      }
+
+      final key = nameLower;
+      if (!grouped.containsKey(key)) {
+        grouped[key] = GroupedPatient(
+          name: p.name,
+          mobile: p.mobile,
+          gender: p.gender,
+          dateOfBirth: p.dateOfBirth,
+          models: [p],
+          selectedAbhaAddress: p.abhaAddress,
+        );
+      } else {
+        if (!grouped[key]!.models.any((m) => m.abhaAddress.toLowerCase() == p.abhaAddress.toLowerCase())) {
+          grouped[key]!.models.add(p);
+        }
+      }
+    }
+    groupedPatientsList.value = grouped.values.toList();
   }
 
   /// Fetches previously saved health data records from Backend DB for the selected patient
@@ -546,7 +580,7 @@ class HealthRecordController extends GetxController {
 
     final fhirPayload = {
       'careContextReference': visitRef,
-      'authoredOn': DateTime.now().toUtc().toIso8601String(),
+      'authoredOn': selectedVisitDate.value.toUtc().toIso8601String(),
       'recordType': hiType,
       'encounterType': encounterType.value,
       'patient': {
@@ -691,11 +725,11 @@ class HealthRecordController extends GetxController {
     final visitRef =
         "$prefix${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}";
     final displayTitle =
-        "$hiType Record - ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}";
+        "$hiType Record - ${selectedVisitDate.value.day}/${selectedVisitDate.value.month}/${selectedVisitDate.value.year}";
 
     final fhirPayload = {
       'careContextReference': visitRef,
-      'authoredOn': DateTime.now().toUtc().toIso8601String(),
+      'authoredOn': selectedVisitDate.value.toUtc().toIso8601String(),
       'recordType': hiType,
       'encounterType': encounterType.value,
       'patient': {
@@ -804,7 +838,7 @@ class HealthRecordController extends GetxController {
         abhaAddress: patient.abhaAddress,
         hiType: hiType,
         createdTime:
-            "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}",
+            "${selectedVisitDate.value.day}/${selectedVisitDate.value.month}/${selectedVisitDate.value.year} ${selectedVisitDate.value.hour}:${selectedVisitDate.value.minute.toString().padLeft(2, '0')}",
         fhirPayload: fhirPayload,
         isLinked: success,
       ),
@@ -872,11 +906,50 @@ class HealthRecordController extends GetxController {
     }
   }
 
-  Future<void> fetchAndDecryptRecords(String consentId) async {
-    selectedConsentId.value = consentId;
+  Future<void> fetchAndDecryptRecords(HiuConsentRequestModel item) async {
+    selectedConsentId.value = item.consentId.isNotEmpty ? item.consentId : item.clientRequestId;
     isFetchingRecords.value = true;
-    var records = await HiuHealthRecordRepo.fetchDecryptedRecords(consentId);
-    fhirRecords.value = records;
+    fhirRecords.clear();
+
+    final String consentId = item.consentId.isNotEmpty ? item.consentId : item.clientRequestId;
+    
+    // Format dates to ISO8601 UTC format if they aren't already
+    String fromDate = item.fromDate;
+    String toDate = item.toDate;
+    if (fromDate.isNotEmpty && !fromDate.contains('T')) {
+      try {
+        fromDate = DateTime.parse(fromDate).toUtc().toIso8601String();
+      } catch (_) {
+        fromDate = "2020-01-01T00:00:00.000Z";
+      }
+    }
+    if (toDate.isNotEmpty && !toDate.contains('T')) {
+      try {
+        toDate = DateTime.parse(toDate).toUtc().toIso8601String();
+      } catch (_) {
+        toDate = DateTime.now().toUtc().toIso8601String();
+      }
+    }
+
+    if (fromDate.isEmpty) fromDate = "2020-01-01T00:00:00.000Z";
+    if (toDate.isEmpty) toDate = DateTime.now().toUtc().toIso8601String();
+
+    final requestId = await HiuHealthRecordRepo.fetchHealthInformation(
+      consentId: consentId,
+      fromDate: fromDate,
+      toDate: toDate,
+    );
+
+    if (requestId != null) {
+      // Wait a moment for gateway / HIP callback delivery before fetching
+      await Future.delayed(const Duration(seconds: 3));
+      var records = await HiuHealthRecordRepo.fetchDecryptedRecords(requestId);
+      fhirRecords.value = records;
+    } else {
+      // Try fallback to fetching using consentId/clientRequestId directly
+      var records = await HiuHealthRecordRepo.fetchDecryptedRecords(consentId);
+      fhirRecords.value = records;
+    }
     isFetchingRecords.value = false;
   }
 }

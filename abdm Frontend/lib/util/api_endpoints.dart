@@ -41,6 +41,7 @@ class ApiEndpoints {
       hipId != null ? "$baseUrl/v3/patient/list?hipId=$hipId" : "$baseUrl/v3/patient/list";
   static String getPatientDetails(String patientId, String hipId) => "$baseUrl/v3/patient/$patientId?hipId=$hipId";
   static String saveHealthDataRecord = "$baseUrl/v3/patient/health-data";
+  static String getAllCareContexts = "$baseUrl/v3/patient/care-contexts";
 
   // ─── System Config & Bridge Status (ConfigController) ───────────────────
   static String registerBridgeUrl = "$baseUrl/v3/config/register-bridge";

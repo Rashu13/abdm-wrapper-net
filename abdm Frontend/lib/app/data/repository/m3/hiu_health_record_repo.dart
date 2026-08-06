@@ -14,6 +14,7 @@ class HiuConsentRequestModel {
   final String purpose;
   final String fromDate;
   final String toDate;
+  final String consentId;
 
   HiuConsentRequestModel({
     required this.id,
@@ -25,6 +26,7 @@ class HiuConsentRequestModel {
     required this.purpose,
     required this.fromDate,
     required this.toDate,
+    required this.consentId,
   });
 
   factory HiuConsentRequestModel.fromJson(Map<String, dynamic> json) {
@@ -67,6 +69,7 @@ class HiuConsentRequestModel {
       purpose: purp,
       fromDate: reqDetails['dateFrom'] ?? reqDetails['consent']?['permission']?['dateRange']?['from'] ?? '',
       toDate: reqDetails['dateTo'] ?? reqDetails['consent']?['permission']?['dateRange']?['to'] ?? '',
+      consentId: json['consentId']?.toString() ?? '',
     );
   }
 }
@@ -176,5 +179,39 @@ class HiuHealthRecordRepo {
       return FhirParser.parseBundle(response.body);
     }
     return [];
+  }
+
+  /// Initiate health information request to ABDM gateway
+  static Future<String?> fetchHealthInformation({
+    required String consentId,
+    required String fromDate,
+    required String toDate,
+  }) async {
+    try {
+      final requestId = "REQ_${DateTime.now().millisecondsSinceEpoch}";
+      final body = {
+        "requestId": requestId,
+        "consentId": consentId,
+        "dateRange": {
+          "from": fromDate,
+          "to": toDate,
+        }
+      };
+
+      final response = await AbdmServer.postRequest(
+        endpoint: ApiEndpoints.fetchEncryptedHealthRecord,
+        body: body,
+      );
+
+      if (response != null &&
+          (response.statusCode == 200 ||
+              response.statusCode == 201 ||
+              response.statusCode == 202)) {
+        return requestId;
+      }
+    } catch (e) {
+      print("fetchHealthInformation error: $e");
+    }
+    return null;
   }
 }

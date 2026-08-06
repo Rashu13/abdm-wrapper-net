@@ -500,6 +500,8 @@ public class ProfileShareV3Service : IProfileShareV3Service
                 var patient = new Patient
                 {
                     AbhaAddress = p.AbhaAddress,
+                    AbhaNumber = p.AbhaNumber,
+                    Pincode = p.Address?.Pincode ?? string.Empty,
                     Name = p.Name,
                     Gender = p.Gender,
                     PatientMobile = p.PhoneNumber,

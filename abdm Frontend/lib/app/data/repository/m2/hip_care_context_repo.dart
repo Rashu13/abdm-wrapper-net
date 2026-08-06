@@ -4,21 +4,18 @@ import 'package:abdm_frontend/app/data/model/response/m2/care_context_model.dart
 import 'package:abdm_frontend/util/api_endpoints.dart';
 
 class HipCareContextRepo {
-  static Future<List<CareContextModel>> getLinkedCareContexts({String requestId = "REQ_DEFAULT"}) async {
+  static Future<List<CareContextModel>> getLinkedCareContexts() async {
     try {
-      final response = await AbdmServer.getRequest(ApiEndpoints.getLinkStatus(requestId));
-      if (response != null && (response.statusCode == 200 || response.statusCode == 202)) {
-        final data = jsonDecode(response.body);
-        if (data['contexts'] != null) {
-          return (data['contexts'] as List)
-              .map((e) => CareContextModel.fromJson(e))
-              .toList();
-        }
+      final response = await AbdmServer.getRequest(ApiEndpoints.getAllCareContexts);
+      if (response != null && response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data
+            .map((e) => CareContextModel.fromJson(e as Map<String, dynamic>))
+            .toList();
       }
     } catch (e) {
       print("getLinkedCareContexts error: $e");
     }
-    // Return empty list on network error / initial state
     return [];
   }
 

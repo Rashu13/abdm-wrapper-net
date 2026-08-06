@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/care_context_controller.dart';
+import '../../dashboard/controllers/dashboard_controller.dart';
 import '../../../../util/constants.dart';
 import '../../../../util/style.dart';
 
@@ -51,7 +52,7 @@ class DiscoveryView extends GetView<CareContextController> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
                     onPressed: () {
-                      controller.linkNewCareContext('rahul@abdm', 'OPD-VISIT-${DateTime.now().millisecondsSinceEpoch % 10000}');
+                      Get.find<DashboardController>().changeTab(6);
                     },
                     icon: const Icon(Icons.add_link, color: Colors.white),
                     label: Text('Link New Context', style: fontMedium.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),

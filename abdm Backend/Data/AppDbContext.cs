@@ -76,6 +76,8 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(p => p.Id);
             entity.Property(p => p.Id).ValueGeneratedOnAdd();
+            entity.Ignore(p => p.AbhaNumber);
+            entity.Ignore(p => p.Pincode);
             entity.Property(p => p.CareContexts)
                 .HasConversion(careContextsConverter)
                 .HasColumnType(textColumnType);

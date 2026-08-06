@@ -243,7 +243,7 @@ class ConsentRequestView extends GetView<HealthRecordController> {
                 const SizedBox.shrink(),
               ElevatedButton.icon(
                 onPressed: () {
-                  controller.fetchAndDecryptRecords(item.clientRequestId);
+                  controller.fetchAndDecryptRecords(item);
                   Get.toNamed(Routes.M3_HEALTH_RECORDS);
                 },
                 style: ElevatedButton.styleFrom(
@@ -318,6 +318,43 @@ class ConsentRequestView extends GetView<HealthRecordController> {
                   ],
                 ),
                 const SizedBox(height: 20),
+
+                // Select from Registered Patients dropdown helper
+                if (controller.patients.isNotEmpty) ...[
+                  Text('Select from Registered Patients',
+                      style: TextStyle(
+                          color: AppColor.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: AppColor.background,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColor.border),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        hint: const Text('Choose a patient...'),
+                        isExpanded: true,
+                        dropdownColor: AppColor.surface,
+                        style: TextStyle(color: AppColor.textPrimary, fontSize: 13),
+                        items: controller.patients.map((p) {
+                          final detailsLabel = "${p.name} (${p.abhaAddress})";
+                          return DropdownMenuItem<String>(
+                            value: p.abhaAddress,
+                            child: Text(detailsLabel),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            abhaCtrl.text = val;
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
                 // ABHA Address Input
                 Text('Patient ABHA Address',
