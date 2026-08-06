@@ -176,16 +176,7 @@ public class GatewayClient : IGatewayClient
                 cleanPath = cleanPath["api/".Length..];
             }
 
-            Uri requestUri;
-            if (cleanPath.StartsWith("hiecm/", StringComparison.OrdinalIgnoreCase) && client.BaseAddress != null && client.BaseAddress.AbsolutePath.Contains("/api"))
-            {
-                var baseHost = $"{client.BaseAddress.Scheme}://{client.BaseAddress.Authority}";
-                requestUri = new Uri(new Uri(baseHost), cleanPath);
-            }
-            else
-            {
-                requestUri = new Uri(client.BaseAddress!, cleanPath);
-            }
+            Uri requestUri = new Uri(client.BaseAddress!, cleanPath);
 
             if (_config.LogCurl)
             {
