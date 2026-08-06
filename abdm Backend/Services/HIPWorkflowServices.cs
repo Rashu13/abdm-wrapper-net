@@ -482,13 +482,31 @@ public class ProfileShareV3Service : IProfileShareV3Service
             if (request.Profile?.Patient != null)
             {
                 var p = request.Profile.Patient;
+                var existingRef = await _patientService.GetPatientReferenceAsync(p.AbhaAddress, hipId.ToString());
+                string patientRef = existingRef;
+                if (string.IsNullOrEmpty(patientRef))
+                {
+                    patientRef = "REF-" + Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
+                }
+
+                string dob = string.Empty;
+                if (!string.IsNullOrEmpty(p.YearOfBirth))
+                {
+                    string day = string.IsNullOrEmpty(p.DayOfBirth) ? "01" : p.DayOfBirth.PadLeft(2, '0');
+                    string month = string.IsNullOrEmpty(p.MonthOfBirth) ? "01" : p.MonthOfBirth.PadLeft(2, '0');
+                    dob = $"{p.YearOfBirth}-{month}-{day}";
+                }
+
                 var patient = new Patient
                 {
                     AbhaAddress = p.AbhaAddress,
                     Name = p.Name,
                     Gender = p.Gender,
                     PatientMobile = p.PhoneNumber,
-                    HipId = hipId.ToString()
+                    HipId = hipId.ToString(),
+                    PatientReference = patientRef,
+                    PatientDisplay = p.Name,
+                    DateOfBirth = dob
                 };
                 await _patientService.UpsertPatientsAsync(new List<Patient> { patient });
             }

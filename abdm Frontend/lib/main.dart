@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'app/routes/app_pages.dart';
 import 'app/modules/splash/bindings/splash_binding.dart';
+import 'app/modules/splash/views/splash_view.dart';
 import 'util/constants.dart';
 
 void main() async {
@@ -27,7 +28,13 @@ void main() async {
       initialRoute: AppPages.INITIAL,
       getPages: AppPages.routes,
       initialBinding: SplashBinding(),
+      unknownRoute: GetPage(
+        name: '/not-found',
+        page: () => const SplashView(),
+        binding: SplashBinding(),
+      ),
       builder: (context, widget) {
+        if (widget == null) return const SizedBox.shrink();
         return Container(
           color: AppColor.background,
           child: Center(

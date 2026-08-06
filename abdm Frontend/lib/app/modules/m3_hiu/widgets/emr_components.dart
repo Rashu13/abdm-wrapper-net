@@ -10,6 +10,7 @@ class EmrCompactTextField extends StatelessWidget {
   final String? hintText;
   final TextInputType? keyboardType;
   final int maxLines;
+  final ValueChanged<String>? onChanged;
 
   const EmrCompactTextField({
     Key? key,
@@ -18,6 +19,7 @@ class EmrCompactTextField extends StatelessWidget {
     this.hintText,
     this.keyboardType,
     this.maxLines = 1,
+    this.onChanged,
   }) : super(key: key);
 
   @override
@@ -26,6 +28,7 @@ class EmrCompactTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      onChanged: onChanged,
       style: TextStyle(color: AppColor.textPrimary, fontSize: 12),
       decoration: InputDecoration(
         isDense: true,

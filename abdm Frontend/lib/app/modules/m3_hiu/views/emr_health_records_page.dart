@@ -626,7 +626,8 @@ class EmrFormShell extends GetView<HealthRecordController> {
                     const SizedBox(height: 16),
                     // PDF Attachment Section
                     Obx(() {
-                      final hasPdf = controller.attachedPdfName.value.isNotEmpty;
+                      final hasPdf =
+                          controller.attachedPdfName.value.isNotEmpty;
                       return Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
@@ -856,7 +857,6 @@ class _OpConsultationBody extends StatelessWidget {
                 controller: controller.opHeightCtrl,
                 labelText: 'HEIGHT (CM)',
                 hintText: '170',
-                keyboardType: TextInputType.number,
               ),
             ),
             const SizedBox(width: 10),
@@ -865,7 +865,6 @@ class _OpConsultationBody extends StatelessWidget {
                 controller: controller.opWeightCtrl,
                 labelText: 'WEIGHT (KG)',
                 hintText: '68',
-                keyboardType: TextInputType.number,
               ),
             ),
             const SizedBox(width: 10),
@@ -1855,27 +1854,11 @@ class EmrWellnessPage extends GetView<HealthRecordController> {
 
   Widget _wellFieldWithChange(String label, TextEditingController ctrl,
       String hint, Function(String) onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style:
-                const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 4),
-        TextField(
-          controller: ctrl,
-          onChanged: onChanged,
-          style: const TextStyle(fontSize: 12),
-          decoration: InputDecoration(
-            hintText: hint,
-            filled: true,
-            fillColor: AppColor.background,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          ),
-        ),
-      ],
+    return EmrCompactTextField(
+      controller: ctrl,
+      labelText: label,
+      hintText: hint,
+      onChanged: onChanged,
     );
   }
 
