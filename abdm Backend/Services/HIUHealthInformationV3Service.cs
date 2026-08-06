@@ -69,6 +69,32 @@ public class HIUHealthInformationV3Service
                 };
             }
 
+            string fromDate = clientRequest.DateRange?.From ?? string.Empty;
+            string toDate = clientRequest.DateRange?.To ?? string.Empty;
+
+            if (string.IsNullOrEmpty(fromDate) || fromDate.StartsWith("2020-01-01"))
+            {
+                try
+                {
+                    var consentDetails = await _patientService.GetConsentDetailsAsync(
+                        consentMapping.PatientId, clientRequest.ConsentId, hiuId);
+                    if (consentDetails?.ConsentDetail?.Permission?.DateRange != null)
+                    {
+                        var dr = consentDetails.ConsentDetail.Permission.DateRange;
+                        if (!string.IsNullOrEmpty(dr.From))
+                        {
+                            fromDate = dr.From;
+                            toDate = dr.To;
+                            _logger.LogInformation($"Resolved dateRange from DB: from={fromDate}, to={toDate}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error resolving dateRange from DB");
+                }
+            }
+
             // Generate real EC curve25519 key pair for encryption
             var cryptoService = new CryptographyService(Microsoft.Extensions.Logging.Abstractions.NullLogger<CryptographyService>.Instance);
             var hiuKeys = cryptoService.GenerateKeys();
@@ -105,8 +131,8 @@ public class HIUHealthInformationV3Service
                     consent = new { id = clientRequest.ConsentId },
                     dateRange = new 
                     { 
-                        from = clientRequest.DateRange?.From ?? "2020-01-01T00:00:00.000Z", 
-                        to = clientRequest.DateRange?.To ?? Utils.GetCurrentTimeStamp() 
+                        from = !string.IsNullOrEmpty(fromDate) ? fromDate : "2020-01-01T00:00:00.000Z", 
+                        to = !string.IsNullOrEmpty(toDate) ? toDate : Utils.GetCurrentTimeStamp() 
                     },
                     dataPushUrl = dataPushUrl,
                     keyMaterial = new
