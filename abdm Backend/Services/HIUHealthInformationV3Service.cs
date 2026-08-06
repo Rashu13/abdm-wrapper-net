@@ -198,10 +198,13 @@ public class HIUHealthInformationV3Service
             };
 
             // Check if we have received encrypted health data
-            if (log.ResponseDetails != null && log.ResponseDetails.Contains("entries"))
+            if (log.ResponseDetails != null && (log.ResponseDetails.Contains("entries") || log.ResponseDetails.Contains("Entries")))
             {
                 var pushRequestJson = log.ResponseDetails.ToString();
-                var pushRequest = System.Text.Json.JsonSerializer.Deserialize<HealthInformationPushRequest>(pushRequestJson);
+                var pushRequest = System.Text.Json.JsonSerializer.Deserialize<HealthInformationPushRequest>(
+                    pushRequestJson,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
 
                 if (pushRequest != null && pushRequest.Entries != null && pushRequest.KeyMaterial != null)
                 {
@@ -210,7 +213,10 @@ public class HIUHealthInformationV3Service
                     if (log.RequestDetails != null)
                     {
                         if (log.RequestDetails.Contains("privateKey")) hiuPrivateKey = log.RequestDetails["privateKey"].AsString;
+                        else if (log.RequestDetails.Contains("PrivateKey")) hiuPrivateKey = log.RequestDetails["PrivateKey"].AsString;
+
                         if (log.RequestDetails.Contains("nonce")) hiuNonce = log.RequestDetails["nonce"].AsString;
+                        else if (log.RequestDetails.Contains("Nonce")) hiuNonce = log.RequestDetails["Nonce"].AsString;
                     }
 
                     string? hipPublicKey = pushRequest.KeyMaterial.DhPublicKey?.KeyValue;
