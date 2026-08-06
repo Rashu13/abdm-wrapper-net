@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using AbdmWrapperNet.Data;
 using AbdmWrapperNet.Models;
 using AbdmWrapperNet.Services;
+using MongoDB.Bson;
 
 namespace AbdmWrapperNet.Controllers;
 
@@ -63,6 +64,20 @@ public class HIUFacadeConsentV3Controller : ControllerBase
         return StatusCode(response.HttpStatusCode > 0 ? response.HttpStatusCode : 200, response);
     }
 
+    private static object? BsonToJsonElement(MongoDB.Bson.BsonDocument? doc)
+    {
+        if (doc == null || doc.ElementCount == 0) return null;
+        try
+        {
+            var json = doc.ToJson(new MongoDB.Bson.IO.JsonWriterSettings { OutputMode = MongoDB.Bson.IO.JsonOutputMode.CanonicalExtendedJson });
+            return System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.Nodes.JsonNode>(json);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// Returns all HIU Consent Requests for the frontend dashboard.
     /// GET /v3/consent/list
@@ -83,8 +98,8 @@ public class HIUFacadeConsentV3Controller : ControllerBase
                 gatewayRequestId = r.GatewayRequestId,
                 createdAt = r.CreatedOn,
                 lastUpdated = r.LastUpdated,
-                requestDetails = r.RequestDetails,
-                responseDetails = r.ResponseDetails,
+                requestDetails = BsonToJsonElement(r.RequestDetails),
+                responseDetails = BsonToJsonElement(r.ResponseDetails),
                 consentId = r.ConsentId,
             });
 
