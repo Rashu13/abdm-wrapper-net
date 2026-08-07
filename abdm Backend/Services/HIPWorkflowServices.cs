@@ -198,65 +198,7 @@ public class HIPHealthInformationV3Service : IHIPHealthInformationV3Service
             {
                 var record = await _patientService.GetHealthDataRecordAsync(abhaAddress, cc.CareContextReference ?? "");
                 
-                // MOCK AUTO-GENERATION FOR TESTING
-                if (record == null || string.IsNullOrEmpty(record.FhirJsonPayload))
-                {
-                    _logger.LogInformation($"Auto-generating mock health data for missing care context: {cc.CareContextReference}");
-                    
-                    string recordType = "Prescription";
-                    string refNo = cc.CareContextReference ?? "";
-                    if (refNo.StartsWith("OPD", StringComparison.OrdinalIgnoreCase) || refNo.StartsWith("OP", StringComparison.OrdinalIgnoreCase)) recordType = "OPConsultation";
-                    else if (refNo.StartsWith("LAB", StringComparison.OrdinalIgnoreCase)) recordType = "DiagnosticReport";
-                    else if (refNo.StartsWith("WEL", StringComparison.OrdinalIgnoreCase)) recordType = "WellnessRecord";
-                    else if (refNo.StartsWith("DIS", StringComparison.OrdinalIgnoreCase)) recordType = "DischargeSummary";
-                    else if (refNo.StartsWith("IMM", StringComparison.OrdinalIgnoreCase)) recordType = "ImmunizationRecord";
-                    else if (refNo.StartsWith("INV", StringComparison.OrdinalIgnoreCase)) recordType = "Invoice";
-                    else if (refNo.StartsWith("HD", StringComparison.OrdinalIgnoreCase) || refNo.StartsWith("DOC", StringComparison.OrdinalIgnoreCase)) recordType = "HealthDocumentRecord";
 
-                    var mockPayload = new
-                    {
-                        careContextReference = cc.CareContextReference,
-                        authoredOn = DateTime.UtcNow.ToString("o"),
-                        patient = new
-                        {
-                            name = patient.Name ?? "Mock Patient",
-                            patientReference = patient.PatientReference ?? "Patient-1",
-                            gender = patient.Gender ?? "M"
-                        },
-                        practitioners = new[]
-                        {
-                            new { name = "Dr. Test Provider", practitionerId = "PR-1" }
-                        },
-                        organisation = new
-                        {
-                            facilityName = "Mock Testing Facility",
-                            facilityId = "IN-1"
-                        },
-                        prescriptions = new[]
-                        {
-                            new { medicine = "Test Medication 500mg", dosage = "1 tablet", timing = "1-1-d", method = "Oral", reason = "Testing Mock Data" }
-                        },
-                        clinicalNotes = $"This is a mock clinical note generated automatically for testing care context {cc.CareContextReference}."
-                    };
-
-                    record = new HealthDataRecord
-                    {
-                        AbhaAddress = abhaAddress,
-                        CareContextReference = cc.CareContextReference ?? "",
-                        RecordType = recordType,
-                        FhirJsonPayload = System.Text.Json.JsonSerializer.Serialize(mockPayload),
-                        CreatedAt = DateTime.UtcNow
-                    };
-                    
-                    try
-                    {
-                        await _patientService.AddHealthDataRecordAsync(record);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning($"Could not save mock data to DB (it will still be used in-memory): {ex.Message}");
-                    }
-                }
 
                 if (record != null && !string.IsNullOrEmpty(record.FhirJsonPayload))
                 {
