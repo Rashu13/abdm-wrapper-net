@@ -74,7 +74,14 @@ public class HIUGatewayCallbackV3Controller : ControllerBase
         _logger.LogInformation("Gateway callback: hiu/consent/request/notify");
         Request.Headers.TryGetValue("X-HIU-ID", out var hiuId);
         Request.Headers.TryGetValue("REQUEST-ID", out var requestId);
-        int statusCode = await _consentService.HiuNotifyAsync(request, hiuId.ToString(), requestId.ToString());
+        
+        string reqId = requestId.ToString();
+        if (string.IsNullOrEmpty(reqId) && request != null)
+        {
+            reqId = request.RequestId;
+        }
+
+        int statusCode = await _consentService.HiuNotifyAsync(request, hiuId.ToString(), reqId);
         return StatusCode(statusCode);
     }
 

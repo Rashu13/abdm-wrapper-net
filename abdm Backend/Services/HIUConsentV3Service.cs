@@ -374,13 +374,24 @@ public class HIUConsentV3Service
         }
 
         // Acknowledge the gateway notification
+        var ackList = notification.ConsentArtefacts.ConvertAll(a =>
+            new ConsentAcknowledgementItem { Status = "OK", ConsentId = a.Id });
+
+        if (ackList.Count == 0)
+        {
+            ackList.Add(new ConsentAcknowledgementItem
+            {
+                Status = "OK",
+                ConsentId = notification.ConsentRequestId
+            });
+        }
+
         var onNotifyReq = new ConsentOnNotifyV3Request
         {
             RequestId = Guid.NewGuid().ToString(),
             Timestamp = Utils.GetCurrentTimeStamp(),
             Response = new RespRequest { RequestId = incomingRequestId },
-            Acknowledgement = notification.ConsentArtefacts.ConvertAll(a =>
-                new ConsentAcknowledgementItem { Status = "OK", ConsentId = a.Id })
+            Acknowledgement = ackList
         };
 
         await _gatewayClient.PostToGatewayAsync(
