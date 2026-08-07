@@ -20,7 +20,8 @@
         "lottie",
         "pinput",
         "qr_flutter",
-        "shimmer"
+        "shimmer",
+        "syncfusion_flutter_datagrid"
       ],
       "devDependencies": [
         "flutter_lints",
@@ -761,6 +762,23 @@
         "collection",
         "meta",
         "pub_semver"
+      ]
+    },
+    {
+      "name": "syncfusion_flutter_datagrid",
+      "version": "24.2.9",
+      "dependencies": [
+        "collection",
+        "flutter",
+        "syncfusion_flutter_core"
+      ]
+    },
+    {
+      "name": "syncfusion_flutter_core",
+      "version": "24.2.9",
+      "dependencies": [
+        "flutter",
+        "vector_math"
       ]
     }
   ],

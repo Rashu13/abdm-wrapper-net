@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import '../../m2_hip/controllers/patient_registry_controller.dart';
 import '../controllers/health_record_controller.dart';
 import '../widgets/emr_components.dart';
 import '../../../../util/constants.dart';
@@ -653,8 +654,7 @@ class EmrFormShell extends GetView<HealthRecordController> {
                                     color: Color(0xFF2563EB), size: 20),
                                 const SizedBox(width: 12),
                                 Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text(
                                       "Authored Visit Date & Time",
@@ -700,8 +700,7 @@ class EmrFormShell extends GetView<HealthRecordController> {
                                   if (!context.mounted) return;
                                   final selectedTime = await showTimePicker(
                                     context: context,
-                                    initialTime:
-                                        TimeOfDay.fromDateTime(date),
+                                    initialTime: TimeOfDay.fromDateTime(date),
                                   );
                                   if (selectedTime != null) {
                                     controller.selectedVisitDate.value =
@@ -732,16 +731,14 @@ class EmrFormShell extends GetView<HealthRecordController> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 14, vertical: 8),
                                 shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(8)),
+                                    borderRadius: BorderRadius.circular(8)),
                               ),
                               icon: const Icon(Icons.edit_calendar_rounded,
                                   size: 16),
                               label: const Text(
                                 "Change Date",
                                 style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold),
+                                    fontSize: 12, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ],
@@ -2043,11 +2040,338 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
   final TextEditingController _searchCtrl = TextEditingController();
   String _query = '';
   int _selectedTab = 0; // 0 = Patients, 1 = Saved Records
+  int _focusedIndex = 0; // Index for keyboard arrow key navigation
 
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  void _showAddNoAbhaPatientDialog(BuildContext context) {
+    final nameCtrl = TextEditingController();
+    final mobileCtrl = TextEditingController();
+    final yobCtrl = TextEditingController(text: DateTime.now().year.toString());
+    String selectedGender = 'M';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                child: Container(
+                  width: 380,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColor.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(Icons.person_add_alt_1_rounded,
+                                color: AppColor.primary, size: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Create Patient (No ABHA)',
+                            style: fontBold.copyWith(
+                                fontSize: 15, color: AppColor.textPrimary),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                      const SizedBox(height: 16),
+
+                      // Patient Name
+                      Text('PATIENT NAME',
+                          style: fontBold.copyWith(
+                              fontSize: 10, color: const Color(0xFF64748B))),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: nameCtrl,
+                        style: fontMedium.copyWith(
+                            fontSize: 12, color: AppColor.textPrimary),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          hintText: 'e.g. Ramesh Kumar',
+                          hintStyle: TextStyle(
+                              color: AppColor.textSecondary.withOpacity(0.4),
+                              fontSize: 11.5),
+                          filled: true,
+                          fillColor: AppColor.background,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: BorderSide(color: AppColor.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide:
+                                BorderSide(color: AppColor.primary, width: 1.5),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Mobile Number
+                      Text('MOBILE NUMBER',
+                          style: fontBold.copyWith(
+                              fontSize: 10, color: const Color(0xFF64748B))),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: mobileCtrl,
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        style: fontMedium.copyWith(
+                            fontSize: 12, color: AppColor.textPrimary),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          hintText: '10-digit mobile number',
+                          hintStyle: TextStyle(
+                              color: AppColor.textSecondary.withOpacity(0.4),
+                              fontSize: 11.5),
+                          filled: true,
+                          fillColor: AppColor.background,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide: BorderSide(color: AppColor.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                            borderSide:
+                                BorderSide(color: AppColor.primary, width: 1.5),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Gender & YOB Row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('GENDER',
+                                    style: fontBold.copyWith(
+                                        fontSize: 10,
+                                        color: const Color(0xFF64748B))),
+                                const SizedBox(height: 6),
+                                Container(
+                                  height: 36,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10),
+                                  decoration: BoxDecoration(
+                                    color: AppColor.background,
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: AppColor.border),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: selectedGender,
+                                      isDense: true,
+                                      isExpanded: true,
+                                      style: fontMedium.copyWith(
+                                          fontSize: 12,
+                                          color: AppColor.textPrimary),
+                                      items: const [
+                                        DropdownMenuItem(
+                                            value: 'M', child: Text('Male')),
+                                        DropdownMenuItem(
+                                            value: 'F', child: Text('Female')),
+                                        DropdownMenuItem(
+                                            value: 'O', child: Text('Other')),
+                                      ],
+                                      onChanged: (val) {
+                                        if (val != null) {
+                                          setDialogState(() {
+                                            selectedGender = val;
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('YEAR OF BIRTH',
+                                    style: fontBold.copyWith(
+                                        fontSize: 10,
+                                        color: const Color(0xFF64748B))),
+                                const SizedBox(height: 6),
+                                TextField(
+                                  controller: yobCtrl,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly
+                                  ],
+                                  style: fontMedium.copyWith(
+                                      fontSize: 12,
+                                      color: AppColor.textPrimary),
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 10),
+                                    hintText: 'e.g. 1990',
+                                    hintStyle: TextStyle(
+                                        color: AppColor.textSecondary
+                                            .withOpacity(0.4),
+                                        fontSize: 11.5),
+                                    filled: true,
+                                    fillColor: AppColor.background,
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                      borderSide:
+                                          BorderSide(color: AppColor.border),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                      borderSide: BorderSide(
+                                          color: AppColor.primary, width: 1.5),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Action Buttons
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              foregroundColor: const Color(0xFF64748B),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                            ),
+                            child: Text('Cancel',
+                                style: fontBold.copyWith(fontSize: 12)),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: AppColor.primaryGradient,
+                              borderRadius: BorderRadius.circular(6),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColor.primary.withOpacity(0.2),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                final name = nameCtrl.text.trim();
+                                final mobile = mobileCtrl.text.trim();
+                                final yob = yobCtrl.text.trim();
+
+                                if (name.isEmpty || mobile.length < 10) {
+                                  Get.snackbar('Validation Error',
+                                      'Please enter a valid name and 10-digit mobile number.',
+                                      backgroundColor: Colors.redAccent,
+                                      colorText: Colors.white);
+                                  return;
+                                }
+
+                                // Create local dummy PatientRegistryModel
+                                final dummyAbha = "mobile-$mobile@sbx";
+                                final patient = PatientRegistryModel(
+                                  abhaAddress: dummyAbha,
+                                  abhaNumber: '',
+                                  pincode: '',
+                                  name: name,
+                                  patientReference: "PAT-$mobile",
+                                  patientDisplay: name,
+                                  gender: selectedGender,
+                                  dateOfBirth: "$yob-01-01",
+                                  mobile: mobile,
+                                  hipId: 'IN0610090658',
+                                  careContextCount: 0,
+                                );
+
+                                // Add to controller lists
+                                widget.controller.patients.add(patient);
+
+                                final grouped = GroupedPatient(
+                                  name: name,
+                                  mobile: mobile,
+                                  gender: selectedGender,
+                                  dateOfBirth: "$yob-01-01",
+                                  models: [patient],
+                                  selectedAbhaAddress: dummyAbha,
+                                );
+
+                                widget.controller.groupedPatientsList
+                                    .insert(0, grouped);
+                                widget.controller.selectedPatient.value =
+                                    patient;
+                                widget.controller
+                                    .fetchSavedHealthRecords(dummyAbha);
+
+                                Navigator.pop(context);
+
+                                Get.snackbar(
+                                  'Patient Selected',
+                                  'You can now write EMR records for $name. They will be saved without an ABHA address.',
+                                  backgroundColor: const Color(0xFF10B981),
+                                  colorText: Colors.white,
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6)),
+                              ),
+                              child: Text('Add Patient',
+                                  style: fontBold.copyWith(
+                                      fontSize: 12, color: Colors.white)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ));
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -2191,7 +2515,9 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
                                 fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            active.abhaAddress,
+                            active.abhaAddress.startsWith('mobile-')
+                                ? "Mobile: ${active.mobile} (No ABHA)"
+                                : active.abhaAddress,
                             style: const TextStyle(
                                 color: Color(0xFF059669), fontSize: 10.5),
                           ),
@@ -2206,10 +2532,90 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
             // Search Field Input
             Padding(
               padding: const EdgeInsets.all(10),
-              child: EmrCompactTextField(
-                controller: _searchCtrl,
-                labelText: 'Search Patient',
-                hintText: 'Search Name, ABHA, Mobile...',
+              child: Column(
+                children: [
+                  Focus(
+                    onKeyEvent: (FocusNode node, KeyEvent event) {
+                      if (event is KeyDownEvent) {
+                        final filteredList =
+                            widget.controller.groupedPatientsList.where((p) {
+                          if (_query.isEmpty) return true;
+                          return p.name.toLowerCase().contains(_query) ||
+                              p.mobile.toLowerCase().contains(_query) ||
+                              p.models.any((m) =>
+                                  m.abhaAddress.toLowerCase().contains(_query));
+                        }).toList();
+
+                        final idxFocus = _focusedIndex ?? 0;
+                        if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                          setState(() {
+                            if (filteredList.isNotEmpty) {
+                              _focusedIndex =
+                                  (idxFocus + 1) % filteredList.length;
+                            }
+                          });
+                          return KeyEventResult.handled;
+                        } else if (event.logicalKey ==
+                            LogicalKeyboardKey.arrowUp) {
+                          setState(() {
+                            if (filteredList.isNotEmpty) {
+                              _focusedIndex =
+                                  (idxFocus - 1 + filteredList.length) %
+                                      filteredList.length;
+                            }
+                          });
+                          return KeyEventResult.handled;
+                        } else if (event.logicalKey ==
+                            LogicalKeyboardKey.enter) {
+                          if (filteredList.isNotEmpty &&
+                              idxFocus >= 0 &&
+                              idxFocus < filteredList.length) {
+                            final selectedModel =
+                                filteredList[idxFocus].selectedModel;
+                            widget.controller.selectedPatient.value =
+                                selectedModel;
+                            widget.controller.fetchSavedHealthRecords(
+                                selectedModel.abhaAddress);
+                          }
+                          return KeyEventResult.handled;
+                        }
+                      }
+                      return KeyEventResult.ignored;
+                    },
+                    child: EmrCompactTextField(
+                      controller: _searchCtrl,
+                      labelText: 'Search Patient',
+                      hintText: 'Search Name, ABHA, Mobile...',
+                      onChanged: (val) {
+                        setState(() {
+                          _query = val.trim().toLowerCase();
+                          _focusedIndex = 0; // Reset focused index on typing
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        _showAddNoAbhaPatientDialog(context);
+                      },
+                      icon: const Icon(Icons.person_add_alt_1_rounded,
+                          size: 15, color: Colors.white),
+                      label: const Text('Add Patient',
+                          style: TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF475569),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6)),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -2246,7 +2652,8 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
                   if (_query.isEmpty) return true;
                   return p.name.toLowerCase().contains(_query) ||
                       p.mobile.toLowerCase().contains(_query) ||
-                      p.models.any((m) => m.abhaAddress.toLowerCase().contains(_query));
+                      p.models.any(
+                          (m) => m.abhaAddress.toLowerCase().contains(_query));
                 }).toList();
 
                 if (filtered.isEmpty) {
@@ -2270,12 +2677,18 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
 
                     return Obx(() {
                       final activeModel = p.selectedModel;
-                      final isSelected = selected?.abhaAddress.toLowerCase() == activeModel.abhaAddress.toLowerCase();
+                      final isSelected = selected?.abhaAddress.toLowerCase() ==
+                          activeModel.abhaAddress.toLowerCase();
+                      final isKeyboardFocused = idx == (_focusedIndex ?? 0);
 
                       return InkWell(
                         onTap: () {
+                          setState(() {
+                            _focusedIndex = idx;
+                          });
                           widget.controller.selectedPatient.value = activeModel;
-                          widget.controller.fetchSavedHealthRecords(activeModel.abhaAddress);
+                          widget.controller
+                              .fetchSavedHealthRecords(activeModel.abhaAddress);
                         },
                         borderRadius: BorderRadius.circular(8),
                         child: AnimatedContainer(
@@ -2284,13 +2697,18 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? const Color(0xFF475569).withOpacity(0.12)
-                                : AppColor.background,
+                                : (isKeyboardFocused
+                                    ? AppColor.primary.withOpacity(0.06)
+                                    : AppColor.background),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: isSelected
                                   ? const Color(0xFF475569)
-                                  : AppColor.border,
-                              width: isSelected ? 1.5 : 1.0,
+                                  : (isKeyboardFocused
+                                      ? AppColor.primary
+                                      : AppColor.border),
+                              width:
+                                  (isSelected || isKeyboardFocused) ? 1.5 : 1.0,
                             ),
                           ),
                           child: Column(
@@ -2302,7 +2720,8 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
                                     radius: 14,
                                     backgroundColor: isSelected
                                         ? const Color(0xFF475569)
-                                        : const Color(0xFF64748B).withOpacity(0.15),
+                                        : const Color(0xFF64748B)
+                                            .withOpacity(0.15),
                                     child: Text(
                                       p.name.isNotEmpty
                                           ? p.name[0].toUpperCase()
@@ -2338,7 +2757,8 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
                               const SizedBox(height: 6),
                               if (p.models.length > 1) ...[
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.6),
                                     borderRadius: BorderRadius.circular(6),
@@ -2349,18 +2769,23 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
                                       value: p.selectedAbhaAddress,
                                       isDense: true,
                                       isExpanded: true,
-                                      style: fontMedium.copyWith(fontSize: 11, color: const Color(0xFF2563EB)),
+                                      style: fontMedium.copyWith(
+                                          fontSize: 11,
+                                          color: const Color(0xFF2563EB)),
                                       items: p.models.map((m) {
                                         return DropdownMenuItem<String>(
                                           value: m.abhaAddress,
-                                          child: Text(m.abhaAddress, overflow: TextOverflow.ellipsis),
+                                          child: Text(m.abhaAddress,
+                                              overflow: TextOverflow.ellipsis),
                                         );
                                       }).toList(),
                                       onChanged: (val) {
                                         if (val != null) {
                                           p.selectedAbhaAddress = val;
-                                          widget.controller.selectedPatient.value = p.selectedModel;
-                                          widget.controller.fetchSavedHealthRecords(val);
+                                          widget.controller.selectedPatient
+                                              .value = p.selectedModel;
+                                          widget.controller
+                                              .fetchSavedHealthRecords(val);
                                         }
                                       },
                                     ),
@@ -2370,9 +2795,13 @@ class _PatientLeftSidebarPanelState extends State<PatientLeftSidebarPanel> {
                                 Padding(
                                   padding: const EdgeInsets.only(left: 4.0),
                                   child: Text(
-                                    p.selectedAbhaAddress,
-                                    style: const TextStyle(
-                                      color: Color(0xFF2563EB),
+                                    p.selectedAbhaAddress.startsWith('mobile-')
+                                        ? "Mobile: ${p.mobile} (No ABHA)"
+                                        : p.selectedAbhaAddress,
+                                    style: TextStyle(
+                                      color: p.selectedAbhaAddress.startsWith('mobile-')
+                                          ? const Color(0xFF64748B)
+                                          : const Color(0xFF2563EB),
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
                                     ),

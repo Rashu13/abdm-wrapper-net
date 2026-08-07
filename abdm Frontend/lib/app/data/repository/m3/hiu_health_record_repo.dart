@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:abdm_frontend/util/api_endpoints.dart';
 import '../../api/abdm_server.dart';
 import '../../api/fhir_parser.dart';
@@ -11,6 +12,7 @@ class HiuConsentRequestModel {
   final String createdAt;
   final String abhaAddress;
   final List<String> hiTypes;
+  final List<String> grantedHiTypes;
   final String purpose;
   final String fromDate;
   final String toDate;
@@ -23,6 +25,7 @@ class HiuConsentRequestModel {
     required this.createdAt,
     required this.abhaAddress,
     required this.hiTypes,
+    required this.grantedHiTypes,
     required this.purpose,
     required this.fromDate,
     required this.toDate,
@@ -41,40 +44,134 @@ class HiuConsentRequestModel {
       }
     }
 
-    String abha = reqDetails['patientAbhaAddress'] ??
-        reqDetails['patientAbha'] ??
-        reqDetails['consent']?['patient']?['id'] ??
-        'user_40893@sbx';
+    final consentReq = reqDetails['consentRequest'] ?? reqDetails['ConsentRequest'];
+    
+    // Resolve ABHA Address safely
+    String abha = '';
+    if (reqDetails['patientAbhaAddress'] != null) {
+      abha = reqDetails['patientAbhaAddress'].toString();
+    } else if (reqDetails['patientAbha'] != null) {
+      abha = reqDetails['patientAbha'].toString();
+    } else if (reqDetails['consent'] is Map && reqDetails['consent']['patient'] is Map) {
+      abha = (reqDetails['consent']['patient']['id'] ?? '').toString();
+    } else if (consentReq is Map && consentReq['consent'] is Map && consentReq['consent']['patient'] is Map) {
+      abha = (consentReq['consent']['patient']['id'] ?? '').toString();
+    }
+    if (abha.isEmpty) abha = 'user_40893@sbx';
 
+    // Resolve HI Types safely
     List<String> hi = [];
     if (reqDetails['hiTypes'] is List) {
       hi = List<String>.from(reqDetails['hiTypes']);
-    } else if (reqDetails['consent']?['hiTypes'] is List) {
+    } else if (reqDetails['consent'] is Map && reqDetails['consent']['hiTypes'] is List) {
       hi = List<String>.from(reqDetails['consent']['hiTypes']);
+    } else if (consentReq is Map && consentReq['consent'] is Map && consentReq['consent']['hiTypes'] is List) {
+      hi = List<String>.from(consentReq['consent']['hiTypes']);
     } else {
       hi = ['Prescription', 'OPConsultation', 'DiagnosticReport'];
     }
 
-    String purp = reqDetails['purposeCode'] ??
-        reqDetails['consent']?['purpose']?['code'] ??
-        'CAREMGT';
+    // Resolve Response details safely (grantedHi)
+    List<String> grantedHi = [];
+    String resolvedStatus = (json['status']?.toString() ?? 'REQUESTED').toUpperCase();
+
+    if (json['responseDetails'] != null) {
+      Map<String, dynamic> respDetails = {};
+      if (json['responseDetails'] is Map<String, dynamic>) {
+        respDetails = json['responseDetails'];
+      } else if (json['responseDetails'] is String) {
+        try {
+          respDetails = jsonDecode(json['responseDetails']);
+        } catch (_) {}
+      }
+
+      // Check if we have the notify notification callback status
+      final notifyResponse = respDetails['CONSENT_ON_NOTIFY_RESPONSE'];
+      if (notifyResponse is Map && notifyResponse['notification'] is Map) {
+        final notificationBlock = notifyResponse['notification'];
+        final String? cbStatus = notificationBlock['status']?.toString();
+        if (cbStatus != null && cbStatus.isNotEmpty) {
+          resolvedStatus = cbStatus.toUpperCase();
+        }
+      }
+
+      for (var entry in respDetails.entries) {
+        if (entry.value is Map) {
+          final valMap = entry.value as Map;
+          final consentBlock = valMap['consent'] ?? valMap['Consent'];
+          if (consentBlock is Map) {
+            final detailBlock = consentBlock['consentDetail'] ?? consentBlock['ConsentDetail'];
+            if (detailBlock is Map) {
+              final hiTypesBlock = detailBlock['hiTypes'] ?? detailBlock['HiTypes'];
+              if (hiTypesBlock is List) {
+                grantedHi = List<String>.from(hiTypesBlock);
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Resolve Purpose Code safely
+    String purp = 'CAREMGT';
+    if (reqDetails['purposeCode'] != null) {
+      purp = reqDetails['purposeCode'].toString();
+    } else if (reqDetails['consent'] is Map && reqDetails['consent']['purpose'] is Map) {
+      purp = (reqDetails['consent']['purpose']['code'] ?? 'CAREMGT').toString();
+    } else if (consentReq is Map && consentReq['consent'] is Map && consentReq['consent']['purpose'] is Map) {
+      purp = (consentReq['consent']['purpose']['code'] ?? 'CAREMGT').toString();
+    }
+
+    // Resolve Date Range safely
+    String from = reqDetails['dateFrom'] ?? '';
+    String to = reqDetails['dateTo'] ?? '';
+    if (consentReq is Map) {
+      final consentBlock = consentReq['consent'] ?? consentReq['Consent'];
+      if (consentBlock is Map) {
+        final permBlock = consentBlock['permission'] ?? consentBlock['Permission'];
+        if (permBlock is Map) {
+          final rangeBlock = permBlock['dateRange'] ?? permBlock['DateRange'];
+          if (rangeBlock is Map) {
+            from = (rangeBlock['from'] ?? rangeBlock['From'] ?? '').toString();
+            to = (rangeBlock['to'] ?? rangeBlock['To'] ?? '').toString();
+          }
+        }
+      }
+    }
 
     return HiuConsentRequestModel(
       id: json['id']?.toString() ?? '',
       clientRequestId: json['clientRequestId']?.toString() ?? '',
-      status: (json['status']?.toString() ?? 'REQUESTED').toUpperCase(),
+      status: resolvedStatus,
       createdAt: json['createdAt']?.toString() ?? DateTime.now().toIso8601String(),
       abhaAddress: abha,
       hiTypes: hi,
+      grantedHiTypes: grantedHi,
       purpose: purp,
-      fromDate: reqDetails['dateFrom'] ?? reqDetails['consent']?['permission']?['dateRange']?['from'] ?? '',
-      toDate: reqDetails['dateTo'] ?? reqDetails['consent']?['permission']?['dateRange']?['to'] ?? '',
+      fromDate: from,
+      toDate: to,
       consentId: json['consentId']?.toString() ?? '',
     );
   }
 }
 
 class HiuHealthRecordRepo {
+  static String _generateUuidV4() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    bytes[6] = (bytes[6] & 0x0F) | 0x40; // set version to 4
+    bytes[8] = (bytes[8] & 0x3F) | 0x80; // set variant to 10
+    
+    final buffer = StringBuffer();
+    for (int i = 0; i < 16; i++) {
+      if (i == 4 || i == 6 || i == 8 || i == 10) {
+        buffer.write('-');
+      }
+      buffer.write(bytes[i].toRadixString(16).padLeft(2, '0'));
+    }
+    return buffer.toString();
+  }
   /// Fetch all HIU consent requests logged in backend database
   static Future<List<HiuConsentRequestModel>> getAllConsentRequests() async {
     try {
@@ -102,7 +199,7 @@ class HiuHealthRecordRepo {
     String? hiuId,
   }) async {
     try {
-      final reqId = "REQ_${DateTime.now().millisecondsSinceEpoch}";
+      final reqId = _generateUuidV4();
       final body = {
         "requestId": reqId,
         "timestamp": DateTime.now().toUtc().toIso8601String(),
@@ -114,17 +211,21 @@ class HiuHealthRecordRepo {
         "eraseAt": eraseAt,
         "consent": {
           "purpose": {
-            "text": "Care Management - Sonomed Portal",
-            "code": purposeCode
+            "text": "Care Management",
+            "code": purposeCode,
+            "refUri": "https://dev.abdm.gov.in"
           },
           "patient": {"id": abhaAddress},
-          "hiu": {"id": hiuId ?? "IN0610090658"},
+          "hiu": {
+            "id": hiuId ?? "IN0610090658",
+            "name": "MIDHA HOSPITAL"
+          },
           "requester": {
-            "name": "Dr. Sonomed Specialist",
+            "name": "Dr. Midha",
             "identifier": {
               "type": "REGNO",
-              "value": "NMC-998811",
-              "system": "https://www.nmc.org.in"
+              "value": "MCI-12345",
+              "system": "https://mciindia.org"
             }
           },
           "hiTypes": hiTypes,
@@ -176,7 +277,25 @@ class HiuHealthRecordRepo {
       ApiEndpoints.getHealthInformationStatus(requestId),
     );
     if (response != null && response.statusCode == 200) {
-      return FhirParser.parseBundle(response.body);
+      try {
+        final Map<String, dynamic> bodyJson = jsonDecode(response.body);
+        final List<FhirRecordItem> allRecords = [];
+        
+        final decryptedList = bodyJson['decryptedHealthInformation'] ?? bodyJson['DecryptedHealthInformation'];
+        if (decryptedList is List) {
+          for (var item in decryptedList) {
+            final fhirBundle = item['fhirBundle'] ?? item['FhirBundle'];
+            if (fhirBundle != null) {
+              final bundleStr = jsonEncode(fhirBundle);
+              final parsedItems = FhirParser.parseBundle(bundleStr);
+              allRecords.addAll(parsedItems);
+            }
+          }
+        }
+        return allRecords;
+      } catch (e) {
+        print("fetchDecryptedRecords parsing error: $e");
+      }
     }
     return [];
   }
@@ -188,7 +307,7 @@ class HiuHealthRecordRepo {
     required String toDate,
   }) async {
     try {
-      final requestId = "REQ_${DateTime.now().millisecondsSinceEpoch}";
+      final requestId = _generateUuidV4();
       final body = {
         "requestId": requestId,
         "consentId": consentId,

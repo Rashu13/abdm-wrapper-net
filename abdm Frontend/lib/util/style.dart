@@ -35,6 +35,12 @@ final fontSmall = GoogleFonts.outfit(
   color: AppColor.textSecondary,
 );
 
+final fontItalic = GoogleFonts.outfit(
+  fontWeight: FontWeight.w400,
+  fontSize: Dimensions.fontSizeSmall,
+  color: AppColor.textSecondary,
+  fontStyle: FontStyle.italic,
+);
 final fontTitle = GoogleFonts.outfit(
   fontWeight: FontWeight.w800,
   fontSize: Dimensions.fontSizeOverLarge,

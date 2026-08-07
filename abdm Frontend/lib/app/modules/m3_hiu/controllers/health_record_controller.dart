@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:abdm_frontend/helper/file_picker_stub.dart'
     if (dart.library.html) 'package:abdm_frontend/helper/file_picker_web.dart'
@@ -34,6 +35,8 @@ class SavedRecordModel {
 }
 
 class HealthRecordController extends GetxController {
+  Timer? _pollingTimer;
+
   // PDF Attachment fields
   var attachedPdfName = ''.obs;
   var attachedPdfBase64 = ''.obs;
@@ -157,10 +160,13 @@ class HealthRecordController extends GetxController {
         fetchSavedHealthRecords(p.abhaAddress);
       }
     });
+
+    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (_) => fetchConsentRequests(silent: true));
   }
 
   @override
   void onClose() {
+    _pollingTimer?.cancel();
     for (var c in complaintsList) {
       c.dispose();
     }
@@ -502,19 +508,22 @@ class HealthRecordController extends GetxController {
     }
   }
 
-  Future<void> fetchConsentRequests() async {
-    isLoadingConsents.value = true;
-    errorMessage.value = '';
+  Future<void> fetchConsentRequests({bool silent = false}) async {
+    if (!silent) {
+      isLoadingConsents.value = true;
+      errorMessage.value = '';
+    }
     try {
       var requests = await HiuHealthRecordRepo.getAllConsentRequests();
       consentRequests.value = requests;
-
-      var list = await HiuHealthRecordRepo.getConsents();
-      consents.value = list;
     } catch (e) {
-      errorMessage.value = 'Error loading consent requests: $e';
+      if (!silent) {
+        errorMessage.value = 'Error loading consent requests: $e';
+      }
     } finally {
-      isLoadingConsents.value = false;
+      if (!silent) {
+        isLoadingConsents.value = false;
+      }
     }
   }
 
@@ -818,6 +827,10 @@ class HealthRecordController extends GetxController {
         'careContextReference': visitRef,
         'recordType': hiType,
         'fhirJsonPayload': jsonEncode(fhirPayload),
+        'mobileNo': patient.mobile,
+        'patientName': patient.name,
+        'gender': patient.gender,
+        'dateOfBirth': patient.dateOfBirth,
       },
     );
 
@@ -911,45 +924,56 @@ class HealthRecordController extends GetxController {
     isFetchingRecords.value = true;
     fhirRecords.clear();
 
-    final String consentId = item.consentId.isNotEmpty ? item.consentId : item.clientRequestId;
-    
-    // Format dates to ISO8601 UTC format if they aren't already
-    String fromDate = item.fromDate;
-    String toDate = item.toDate;
-    if (fromDate.isNotEmpty && !fromDate.contains('T')) {
-      try {
-        fromDate = DateTime.parse(fromDate).toUtc().toIso8601String();
-      } catch (_) {
-        fromDate = "2020-01-01T00:00:00.000Z";
+    try {
+      final String consentId = item.consentId.isNotEmpty ? item.consentId : item.clientRequestId;
+      
+      // Format dates to ISO8601 UTC format if they aren't already
+      String fromDate = item.fromDate;
+      String toDate = item.toDate;
+      if (fromDate.isNotEmpty && !fromDate.contains('T')) {
+        try {
+          fromDate = DateTime.parse(fromDate).toUtc().toIso8601String();
+        } catch (_) {
+          fromDate = "2020-01-01T00:00:00.000Z";
+        }
       }
-    }
-    if (toDate.isNotEmpty && !toDate.contains('T')) {
-      try {
-        toDate = DateTime.parse(toDate).toUtc().toIso8601String();
-      } catch (_) {
-        toDate = DateTime.now().toUtc().toIso8601String();
+      if (toDate.isNotEmpty && !toDate.contains('T')) {
+        try {
+          toDate = DateTime.parse(toDate).toUtc().toIso8601String();
+        } catch (_) {
+          toDate = DateTime.now().toUtc().toIso8601String();
+        }
       }
+
+      if (fromDate.isEmpty) fromDate = "2020-01-01T00:00:00.000Z";
+      if (toDate.isEmpty) toDate = DateTime.now().toUtc().toIso8601String();
+
+      final requestId = await HiuHealthRecordRepo.fetchHealthInformation(
+        consentId: consentId,
+        fromDate: fromDate,
+        toDate: toDate,
+      );
+
+      if (requestId != null) {
+        // Poll the status API several times to allow async HIP callback transfer & decryption
+        List<FhirRecordItem> records = [];
+        for (int i = 0; i < 6; i++) {
+          await Future.delayed(const Duration(seconds: 2));
+          records = await HiuHealthRecordRepo.fetchDecryptedRecords(requestId);
+          if (records.isNotEmpty) {
+            break;
+          }
+        }
+        fhirRecords.value = records;
+      } else {
+        // Try fallback to fetching using consentId/clientRequestId directly
+        var records = await HiuHealthRecordRepo.fetchDecryptedRecords(consentId);
+        fhirRecords.value = records;
+      }
+    } catch (e) {
+      debugPrint("Error in fetchAndDecryptRecords: $e");
+    } finally {
+      isFetchingRecords.value = false;
     }
-
-    if (fromDate.isEmpty) fromDate = "2020-01-01T00:00:00.000Z";
-    if (toDate.isEmpty) toDate = DateTime.now().toUtc().toIso8601String();
-
-    final requestId = await HiuHealthRecordRepo.fetchHealthInformation(
-      consentId: consentId,
-      fromDate: fromDate,
-      toDate: toDate,
-    );
-
-    if (requestId != null) {
-      // Wait a moment for gateway / HIP callback delivery before fetching
-      await Future.delayed(const Duration(seconds: 3));
-      var records = await HiuHealthRecordRepo.fetchDecryptedRecords(requestId);
-      fhirRecords.value = records;
-    } else {
-      // Try fallback to fetching using consentId/clientRequestId directly
-      var records = await HiuHealthRecordRepo.fetchDecryptedRecords(consentId);
-      fhirRecords.value = records;
-    }
-    isFetchingRecords.value = false;
   }
 }
