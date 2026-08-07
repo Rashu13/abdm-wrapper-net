@@ -140,11 +140,12 @@ public class SqlServerRequestLogV3Service : IRequestLogV3Service
 
         log.Status = requestStatus.GetValue();
         log.ConsentId = identifier;
+        log.EntityType = "HIU";
         log.LastUpdated = DateTime.UtcNow;
 
-        var requestDetails = log.RequestDetails ?? new BsonDocument();
-        requestDetails["consentDetails"] = ToBsonValue(consentDetails);
-        log.RequestDetails = requestDetails;
+        var responseDetails = log.ResponseDetails ?? new BsonDocument();
+        responseDetails[identifier] = ToBsonValue(consentDetails);
+        log.ResponseDetails = responseDetails;
 
         _context.RequestLogs.Update(log);
         await _context.SaveChangesAsync();
@@ -544,6 +545,7 @@ public class SqlServerRequestLogV3Service : IRequestLogV3Service
         var log = new RequestLog
         {
             Module = "HIU_CONSENT",
+            EntityType = "HIU",
             AbhaAddress = request.Consent?.Patient?.Id ?? string.Empty,
             ClientRequestId = request.RequestId,
             GatewayRequestId = request.RequestId,

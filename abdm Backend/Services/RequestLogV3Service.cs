@@ -126,6 +126,8 @@ public class RequestLogV3Service : IRequestLogV3Service
         var update = Builders<RequestLog>.Update
             .Set(r => r.ResponseDetails, responseDetails)
             .Set(r => r.Status, requestStatus.ToString())
+            .Set(r => r.ConsentId, identifier)
+            .Set(r => r.EntityType, "HIU")
             .Set(r => r.LastUpdated, DateTime.UtcNow);
 
         await _context.RequestLogs.UpdateOneAsync(filter, update);
@@ -538,6 +540,7 @@ public class RequestLogV3Service : IRequestLogV3Service
         var requestLog = new RequestLog
         {
             Module = "HIU_CONSENT",
+            EntityType = "HIU",
             AbhaAddress = request.Consent?.Patient?.Id ?? string.Empty,
             ClientRequestId = request.RequestId,
             GatewayRequestId = request.RequestId,

@@ -413,6 +413,17 @@ public class HIUConsentV3Service
             await _consentPatientService.SaveConsentPatientMappingAsync(
                 consentId, patientId, "HIU", hiuId);
 
+            // Update RequestLog with the fetched consent details so the HIU dashboard has the correct granted hiTypes
+            var requestLog = await _requestLogService.FindByConsentIdAsync(consentId, "HIU");
+            if (requestLog != null)
+            {
+                await _requestLogService.UpdateConsentResponseAsync(
+                    requestLog.GatewayRequestId,
+                    consentId,
+                    RequestStatus.CONSENT_ON_FETCH_SUCCESS,
+                    request);
+            }
+
             return 202;
         }
         catch (Exception ex)
