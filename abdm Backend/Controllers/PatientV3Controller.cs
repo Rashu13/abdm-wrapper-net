@@ -77,9 +77,87 @@ public class PatientV3Controller : ControllerBase
     {
         _logger.LogInformation($"Request to save health data for care context {record.CareContextReference} and ABHA {record.AbhaAddress}");
         
+        // Handle patient registration without ABHA address using MobileNo + PatientName
+        if (string.IsNullOrEmpty(record.AbhaAddress) || record.AbhaAddress.StartsWith("mobile-"))
+        {
+            if (string.IsNullOrEmpty(record.AbhaAddress))
+            {
+                if (!string.IsNullOrEmpty(record.MobileNo))
+                {
+                    record.AbhaAddress = $"mobile-{record.MobileNo}@sbx";
+                }
+            }
+            else if (record.AbhaAddress.StartsWith("mobile-"))
+            {
+                record.MobileNo = record.AbhaAddress.Replace("mobile-", "").Replace("@sbx", "");
+            }
+
+            if (!string.IsNullOrEmpty(record.MobileNo))
+            {
+                var dummyAbha = record.AbhaAddress;
+
+                // Extract PatientName from FhirJsonPayload if missing
+                if (string.IsNullOrEmpty(record.PatientName) && !string.IsNullOrEmpty(record.FhirJsonPayload))
+                {
+                    try
+                    {
+                        using var doc = System.Text.Json.JsonDocument.Parse(record.FhirJsonPayload);
+                        if (doc.RootElement.TryGetProperty("patient", out var patientProp))
+                        {
+                            if (patientProp.TryGetProperty("name", out var nameProp))
+                            {
+                                record.PatientName = nameProp.GetString();
+                            }
+                        }
+                    }
+                    catch {}
+                }
+
+                var existingPatient = await _patientService.GetPatientAsync(dummyAbha, _abdmConfig.HipId);
+                if (existingPatient == null)
+                {
+                    var newPatient = new Patient
+                    {
+                        AbhaAddress = dummyAbha,
+                        PatientMobile = record.MobileNo,
+                        Name = record.PatientName ?? "Unknown Patient",
+                        PatientReference = record.CareContextReference ?? Guid.NewGuid().ToString(),
+                        PatientDisplay = record.PatientName ?? "Unknown Patient",
+                        HipId = _abdmConfig.HipId,
+                        CareContexts = new List<CareContext>
+                        {
+                            new CareContext
+                            {
+                                ReferenceNumber = record.CareContextReference,
+                                Display = record.RecordType == "DischargeSummary" ? "Discharge Summary" : "Prescription Record",
+                                HiType = record.RecordType,
+                                IsLinked = false
+                            }
+                        }
+                    };
+                    await _patientService.UpsertPatientsAsync(new List<Patient> { newPatient });
+                }
+                else
+                {
+                    if (existingPatient.CareContexts == null) existingPatient.CareContexts = new List<CareContext>();
+                    if (!existingPatient.CareContexts.Any(c => c.ReferenceNumber == record.CareContextReference))
+                    {
+                        existingPatient.CareContexts.Add(new CareContext
+                        {
+                            ReferenceNumber = record.CareContextReference,
+                            Display = record.RecordType == "DischargeSummary" ? "Discharge Summary" : "Prescription Record",
+                            HiType = record.RecordType,
+                            IsLinked = false
+                        });
+                        await _patientService.UpsertPatientsAsync(new List<Patient> { existingPatient });
+                    }
+                }
+            }
+        }
+
         if (string.IsNullOrEmpty(record.AbhaAddress) || string.IsNullOrEmpty(record.CareContextReference) || string.IsNullOrEmpty(record.FhirJsonPayload))
         {
-            return BadRequest(new { Message = "AbhaAddress, CareContextReference, and FhirJsonPayload are mandatory" });
+            return BadRequest(new { Message = "AbhaAddress (or MobileNo), CareContextReference, and FhirJsonPayload are mandatory" });
         }
 
         record.CreatedAt = DateTime.UtcNow;

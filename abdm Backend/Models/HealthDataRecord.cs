@@ -17,10 +17,15 @@ public class HealthDataRecord
     [MaxLength(100)]
     public string CareContextReference { get; set; } = string.Empty;
 
-    [Required]
     [Column("abha_address")]
     [MaxLength(100)]
     public string AbhaAddress { get; set; } = string.Empty;
+
+    [NotMapped]
+    public string? MobileNo { get; set; }
+
+    [NotMapped]
+    public string? PatientName { get; set; }
 
     [Required]
     [Column("record_type")]
