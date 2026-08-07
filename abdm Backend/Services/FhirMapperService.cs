@@ -2341,6 +2341,153 @@ public class FhirMapperService : IFhirMapperService
             }
         }
 
+        // 6c. Add Procedures if present
+        var proceduresElement = GetProperty(root, "procedures");
+        if (proceduresElement.ValueKind == JsonValueKind.Array && proceduresElement.GetArrayLength() > 0)
+        {
+            var procedureSection = new Composition.SectionComponent
+            {
+                Title = "Procedures",
+                Code = new CodeableConcept
+                {
+                    Text = "Procedures",
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "439006003", "Procedures")
+                    }
+                }
+            };
+
+            int procIndex = 1;
+            foreach (var p in proceduresElement.EnumerateArray())
+            {
+                var text = p.ValueKind == JsonValueKind.String ? p.GetString() : (GetString(p, "text") ?? GetString(p, "procedure") ?? "");
+                if (!string.IsNullOrEmpty(text))
+                {
+                    var procedure = new Procedure
+                    {
+                        Id = $"Procedure-{procIndex}",
+                        Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/Procedure"),
+                        Status = Hl7.Fhir.Model.EventStatus.Completed,
+                        Code = new CodeableConcept
+                        {
+                            Text = text,
+                            Coding = new List<Coding>
+                            {
+                                new Coding(SNOMED_URL, "439006003", text)
+                            }
+                        },
+                        Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName }
+                    };
+
+                    procedureSection.Entry.Add(new ResourceReference($"Procedure/{procedure.Id}"));
+                    entries.Add(new Bundle.EntryComponent { FullUrl = $"Procedure/{procedure.Id}", Resource = procedure });
+                    procIndex++;
+                }
+            }
+
+            if (procedureSection.Entry.Count > 0)
+            {
+                composition.Section.Add(procedureSection);
+            }
+        }
+
+        // 6d. Add Care Plan if present
+        var carePlanElement = GetProperty(root, "carePlan");
+        if (carePlanElement.ValueKind == JsonValueKind.Array && carePlanElement.GetArrayLength() > 0)
+        {
+            var carePlanSection = new Composition.SectionComponent
+            {
+                Title = "Care Plan",
+                Code = new CodeableConcept
+                {
+                    Text = "Care Plan",
+                    Coding = new List<Coding>
+                    {
+                        new Coding(SNOMED_URL, "18776-5", "Care Plan")
+                    }
+                }
+            };
+
+            int cpIndex = 1;
+            foreach (var cp in carePlanElement.EnumerateArray())
+            {
+                var text = cp.ValueKind == JsonValueKind.String ? cp.GetString() : (GetString(cp, "text") ?? GetString(cp, "description") ?? "");
+                if (!string.IsNullOrEmpty(text))
+                {
+                    var carePlan = new CarePlan
+                    {
+                        Id = $"CarePlan-{cpIndex}",
+                        Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/CarePlan"),
+                        Status = Hl7.Fhir.Model.RequestStatus.Active,
+                        Intent = Hl7.Fhir.Model.CarePlan.CarePlanIntent.Plan,
+                        Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
+                        Activity = new List<CarePlan.ActivityComponent>
+                        {
+                            new CarePlan.ActivityComponent
+                            {
+                                Detail = new CarePlan.DetailComponent
+                                {
+                                    Description = text
+                                }
+                            }
+                        }
+                    };
+
+                    carePlanSection.Entry.Add(new ResourceReference($"CarePlan/{carePlan.Id}"));
+                    entries.Add(new Bundle.EntryComponent { FullUrl = $"CarePlan/{carePlan.Id}", Resource = carePlan });
+                    cpIndex++;
+                }
+            }
+
+            if (carePlanSection.Entry.Count > 0)
+            {
+                composition.Section.Add(carePlanSection);
+            }
+        }
+        else
+        {
+            var carePlanStr = GetString(root, "carePlan") ?? GetString(root, "careplan");
+            if (!string.IsNullOrEmpty(carePlanStr))
+            {
+                var carePlanSection = new Composition.SectionComponent
+                {
+                    Title = "Care Plan",
+                    Code = new CodeableConcept
+                    {
+                        Text = "Care Plan",
+                        Coding = new List<Coding>
+                        {
+                            new Coding(SNOMED_URL, "18776-5", "Care Plan")
+                        }
+                    }
+                };
+
+                var carePlan = new CarePlan
+                {
+                    Id = "CarePlan-1",
+                    Meta = CreateMeta("https://nrces.in/ndhm/fhir/r4/StructureDefinition/CarePlan"),
+                    Status = Hl7.Fhir.Model.RequestStatus.Active,
+                    Intent = Hl7.Fhir.Model.CarePlan.CarePlanIntent.Plan,
+                    Subject = new ResourceReference($"Patient/{patient.Id}") { Display = patientName },
+                    Activity = new List<CarePlan.ActivityComponent>
+                    {
+                        new CarePlan.ActivityComponent
+                        {
+                            Detail = new CarePlan.DetailComponent
+                            {
+                                Description = carePlanStr
+                            }
+                        }
+                    }
+                };
+
+                carePlanSection.Entry.Add(new ResourceReference($"CarePlan/{carePlan.Id}"));
+                entries.Add(new Bundle.EntryComponent { FullUrl = $"CarePlan/{carePlan.Id}", Resource = carePlan });
+                composition.Section.Add(carePlanSection);
+            }
+        }
+
         // 7. Handle Attached Documents
         var docSection = new Composition.SectionComponent
         {
