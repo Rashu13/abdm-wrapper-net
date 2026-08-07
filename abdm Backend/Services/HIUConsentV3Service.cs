@@ -314,13 +314,25 @@ public class HIUConsentV3Service
         var gatewayRequestId = await _consentRequestMappingService.GetGatewayRequestIdAsync(
             notification.ConsentRequestId);
 
-        if (notification.Status.Equals("DENIED", StringComparison.OrdinalIgnoreCase))
+        if (notification.Status.Equals("DENIED", StringComparison.OrdinalIgnoreCase) ||
+            notification.Status.Equals("EXPIRED", StringComparison.OrdinalIgnoreCase) ||
+            notification.Status.Equals("REVOKED", StringComparison.OrdinalIgnoreCase))
         {
             if (gatewayRequestId != null)
             {
+                RequestStatus reqStatus = RequestStatus.CONSENT_ON_NOTIFY_RESPONSE_RECEIVED;
+                if (notification.Status.Equals("EXPIRED", StringComparison.OrdinalIgnoreCase))
+                {
+                    reqStatus = RequestStatus.CONSENT_EXPIRED;
+                }
+                else if (notification.Status.Equals("REVOKED", StringComparison.OrdinalIgnoreCase))
+                {
+                    reqStatus = RequestStatus.CONSENT_REVOKED;
+                }
+
                 await _requestLogService.UpdateConsentResponseAsync(gatewayRequestId,
                     "CONSENT_ON_NOTIFY_RESPONSE",
-                    RequestStatus.CONSENT_ON_NOTIFY_RESPONSE_RECEIVED,
+                    reqStatus,
                     request);
             }
         }

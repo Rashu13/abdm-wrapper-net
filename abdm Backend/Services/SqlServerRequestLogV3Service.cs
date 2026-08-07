@@ -143,7 +143,8 @@ public class SqlServerRequestLogV3Service : IRequestLogV3Service
         log.EntityType = "HIU";
         log.LastUpdated = DateTime.UtcNow;
 
-        var responseDetails = log.ResponseDetails ?? new BsonDocument();
+        // Clone the BsonDocument to force EF Core's change tracker to detect the modification
+        var responseDetails = log.ResponseDetails != null ? new BsonDocument(log.ResponseDetails) : new BsonDocument();
         responseDetails[identifier] = ToBsonValue(consentDetails);
         log.ResponseDetails = responseDetails;
 
