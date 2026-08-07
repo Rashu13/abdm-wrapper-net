@@ -86,8 +86,9 @@ public class HIUFacadeConsentV3Controller : ControllerBase
     public IActionResult GetConsentList()
     {
         var logs = _db.RequestLogs
-            .Where(r => r.Module == "HIU_CONSENT" || r.Module.Contains("CONSENT"))
+            .Where(r => r.Module == "HIU_CONSENT")
             .OrderByDescending(r => r.CreatedOn)
+            .Take(15)
             .ToList()
             .Select(r => new
             {
