@@ -96,21 +96,48 @@ public class PatientV3Controller : ControllerBase
             {
                 var dummyAbha = record.AbhaAddress;
 
-                // Extract PatientName from FhirJsonPayload if missing
-                if (string.IsNullOrEmpty(record.PatientName) && !string.IsNullOrEmpty(record.FhirJsonPayload))
+                // Read direct parameters sent by the UI
+                string patientGender = record.Gender ?? string.Empty;
+                string patientDob = record.DateOfBirth ?? string.Empty;
+
+                // Fallback to parsing from FhirJsonPayload if parameters are missing
+                if (string.IsNullOrEmpty(patientGender) || string.IsNullOrEmpty(patientDob) || string.IsNullOrEmpty(record.PatientName))
                 {
                     try
                     {
                         using var doc = System.Text.Json.JsonDocument.Parse(record.FhirJsonPayload);
                         if (doc.RootElement.TryGetProperty("patient", out var patientProp))
                         {
-                            if (patientProp.TryGetProperty("name", out var nameProp))
+                            if (string.IsNullOrEmpty(record.PatientName) && patientProp.TryGetProperty("name", out var nameProp))
                             {
                                 record.PatientName = nameProp.GetString();
+                            }
+                            if (string.IsNullOrEmpty(patientGender) && patientProp.TryGetProperty("gender", out var genderProp))
+                            {
+                                patientGender = genderProp.GetString() ?? string.Empty;
+                            }
+                            if (string.IsNullOrEmpty(patientDob) && patientProp.TryGetProperty("birthDate", out var dobProp))
+                            {
+                                patientDob = dobProp.GetString() ?? string.Empty;
                             }
                         }
                     }
                     catch {}
+                }
+
+                // Standardize gender code for gateway compatibility
+                if (!string.IsNullOrEmpty(patientGender))
+                {
+                    patientGender = patientGender.Trim().ToUpper();
+                    if (patientGender == "MALE" || patientGender == "M") patientGender = "M";
+                    else if (patientGender == "FEMALE" || patientGender == "F") patientGender = "F";
+                    else if (patientGender == "OTHER" || patientGender == "O") patientGender = "O";
+                }
+
+                // If gender or dateOfBirth remain completely unspecified, return a validation bad request
+                if (string.IsNullOrEmpty(patientGender) || string.IsNullOrEmpty(patientDob))
+                {
+                    return BadRequest(new { Message = "Gender and DateOfBirth are mandatory for patients without an ABHA address." });
                 }
 
                 var existingPatient = await _patientService.GetPatientAsync(dummyAbha, _abdmConfig.HipId);
@@ -121,6 +148,8 @@ public class PatientV3Controller : ControllerBase
                         AbhaAddress = dummyAbha,
                         PatientMobile = record.MobileNo,
                         Name = record.PatientName ?? "Unknown Patient",
+                        Gender = patientGender,
+                        DateOfBirth = patientDob,
                         PatientReference = record.CareContextReference ?? Guid.NewGuid().ToString(),
                         PatientDisplay = record.PatientName ?? "Unknown Patient",
                         HipId = _abdmConfig.HipId,
@@ -139,6 +168,18 @@ public class PatientV3Controller : ControllerBase
                 }
                 else
                 {
+                    bool needsUpdate = false;
+                    if (existingPatient.Gender != patientGender)
+                    {
+                        existingPatient.Gender = patientGender;
+                        needsUpdate = true;
+                    }
+                    if (existingPatient.DateOfBirth != patientDob)
+                    {
+                        existingPatient.DateOfBirth = patientDob;
+                        needsUpdate = true;
+                    }
+
                     if (existingPatient.CareContexts == null) existingPatient.CareContexts = new List<CareContext>();
                     if (!existingPatient.CareContexts.Any(c => c.ReferenceNumber == record.CareContextReference))
                     {
@@ -149,6 +190,11 @@ public class PatientV3Controller : ControllerBase
                             HiType = record.RecordType,
                             IsLinked = false
                         });
+                        needsUpdate = true;
+                    }
+
+                    if (needsUpdate)
+                    {
                         await _patientService.UpsertPatientsAsync(new List<Patient> { existingPatient });
                     }
                 }

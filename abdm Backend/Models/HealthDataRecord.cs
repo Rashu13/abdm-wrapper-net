@@ -27,6 +27,12 @@ public class HealthDataRecord
     [NotMapped]
     public string? PatientName { get; set; }
 
+    [NotMapped]
+    public string? Gender { get; set; }
+
+    [NotMapped]
+    public string? DateOfBirth { get; set; }
+
     [Required]
     [Column("record_type")]
     [MaxLength(50)]
